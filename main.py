@@ -7,6 +7,7 @@ from guiThermalCamera import guiThermalCamera
 import threading
 from elementaryFunctions import *
 
+
 #Create GUI
 root = Tk()
 root.title("Quartet Controler")

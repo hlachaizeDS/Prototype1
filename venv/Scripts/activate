@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\Prototype\PycharmProjects\OligoPrintVacuum\venv"
+VIRTUAL_ENV="C:\Users\Eleanor Hawkins\PyCharmProjects\Prototype3\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
