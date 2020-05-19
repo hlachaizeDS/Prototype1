@@ -387,11 +387,45 @@ def dispense(hardware,solution, time):
         sleep(time)
         hardware.set_output2(output, 0)
 
+def multiDispensePumps(hardware,volumes):
+
+    while volumes!=[0,0,0,0,0,0]:
+
+        dus=[]
+        for i in range(3):
+            if volumes[i]!=0:
+                du=hardware.dispense_units_1[i]
+                dus.append(du)
+                if volumes[i]<=du.max_disp:
+                    vol_to_disp=volumes[i]
+                else:
+                    vol_to_disp=du.max_disp
+
+                du.push(vol_to_disp)
+                volumes[i]-=vol_to_disp
+
+        for j in range(3):
+            if volumes[j+3] != 0:
+                du = hardware.dispense_units_2[j]
+                dus.append(du)
+                if volumes[j+3] <= du.max_disp:
+                    vol_to_disp = volumes[j+3]
+                else:
+                    vol_to_disp = du.max_disp
+
+                du.push(vol_to_disp)
+                volumes[j+3] -= vol_to_disp
+
+        for du in dus:
+            du.zero()
+
+
 
 def multiDispense(hardware,nucleoArray,time):
 
     if hardware.parent.directCommand.stopButton_value.get()==1:
         return
+
     for i in range(4):
         if nucleoArray[i] == 1:
             hardware.set_output(i+2, 1)

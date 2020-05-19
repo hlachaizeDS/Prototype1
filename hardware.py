@@ -190,4 +190,23 @@ class HardWare(Frame):
     def vacValveClose(self):
         self.set_output2(6, 0)
 
+    def apply_axis_parameters(self,motor_parameters_list, velocity_max, acceleration_max, current_max, current_standby,
+                                  deceleration_max, velocity_V1, swap_switches, right_limit_switch_polarity,
+                              left_limit_switch_polarity, reference_type,reference_search_velocity,
+                              precise_reference_search_velocity, microsteps
+                                  ):
+        for motor in motor_parameters_list:
+            motor.set(4, velocity_max[motor_parameters_list.index(motor)])
+            motor.set(5, acceleration_max[motor_parameters_list.index(motor)])
+            motor.set(6, current_max[motor_parameters_list.index(motor)])
+            motor.set(7, current_standby[motor_parameters_list.index(motor)])
+            motor.set(17, deceleration_max[motor_parameters_list.index(motor)])
+            motor.set(16, velocity_V1)
+            motor.set(14, swap_switches[motor_parameters_list.index(motor)])
+            motor.set(24, right_limit_switch_polarity[motor_parameters_list.index(motor)])
+            motor.set(25, left_limit_switch_polarity[motor_parameters_list.index(motor)])
 
+            motor.set(193, reference_type[motor_parameters_list.index(motor)])
+            motor.set(194, reference_search_velocity[motor_parameters_list.index(motor)])
+            motor.set(195, precise_reference_search_velocity[motor_parameters_list.index(motor)])
+            motor.set(140, microsteps[motor_parameters_list.index(motor)])

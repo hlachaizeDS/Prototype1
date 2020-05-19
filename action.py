@@ -2,11 +2,14 @@ from hardware import *
 import sys
 
 
+
 def actionButton_Callback(directCommand):
 
 
     hardware=directCommand.parent.hardware
 
+    #hardware.dispense_units_1[0].dispense(125)
+    multiDispensePumps(hardware,[200,25,25,0,0,0])
     #ElongationAether(hardware,0)
     #hardware.vacuum.start()
     #ElongationCycle(hardware,0)
@@ -14,7 +17,7 @@ def actionButton_Callback(directCommand):
     #FJTaqman(hardware,0)
     #FJCodonMap(hardware,0)
     #ElongationCycleSeparatedOneEnz(hardware,0)
-    ElongationCycleSeparatedTwoEnz_384Test(hardware,1)
+    #ElongationCycleSeparatedTwoEnz_384Test(hardware,1)
     #ElongationCycleSeparatedTwoEnz(hardware, 0)
     #ElongationCycleTwoEnzymesWithWater(hardware, 0)
     #ElongationCycleNGS(hardware,0)
