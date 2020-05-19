@@ -4,7 +4,8 @@ class TkinterRefresher:
     def __init__(self, parent):
         self.parent=parent
         self.counter=0
-        self.refreshGUI()
+        if self.parent.hardware.thermalCam:
+            self.refreshGUI()
 
 
     def refreshGUI(self):

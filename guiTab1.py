@@ -23,8 +23,9 @@ class MainFrameTab1(Frame):
         self.titleLabel.grid(row=1, columnspan=2)
 
         '''Frame on the Right'''
-        self.rightFrame = RightFrame(self,bd=2,relief=GROOVE,padx=5,pady=5)
-        self.rightFrame.grid(row=3, column=3)
+        if self.hardware.thermalCam:
+            self.rightFrame = RightFrame(self,bd=2,relief=GROOVE,padx=5,pady=5)
+            self.rightFrame.grid(row=3, column=3)
 
         '''Frame on the Left'''
         self.leftFrame = LeftFrame(self,bd=2,relief=GROOVE,padx=5,pady=5)

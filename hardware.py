@@ -22,12 +22,13 @@ class HardWare(Frame):
     def __init__(self, parent, *args, **kwargs):
         self.parent = parent
 
-        firstCard=0
-        secondCard=0
-        vacuumController=0
-        arduino=0
+        self.firstCard=0
+        self.secondCard=0
+        self.vacuumController=0
+        self.arduino=0
+        self.thermalCam=0   #Will impact rightFrame in guitab1
 
-        if firstCard :
+        if self.firstCard :
             #try:
                 serial_port = Serial(PORT,9600)
                 self.bus = TMCL.connect(serial_port)
@@ -86,7 +87,7 @@ class HardWare(Frame):
               #  sys.exit(1)
 
 
-        if secondCard :
+        if self.secondCard :
             #try:
                 serial_port_2 = Serial(PORT_2,9600)
                 self.bus_stirrer = TMCL.connect(serial_port_2)
@@ -100,7 +101,7 @@ class HardWare(Frame):
              #   print("Port " + PORT_2 + " not Found")
               #  sys.exit(1)
 
-        if vacuumController :
+        if self.vacuumController :
             try:
                 ser = Serial(PORT_VACUUM , baudrate=57600)
                 self.vacuum = Vacuum(self,ser)
@@ -110,7 +111,7 @@ class HardWare(Frame):
                 sys.exit(1)
 
 
-        if arduino:
+        if self.arduino:
             self.arduinoControl=ArduinoControl(self)
             self.arduinoControl.stopShaking()
 
