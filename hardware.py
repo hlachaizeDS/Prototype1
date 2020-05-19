@@ -1,5 +1,5 @@
 MODULE_ADDRESS = 1
-PORT = "COM3"
+PORT = "COM5"
 PORT_2 = "COM5"
 PORT_VACUUM = "COM6"
 STALLGUARD_THRESHOLD = 0
@@ -22,7 +22,7 @@ class HardWare(Frame):
     def __init__(self, parent, *args, **kwargs):
         self.parent = parent
 
-        self.firstCard=0
+        self.firstCard=1
         self.secondCard=0
         self.vacuumController=0
         self.arduino=0
@@ -33,23 +33,23 @@ class HardWare(Frame):
                 serial_port = Serial(PORT,9600)
                 self.bus = TMCL.connect(serial_port)
 
-                self.xMotor = self.bus.get_motor(MODULE_ADDRESS, 1)
+                self.xMotor = self.bus.get_motor(MODULE_ADDRESS, 0)
                 self.xMotorParametersInterface = TMCL.motor.AxisParameterInterface(self.xMotor)
 
-                self.yMotor = self.bus.get_motor(MODULE_ADDRESS, 2)
+                self.yMotor = self.bus.get_motor(MODULE_ADDRESS, 1)
                 self.yMotorParametersInterface = TMCL.motor.AxisParameterInterface(self.yMotor)
 
-                self.zMotor = self.bus.get_motor(MODULE_ADDRESS, 0)
+                self.zMotor = self.bus.get_motor(MODULE_ADDRESS, 2)
                 self.zMotorParametersInterface = TMCL.motor.AxisParameterInterface(self.zMotor)
 
                 stallguard_value = 30  # -64..+63
                 stallguard_minimum_speed = 5000  # 0...7999774
-                current_max = [100, 100, 30, 255, 60]  # 0..255
-                current_standby = [25, 100, 8, 25, 8]  # 0..255
+                current_max = [150, 200, 30, 255, 60]  # 0..255
+                current_standby = [20, 50, 8, 25, 8]  # 0..255
                 acceleration_max = [1000000, 100000000, 20000000, 400000, 500000]  # 0...7629278
                 deceleration_max = acceleration_max  # 0...7629278
-                reference_type = [1, 1, 65, 1, 65]
-                swap_switches = [0, 1, 1, 0, 0]
+                reference_type = [1, 1, 1, 1, 65]
+                swap_switches = [0, 0, 1, 0, 0]
                 right_limit_switch_polarity = [0, 0, 0, 0, 1]
                 left_limit_switch_polarity = [0, 0, 0, 0, 0]
                 reference_search_velocity = [50000, 50000, 150000, 100000, 100000]
