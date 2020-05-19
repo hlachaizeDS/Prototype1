@@ -2,6 +2,8 @@ MODULE_ADDRESS = 1
 PORT = "COM5"
 PORT_2 = "COM5"
 PORT_VACUUM = "COM6"
+PORT_PUMP_1="COM3"
+PORT_PUMP_2="COM4"
 STALLGUARD_THRESHOLD = 0
 STIRRING_VELOCITY=1050000
 
@@ -15,6 +17,7 @@ from cycles import *
 from thermometre import *
 #from thermalCamera import *
 from arduinoControl import *
+from DispenseUnit import *
 
 
 
@@ -27,6 +30,8 @@ class HardWare(Frame):
         self.vacuumController=0
         self.arduino=0
         self.thermalCam=0   #Will impact rightFrame in guitab1
+        self.pump_card_1 = 1
+        self.pump_card_2 = 1
 
         if self.firstCard :
             #try:
@@ -115,6 +120,42 @@ class HardWare(Frame):
             self.arduinoControl=ArduinoControl(self)
             self.arduinoControl.stopShaking()
 
+        if self.pump_card_1 :
+
+            serial_port_pump_1 = Serial(PORT_PUMP_1, 9600)
+            self.bus_pump_1 = TMCL.connect(serial_port_pump_1)
+
+            self.motors_pump_1=[]
+            self.motors_parameters_pump_1=[]
+            for i in range(3):
+                self.motors_pump_1.append(self.bus_pump_1.get_motor(MODULE_ADDRESS,i))
+                self.motors_parameters_pump_1.append(TMCL.motor.AxisParameterInterface(self.motors_pump_1[-1]))
+
+            stallguard_value = 30  # -64..+63
+            stallguard_minimum_speed = 5000  # 0...7999774
+            current_max = [130 for i in range(3)]   # 0..255
+            current_standby = [8 for i in range(3)]   # 0..255
+            acceleration_max = [6629278 for i in range(3)]  # 0...7629278
+            deceleration_max = acceleration_max  # 0...7629278
+            reference_type = [65,65,65]
+            swap_switches = [0,0,0]
+            right_limit_switch_polarity = [0,0,0]
+            left_limit_switch_polarity = [0,0,0]
+            reference_search_velocity = [100000 for i in range(3)]
+            precise_reference_search_velocity = [5000 for i in range(3)]
+            velocity_max = [350000 for i in range(3)]
+            microsteps = [6 for i in range(3)]
+            velocity_V1=0
+
+            self.apply_axis_parameters(self.motors_parameters_pump_1, velocity_max, acceleration_max, current_max, current_standby,
+                                       deceleration_max, velocity_V1, swap_switches, right_limit_switch_polarity,
+                                       left_limit_switch_polarity, reference_type,reference_search_velocity,
+                                       precise_reference_search_velocity, microsteps
+                                       )
+
+            self.dispense_units_1=[]
+            for i in range(3):
+                self.dispense_units_1.append(DispenseUnit(self,self.motors_pump_1[i],self.motors_parameters_pump_1[i],self.bus_pump_1,i))
 
     def initialisation(self):
 
