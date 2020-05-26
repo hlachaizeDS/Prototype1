@@ -8,8 +8,8 @@ def actionButton_Callback(directCommand):
 
     hardware=directCommand.parent.hardware
 
-    #hardware.dispense_units_1[0].dispense(125)
-    multiDispensePumps(hardware,[200,25,25,0,0,0])
+    hardware.dispense_units_1[0].initialise_position()
+    #multiDispensePumps(hardware,[200,25,25,0,0,0])
     #ElongationAether(hardware,0)
     #hardware.vacuum.start()
     #ElongationCycle(hardware,0)

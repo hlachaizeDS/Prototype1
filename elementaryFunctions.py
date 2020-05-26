@@ -389,6 +389,9 @@ def dispense(hardware,solution, time):
 
 def multiDispensePumps(hardware,volumes):
 
+    pullback=3  #uls
+
+    volumes=volumes.copy()
     while volumes!=[0,0,0,0,0,0]:
 
         dus=[]

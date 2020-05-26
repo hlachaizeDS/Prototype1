@@ -157,6 +157,43 @@ class HardWare(Frame):
             for i in range(3):
                 self.dispense_units_1.append(DispenseUnit(self,self.motors_pump_1[i],self.motors_parameters_pump_1[i],self.bus_pump_1,i))
 
+        if self.pump_card_2 :
+
+            serial_port_pump_2 = Serial(PORT_PUMP_2, 9600)
+            self.bus_pump_2 = TMCL.connect(serial_port_pump_2)
+
+            self.motors_pump_2=[]
+            self.motors_parameters_pump_2=[]
+            for i in range(3):
+                self.motors_pump_2.append(self.bus_pump_2.get_motor(MODULE_ADDRESS,i))
+                self.motors_parameters_pump_2.append(TMCL.motor.AxisParameterInterface(self.motors_pump_2[-1]))
+
+            stallguard_value = 30  # -64..+63
+            stallguard_minimum_speed = 5000  # 0...7999774
+            current_max = [130 for i in range(3)]   # 0..255
+            current_standby = [8 for i in range(3)]   # 0..255
+            acceleration_max = [6629278 for i in range(3)]  # 0...7629278
+            deceleration_max = acceleration_max  # 0...7629278
+            reference_type = [65,65,65]
+            swap_switches = [0,0,0]
+            right_limit_switch_polarity = [0,0,0]
+            left_limit_switch_polarity = [0,0,0]
+            reference_search_velocity = [100000 for i in range(3)]
+            precise_reference_search_velocity = [5000 for i in range(3)]
+            velocity_max = [350000 for i in range(3)]
+            microsteps = [6 for i in range(3)]
+            velocity_V1=0
+
+            self.apply_axis_parameters(self.motors_parameters_pump_2, velocity_max, acceleration_max, current_max, current_standby,
+                                       deceleration_max, velocity_V1, swap_switches, right_limit_switch_polarity,
+                                       left_limit_switch_polarity, reference_type,reference_search_velocity,
+                                       precise_reference_search_velocity, microsteps
+                                       )
+
+            self.dispense_units_2=[]
+            for i in range(3):
+                self.dispense_units_2.append(DispenseUnit(self,self.motors_pump_2[i],self.motors_parameters_pump_2[i],self.bus_pump_2,i))
+
     def initialisation(self):
 
         self.parent.directCommand.initialisationLed.configure(bg='red')
@@ -189,6 +226,13 @@ class HardWare(Frame):
 
     def vacValveClose(self):
         self.set_output2(6, 0)
+
+    def init_du(self,du_index):
+        #du_index from 0 to 5
+        if du_index in [0,1,2]:
+            self.dispense_units_1[du_index].initialise_position()
+        else:
+            self.dispense_units_2[du_index-3].initialise_position()
 
     def apply_axis_parameters(self,motor_parameters_list, velocity_max, acceleration_max, current_max, current_standby,
                                   deceleration_max, velocity_V1, swap_switches, right_limit_switch_polarity,

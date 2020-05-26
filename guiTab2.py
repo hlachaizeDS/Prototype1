@@ -100,30 +100,49 @@ class MiddleFrame(Frame):
         self.volumeToDisp_value = StringVar()
         self.volumeToDisp=Entry(self,textvariable=self.volumeToDisp_value)
         self.volumeToDisp.grid(row=1,column=5)
-        self.volumeToDisp_value.set('0.1')
+        self.volumeToDisp_value.set('25')
 
-        self.multidispButton = Button(self, text="ACGT", command=lambda : multiDispense(hardware, [1,1,1,1],float(self.volumeToDisp_value.get())))
-        self.multidispButton.grid(row=2, column=5, padx=5, pady=5)
+        self.multidispMNACGTButton = Button(self, text="MNACGT",
+                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(6)]))
+        self.multidispMNACGTButton.grid(row=2, column=5, padx=5, pady=5)
 
-        self.multidispMNACGTButton = Button(self, text="MNACGT", command=lambda: multiDispenseMNACGT(hardware, [1, 1, 1, 1, 1, 1], float(
-            self.volumeToDisp_value.get())))
-        self.multidispMNACGTButton.grid(row=3, column=5, padx=5, pady=5)
+        self.multidispButton = Button(self, text="ACGT", command=lambda : multiDispensePumps(hardware, [0,0]+[float(self.volumeToDisp_value.get()) for i in range(4)]))
+        self.multidispButton.grid(row=3, column=5, padx=5, pady=5)
 
         self.multidispMNButton = Button(self, text="MN",
-                                            command=lambda: multiDispenseMNACGT(hardware, [1, 1, 0, 0, 0, 0], float(
-                                                self.volumeToDisp_value.get())))
+                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(2)]+[0,0,0,0]))
         self.multidispMNButton.grid(row=4, column=5, padx=5, pady=5)
 
-        buffersList=['A','C','G','T','M','N','DB','BB','Buff1','Buff2']
+        channelList=['M', 'N', 'A', 'C','G','T']
+        self.bufferButton = [None] * len(channelList)
+        for buffer in channelList:
+            print(channelList.index(buffer))
+            self.bufferButton[channelList.index(buffer)] = Button(self, text=buffer, command=lambda buffer=buffer: multiDispensePumps(hardware,disp_pattern(channelList.index(buffer),float(self.volumeToDisp_value.get()) )))
+            self.bufferButton[channelList.index(buffer)].grid(row=5 + channelList.index(buffer),column=5,padx=5, pady=5)
+
+        self.initButton= Button(self, text='Init', command=lambda : hardware.init_du(int(self.volumeToDisp_value.get())))
+        self.initButton.grid(row=5 + channelList.index(buffer) + 1,column=5,padx=5, pady=5)
+
+        ##Entry
+        self.timeToDisp_value = StringVar()
+        self.timeToDisp = Entry(self, textvariable=self.timeToDisp_value)
+        self.timeToDisp.grid(row=1, column=6)
+        self.timeToDisp_value.set('0.1')
+
+        buffersList = ['DB', 'BB', 'Buff1', 'Buff2']
         self.bufferButton = [None] * len(buffersList)
         for buffer in buffersList:
-            self.bufferButton[buffersList.index(buffer)] = Button(self, text=buffer, command=lambda buffer=buffer: dispense(hardware,buffer,float(self.volumeToDisp_value.get())))
-            self.bufferButton[buffersList.index(buffer)].grid(row=5 + buffersList.index(buffer),column=5,padx=5, pady=5)
+            self.bufferButton[buffersList.index(buffer)] = Button(self, text=buffer,
+                                                                  command=lambda buffer=buffer: dispense(hardware,
+                                                                                                         buffer, float(
+                                                                          self.volumeToDisp_value.get())))
+            self.bufferButton[buffersList.index(buffer)].grid(row=2 + buffersList.index(buffer), column=6, padx=5,
+                                                              pady=5)
 
         '''GoToWell Block'''
         self.colToGo_value = StringVar()
         self.colToGo = Entry(self, textvariable=self.colToGo_value)
-        self.colToGo.grid(row=1, column=6)
+        self.colToGo.grid(row=1, column=7)
         self.colToGo_value.set('1')
 
         buffersList = ['A', 'C', 'G', 'T', 'M', 'N', 'DB', 'BB', 'Buff1', 'Buff2']
@@ -131,7 +150,7 @@ class MiddleFrame(Frame):
         for buffer in buffersList:
             self.bufferButton2[buffersList.index(buffer)] = Button(self, text=buffer,
                                                                   command=lambda buffer=buffer: goToColumn_Callback(self,hardware,buffer))
-            self.bufferButton2[buffersList.index(buffer)].grid(row=3 + buffersList.index(buffer), column=6, padx=5,
+            self.bufferButton2[buffersList.index(buffer)].grid(row=3 + buffersList.index(buffer), column=7, padx=5,
                                                               pady=5)
 
 '''CALLBACK FUNCTIONS'''
@@ -183,6 +202,12 @@ def goToColumn_Callback(MiddleFrame,hardware,buffer):
     goToWell(hardware,buffer,(colToGo-1)*4+1,0)
     MiddleFrame.colToGo_value.set(colToGo+1)
 
+def disp_pattern(id,vol):
+    print(id)
+    pattern=[0,0,0,0,0,0]
+    pattern[id]=vol
+
+    return pattern
 '''CALLBACKS FOR LEFT FRAME'''
 
 if __name__ == "__main__":
