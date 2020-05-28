@@ -9,6 +9,7 @@ def actionButton_Callback(directCommand):
     hardware=directCommand.parent.hardware
 
     hardware.dispense_units_1[0].initialise_position()
+    #goToWell(hardware,"DB",1,0)
     #multiDispensePumps(hardware,[200,25,25,0,0,0])
     #ElongationAether(hardware,0)
     #hardware.vacuum.start()

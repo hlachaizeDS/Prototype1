@@ -207,8 +207,8 @@ class HardWare(Frame):
 
     def give_positions(self):
         # Returns the positions of all motors
-        names=['xMotor','yMotor','zMotor','stirrerMotor','magnetMotor']
-        motorsParametersInterface = [self.xMotorParametersInterface, self.yMotorParametersInterface, self.zMotorParametersInterface, self.stirrerMotorParametersInterface, self.magnetMotorParametersInterface]
+        names=['xMotor','yMotor','zMotor']
+        motorsParametersInterface = [self.xMotorParametersInterface, self.yMotorParametersInterface, self.zMotorParametersInterface]
         for motorInterface in motorsParametersInterface:
             print (names[motorsParametersInterface.index(motorInterface)] + ' position is ' + str(motorInterface.actual_position))
 
@@ -233,6 +233,31 @@ class HardWare(Frame):
             self.dispense_units_1[du_index].initialise_position()
         else:
             self.dispense_units_2[du_index-3].initialise_position()
+
+    def init_all_du(self):
+
+        #du_index from 0 to 5
+        for du_index in [0,1,2]:
+            self.dispense_units_1[du_index].set_param_init()
+            self.dispense_units_2[du_index].set_param_init()
+        for du_index in [0, 1, 2]:
+            self.dispense_units_1[du_index].push(self.dispense_units_1[du_index].init_forward)
+            self.dispense_units_2[du_index].push(self.dispense_units_1[du_index].init_forward)
+        for du_index in [0, 1, 2]:
+            self.dispense_units_1[du_index].set_param_std()
+            self.dispense_units_2[du_index].set_param_std()
+        for du_index in [0, 1, 2]:
+            self.dispense_units_1[du_index].pull_from_reservoir(self.dispense_units_1[du_index].init_backward)
+            self.dispense_units_2[du_index].pull_from_reservoir(self.dispense_units_1[du_index].init_backward)
+        for du_index in [0, 1, 2]:
+            self.dispense_units_1[du_index].wait_for_pos()
+            self.dispense_units_2[du_index].wait_for_pos()
+        for du_index in [0, 1, 2]:
+            self.dispense_units_1[du_index].motor_parameters.set(1, 0)
+            self.dispense_units_2[du_index].motor_parameters.set(1, 0)
+        for du_index in [0, 1, 2]:
+            self.dispense_units_1[du_index].motor_parameters.set(0, 0)
+            self.dispense_units_2[du_index].motor_parameters.set(0, 0)
 
     def apply_axis_parameters(self,motor_parameters_list, velocity_max, acceleration_max, current_max, current_standby,
                                   deceleration_max, velocity_V1, swap_switches, right_limit_switch_polarity,

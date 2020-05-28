@@ -3,6 +3,9 @@ import time
 from hardware import STIRRING_VELOCITY
 import math
 
+X_A1=100436
+Y_A1=23720
+
 def initialiseMotorList(hardware,motor_list):
 
     '''Gets a list of motors and initialise them in parallel'''
@@ -38,8 +41,8 @@ def goToWell(hardware,element,well,quadrant):
     'Positions of A1 with the up left Lee vann'
     #X_1 = 88822
     #Y_1 = 10518
-    X_1 = 89719
-    Y_1 = 6023
+    X_1 = X_A1
+    Y_1 = Y_A1
 
     if quadrant==1:
         X_1=X_1-2287
@@ -149,8 +152,8 @@ def goToRealWell(hardware,realWell,quadrant):
     #'needlesGoUp(hardware)
 
     'Positions of A1 with the up left Lee vann'
-    X_1 = 89719 -(3*9200)
-    Y_1 = 6023
+    X_1 = X_A1 -(3*9200)
+    Y_1 = Y_A1
 
 
     if quadrant==1:
@@ -186,8 +189,8 @@ def goToRealWell6Nozzles(hardware,realWell,quadrant):
     #'needlesGoUp(hardware)
 
     'Positions of A1 with the up left Lee vann'
-    X_1 = 89719 -(3*9200)
-    Y_1 = 6023
+    X_1 = X_A1 -(3*9200)
+    Y_1 = Y_A1
 
 
     if quadrant==1:
@@ -418,6 +421,9 @@ def multiDispensePumps(hardware,volumes):
 
                 du.push(vol_to_disp)
                 volumes[j+3] -= vol_to_disp
+
+        for du in dus:
+            du.pull(du.pullback)
 
         for du in dus:
             du.zero()
