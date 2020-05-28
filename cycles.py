@@ -4,22 +4,12 @@ import datetime
 import easygui
 
 proteinase=0
-#dispTime = 0.233
-dispTime = 0.43
-dispTime25=0.235
 dispDBTime = 0.12
 dispBBTime = 0.105
 dispBuff1Time=0.155
 dispBuff2Time=0.13
 dispWater50=0.16
 
-dispM=0.41
-dispN=0.41
-
-dispTime25_nuc=0.23
-dispTime25_enzyme=0.185
-dispTime25_enzyme_M=0.205
-dispTime25_enzyme_N=0.36
 
 from quartetControlSave import saveQuartetControlFile,force2digits
 
@@ -1176,6 +1166,40 @@ def dispensePremixesAndEnzymeSep(hardware,time_nuc,time_enz_M,time_enz_N,M_array
             hardware.parent.update()
 
     goToWell(hardware, "thermalCamera", 1, 0)
+
+def dispensePumps(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_array,is384):
+
+    nuclArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy()]
+    'we loop for every position possible'
+    for col in range(0,12,1):
+        for m_well in range(1+18*col,13+(18*col)+1,1):
+            n_well=m_well+1
+            a_well=m_well+2
+            c_well=m_well+3
+            g_well=m_well+4
+            t_well=m_well+5
+            wells=[m_well,n_well,a_well,c_well,g_well,t_well]
+            disp=[0,0,0,0,0,0] #Flag to know if we should dispense
+            for nucl in range(6):
+                #print (plateWellToRealWell(wells[nucl]))
+                if plateWellToRealWell6Nozzles(wells[nucl]) in nuclArrays[nucl]:
+                    disp[nucl]=volumes[nucl]
+                    nuclArrays[nucl].remove(plateWellToRealWell6Nozzles(wells[nucl]))
+            if any(vol!=0 for vol in disp ):
+                if is384:
+                    for i in range(1,5):
+                        goToRealWell6Nozzles(hardware,m_well,i)
+                        multiDispensePumps(hardware,disp)
+                else:
+                    goToRealWell6Nozzles(hardware, m_well, 0)
+                    multiDispensePumps(hardware,disp)
+                    #multiDispense(hardware, disp, time)
+                    # 0.22 for 48uL
+                    # 0.48 for 96uL
+            hardware.parent.update()
+
+    goToWell(hardware, "thermalCamera", 1, 0)
+
 
 def dispenseAllAether(hardware,time_enz,M_array,N_array,A_array,C_array,G_array,T_array,is384):
 

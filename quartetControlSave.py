@@ -3,7 +3,7 @@ import shutil
 import os
 import openpyxl
 
-from cycles import dispTime25_nuc,dispTime25_enzyme,dispDBTime,dispBBTime
+#from cycles import dispTime25_nuc,dispTime25_enzyme,dispDBTime,dispBBTime
 
 def readExpID():
     path="C:\\Users\\Prototype\\PycharmProjects\\OligoPrintVacuum\\ExpID.txt"
