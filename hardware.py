@@ -1,9 +1,9 @@
 MODULE_ADDRESS = 1
-PORT = "COM5"
+PORT = "COM7"
 PORT_2 = "COM5"
 PORT_VACUUM = "COM6"
-PORT_PUMP_1="COM3"
-PORT_PUMP_2="COM4"
+PORT_PUMP_1="COM8"
+PORT_PUMP_2="COM9"
 STALLGUARD_THRESHOLD = 0
 STIRRING_VELOCITY=1050000
 
@@ -28,7 +28,7 @@ class HardWare(Frame):
         self.firstCard=1
         self.secondCard=0
         self.vacuumController=0
-        self.arduino=0
+        self.arduino=1
         self.thermalCam=0   #Will impact rightFrame in guitab1
         self.pump_card_1 = 1
         self.pump_card_2 = 1
@@ -222,10 +222,10 @@ class HardWare(Frame):
         self.bus_stirrer.send(MODULE_ADDRESS, TMCL.commands.Command.SIO, output, 2, value)
 
     def vacValveOpen(self):
-        self.set_output2(6,1)
+        self.set_output(2,1)
 
     def vacValveClose(self):
-        self.set_output2(6, 0)
+        self.set_output(2, 0)
 
     def init_du(self,du_index):
         #du_index from 0 to 5
@@ -246,6 +246,9 @@ class HardWare(Frame):
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].set_param_std()
             self.dispense_units_2[du_index].set_param_std()
+        for du_index in [0, 1, 2]:
+            self.dispense_units_1[du_index].pull(self.dispense_units_1[du_index].pullback)
+            self.dispense_units_2[du_index].pull(self.dispense_units_1[du_index].pullback)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].pull_from_reservoir(self.dispense_units_1[du_index].init_backward)
             self.dispense_units_2[du_index].pull_from_reservoir(self.dispense_units_1[du_index].init_backward)

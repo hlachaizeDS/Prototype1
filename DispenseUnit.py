@@ -22,7 +22,7 @@ class DispenseUnit():
 
         #init
         self.init_forward=110 #ul
-        self.init_backward=self.max_disp+1 #ul
+        self.init_backward=self.max_disp+self.pullback+1 #ul
 
 
     def dispense(self,volume):
@@ -47,7 +47,7 @@ class DispenseUnit():
     def push(self,volume):
         self.wait_for_pos()
         self.open_valve()
-        steps_nb = int(volume * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
+        steps_nb = int((volume+self.pullback) * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
         self.motor.move_relative( steps_nb)
 
     def pull(self,volume):
@@ -99,6 +99,8 @@ class DispenseUnit():
         self.push(self.init_forward)
 
         self.set_param_std()
+
+        self.pull(self.pullback)
 
         self.pull_from_reservoir(self.init_backward)
 

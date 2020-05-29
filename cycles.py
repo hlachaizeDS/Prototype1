@@ -1282,15 +1282,12 @@ def removeSupernatant(hardware,vacuumTime):
 
     goToWell(hardware, 'thermalCamera', 1,0)
 
+    hardware.vacValveOpen()
+
+    wait(hardware, vacuumTime)
     hardware.vacValveClose()
 
-    hardware.vacuum.start()
-    wait(hardware, vacuumTime)
-    hardware.vacuum.stop()
-
-
-    hardware.vacValveOpen()
-    wait(hardware, 5)
+    wait(hardware, 3)
 
     #hardware.set_output(7,1)
     #wait(hardware,10)

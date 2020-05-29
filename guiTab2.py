@@ -31,13 +31,13 @@ class MiddleFrame(Frame):
         hardware = self.parent.parent.children['!mainframetab1'].hardware
 
         # Priming Premix
-        self.primingPremixButton = Button(self, text="Premix 15s", command=lambda: multiDispense(hardware,[1,1,1,1],15))
-        self.primingPremixButton.grid(row=1, column=1, padx=30, pady=5)
+        self.initAllFirstButton = Button(self, text="Init All Pumps", command=lambda: hardware.init_all_du())
+        self.initAllFirstButton.grid(row=1, column=1, padx=30, pady=5)
 
-        # Hit Priming Premix
-        self.hitPrimingPremixButton = Button(self, text="Premix Hit 15s",
-                                             command=lambda: hitPrimingPremix_Callback(hardware))
-        self.hitPrimingPremixButton.grid(row=2, column=1, padx=30, pady=5)
+        # Priming premix
+        self.PrimingPremixButton = Button(self, text="Prime 2mL",
+                                             command=lambda: multiDispensePumps(hardware,[2000,2000,2000,2000,2000,2000]))
+        self.PrimingPremixButton.grid(row=2, column=1, padx=30, pady=5)
 
         # Priming DB
         self.primingDBButton = Button(self, text="DB 10s",
@@ -137,7 +137,7 @@ class MiddleFrame(Frame):
             self.bufferButton[buffersList.index(buffer)] = Button(self, text=buffer,
                                                                   command=lambda buffer=buffer: dispense(hardware,
                                                                                                          buffer, float(
-                                                                          self.volumeToDisp_value.get())))
+                                                                          self.timeToDisp_value.get())))
             self.bufferButton[buffersList.index(buffer)].grid(row=2 + buffersList.index(buffer), column=6, padx=5,
                                                               pady=5)
 
@@ -178,13 +178,11 @@ def vent_Callback(middleFrame,hardware):
 
 def ventOffVacOn_Callback(hardware):
 
-    hardware.vacValveClose()
-    hardware.vacuum.start()
+    hardware.vacValveOpen()
 
 def ventOnVacOff_Callback(hardware):
 
-    hardware.vacuum.stop()
-    hardware.vacValveOpen()
+    hardware.vacValveClose()
 
 def hitPrimingPremix_Callback(hardware):
 

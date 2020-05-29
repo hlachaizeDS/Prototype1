@@ -368,16 +368,16 @@ def dispense(hardware,solution, time):
         card = 1
         output=1
     if solution=="DB":
-        card = 2
+        card = 1
         output=0
     if solution=="BB":
-        card=2
+        card=1
         output=1
     if solution=="Buff1":
         card=2
         output=2
     if solution=="Buff2":
-        card=1
+        card=2
         output=6
 
     if card==1 :
