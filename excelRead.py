@@ -1,6 +1,6 @@
 import xlrd
 
-path = r'C:\Users\Prototype\Desktop\Prototype\Quartet_control.xlsm'
+path = r'C:\Users\Eleanor Hawkins\Desktop\Prototype3\Quartet_Control.xlsm'
 
 #Parameters
 

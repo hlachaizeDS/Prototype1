@@ -222,7 +222,7 @@ class ThermalImageThread:
         try:
             sleep(1.0)
             #if thermalImages are not active, we return
-            if thermalImages==0:
+            if thermalImages==0 or self.parent.parent.hardware.thermalCam==0:
                 return
 
             # If it's just a test we dont take pictures

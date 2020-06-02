@@ -3,8 +3,8 @@ import time
 from hardware import STIRRING_VELOCITY
 import math
 
-X_A1=100436
-Y_A1=23720
+X_A1=118059
+Y_A1=25696
 
 def initialiseMotorList(hardware,motor_list):
 
@@ -91,20 +91,20 @@ def goToWell(hardware,element,well,quadrant):
 
     if element=='safe':
         X_1 = 0
-        Y_1 = 118059
+        Y_1 = 135678
 
     if element=='thermo':
-        X_1=-1047
-        Y_1=6115
+        X_1=0
+        Y_1=135678
 
     if element == "thermalCamera":
         X_1 = 0
-        Y_1 = 118059
+        Y_1 = 135678
 
     if element == "washPrime":
         #X_1 = 167686
-        X_1=182478
-        Y_1 = -23027
+        X_1=185300
+        Y_1 = 0
 
     if element == "premixPrime":
         X_1 = 0

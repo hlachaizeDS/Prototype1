@@ -6,7 +6,7 @@ import openpyxl
 #from cycles import dispTime25_nuc,dispTime25_enzyme,dispDBTime,dispBBTime
 
 def readExpID():
-    path="C:\\Users\\Prototype\\PycharmProjects\\OligoPrintVacuum\\ExpID.txt"
+    path="C:\\Users\\Eleanor Hawkins\\PyCharmProjects\\Prototype3\\ExpID.txt"
     file=open(path,"r")
     number=file.readline()
     file.close()
@@ -21,11 +21,11 @@ def saveQuartetControlFile(title):
     now=datetime.datetime.now()
 
     #original Quartet file
-    original_path="C:\\Users\\Prototype\\Desktop\\Prototype\\Quartet_Control.xlsm"
+    original_path="C:\\Users\\Eleanor Hawkins\\Desktop\\Prototype3\\Quartet_Control.xlsm"
     expID=readExpID()
 
     #new folder path
-    general_path = "G:\\Mon Drive\\0. DNA Script Drive\\3. RD\\RD.2 - DEVELOPMENT\\D.12 - Synthesis Operations\\S.3 - Prototypes\\P1\\Quartets"
+    general_path = "G:\\Mon Drive\\0. DNA Script Drive\\3. RD\\RD.2 - DEVELOPMENT\\D.12 - Synthesis Operations\\S.3 - Prototypes\\P3\\Quartets"
     folder_path=str(now.year)[2:]+ force2digits(now.month)
 
     # new file path
@@ -44,16 +44,17 @@ def saveQuartetControlFile(title):
     shutil.copy(original_path, final_personal_path)
     shutil.copy(original_path, final_all_path)
 
-    for path in [final_personal_path,final_all_path]:
-        workbook = openpyxl.open(path,keep_vba=True)
-        generalSheet = workbook.get_sheet_by_name('General')
-        date = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day)
-        generalSheet.cell(row=3, column=2).value = date
-        generalSheet.cell(row=59, column=2).value = dispTime25_nuc
-        generalSheet.cell(row=60, column=2).value = dispTime25_enzyme
-        generalSheet.cell(row=61, column=2).value = dispDBTime
-        generalSheet.cell(row=62, column=2).value = dispBBTime
-        workbook.save(path)
+    #We don't insert timings anymore
+    # for path in [final_personal_path,final_all_path]:
+    #     workbook = openpyxl.open(path,keep_vba=True)
+    #     generalSheet = workbook.get_sheet_by_name('General')
+    #     date = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day)
+    #     generalSheet.cell(row=3, column=2).value = date
+    #     generalSheet.cell(row=59, column=2).value = dispTime25_nuc
+    #     generalSheet.cell(row=60, column=2).value = dispTime25_enzyme
+    #     generalSheet.cell(row=61, column=2).value = dispDBTime
+    #     generalSheet.cell(row=62, column=2).value = dispBBTime
+    #     workbook.save(path)
 
 def force2digits(number):
     if number<10:
