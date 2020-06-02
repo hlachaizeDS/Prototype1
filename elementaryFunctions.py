@@ -3,7 +3,7 @@ import time
 from hardware import STIRRING_VELOCITY
 import math
 
-X_A1=118059
+X_A1=99563
 Y_A1=25696
 
 def initialiseMotorList(hardware,motor_list):

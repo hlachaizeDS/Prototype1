@@ -25,7 +25,7 @@ def saveQuartetControlFile(title):
     expID=readExpID()
 
     #new folder path
-    general_path = "G:\\Mon Drive\\0. DNA Script Drive\\3. RD\\RD.2 - DEVELOPMENT\\D.12 - Synthesis Operations\\S.3 - Prototypes\\P3\\Quartets"
+    general_path = "G:\\My Drive\\0. DNA Script Drive\\3. RD\\RD.2 - DEVELOPMENT\\D.12 - Synthesis Operations\\S.3 - Prototypes\\P3\\Quartets"
     folder_path=str(now.year)[2:]+ force2digits(now.month)
 
     # new file path

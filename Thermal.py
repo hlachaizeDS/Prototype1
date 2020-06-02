@@ -231,7 +231,7 @@ class ThermalImageThread:
 
 
             sleep(0.5)
-            root_path = "C:\\Users\\Prototype\\Desktop\\Prototype\\Thermal_Camera"
+            root_path = "C:\\Users\\Eleanor Hawkins\\Desktop\\Thermal_Camera"
 
             now = datetime.datetime.now()
 
@@ -248,6 +248,18 @@ class ThermalImageThread:
 
         except:
             print('Couldnt take snapshot')
+
+
+class FakeThermalImageThread:
+
+    def __init__(self):
+        # store the video stream object and output path, then initialize
+        # the most recently read frame, thread for reading frames, and
+        # the thread stop event
+        variable='just to have a variable'
+
+    def snapshot_in_cycle(self, thermalImages, folder_path, cycle, step):
+        variable='snap'
 
 def frameFormatting(frame):
     for pixel in frame:

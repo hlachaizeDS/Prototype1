@@ -19,7 +19,7 @@ def actionButton_Callback(directCommand):
     #FJCodonMap(hardware,0)
     #ElongationCycleSeparatedOneEnz(hardware,0)
     #ElongationCycleSeparatedTwoEnz_384Test(hardware,1)
-    #ElongationCycleSeparatedTwoEnz(hardware, 0)
+    ElongationCycleSeparatedTwoEnz(hardware, 0)
     #ElongationCycleTwoEnzymesWithWater(hardware, 0)
     #ElongationCycleNGS(hardware,0)
     #ElongationTimesTwoEnzymes(hardware,0)

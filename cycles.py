@@ -2,6 +2,7 @@ from elementaryFunctions import *
 from excelRead import *
 import datetime
 import easygui
+from Thermal import FakeThermalImageThread
 
 proteinase=0
 dispDBTime = 0.12
@@ -265,9 +266,11 @@ def ElongationCycleSeparatedTwoEnz(hardware,is384):
     if saveQuartet:
         saveQuartetControlFile(title)
 
-    thermalImages = 1
+    thermalImages = 0
     if thermalImages:
         TT = hardware.parent.rightFrame.thermalThread
+    else:
+        TT=FakeThermalImageThread()
 
     # Set up recording file for thermal snapshots
     now = datetime.datetime.now()
