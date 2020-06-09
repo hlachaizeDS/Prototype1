@@ -219,10 +219,10 @@ class ThermalImageThread:
                 #self.rightFrame.after(50, self.videoLoop)
 
     def snapshot_in_cycle(self,thermalImages,folder_path,cycle,step):
-        try:
+        #try:
             sleep(1.0)
             #if thermalImages are not active, we return
-            if thermalImages==0 or self.parent.parent.hardware.thermalCam==0:
+            if thermalImages==0 or self.rightFrame.parent.hardware.thermalCam==0:
                 return
 
             # If it's just a test we dont take pictures
@@ -231,7 +231,7 @@ class ThermalImageThread:
 
 
             sleep(0.5)
-            root_path = "C:\\Users\\Eleanor Hawkins\\Desktop\\Thermal_Camera"
+            root_path = "C:\\Users\\Eleanor Hawkins\\Desktop\\Prototype3\\Thermal_Camera"
 
             now = datetime.datetime.now()
 
@@ -246,8 +246,8 @@ class ThermalImageThread:
             #imageio.imwrite(final_path+"_Temp.png", self.thermalFrame.astype(np.uint8))
             np.savetxt(final_path + ".csv", self.thermalFrame, delimiter=';', fmt='%.2f')
 
-        except:
-            print('Couldnt take snapshot')
+        #except:
+            #print('Couldnt take snapshot')
 
 
 class FakeThermalImageThread:

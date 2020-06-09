@@ -5,8 +5,8 @@ import easygui
 from Thermal import FakeThermalImageThread
 
 proteinase=0
-dispDBTime = 0.12
-dispBBTime = 0.105
+dispDBTime = 0.14
+dispBBTime = 0.11
 dispBuff1Time=0.155
 dispBuff2Time=0.13
 dispWater50=0.16
@@ -266,7 +266,7 @@ def ElongationCycleSeparatedTwoEnz(hardware,is384):
     if saveQuartet:
         saveQuartetControlFile(title)
 
-    thermalImages = 0
+    thermalImages = 1
     if thermalImages:
         TT = hardware.parent.rightFrame.thermalThread
     else:

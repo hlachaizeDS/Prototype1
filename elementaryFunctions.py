@@ -91,15 +91,15 @@ def goToWell(hardware,element,well,quadrant):
 
     if element=='safe':
         X_1 = 0
-        Y_1 = 135678
+        Y_1 = 117106
 
     if element=='thermo':
         X_1=0
-        Y_1=135678
+        Y_1=117106
 
     if element == "thermalCamera":
         X_1 = 0
-        Y_1 = 135678
+        Y_1 = 117106
 
     if element == "washPrime":
         #X_1 = 167686

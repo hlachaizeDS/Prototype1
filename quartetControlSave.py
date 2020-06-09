@@ -25,12 +25,12 @@ def saveQuartetControlFile(title):
     expID=readExpID()
 
     #new folder path
-    general_path = "G:\\My Drive\\0. DNA Script Drive\\3. RD\\RD.2 - DEVELOPMENT\\D.12 - Synthesis Operations\\S.3 - Prototypes\\P3\\Quartets"
+    general_path = "C:\\Users\\Eleanor Hawkins\\DNA Script\\Thomas YBERT - SYNTHESIS OPERATIONS\\S.5 - P3\\Quartets"
     folder_path=str(now.year)[2:]+ force2digits(now.month)
 
     # new file path
-    personal_folder_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_HL_P1_' + title + '_' + expID
-    file_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + "_HL_P1_" + title + "_" + expID
+    personal_folder_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_HL_P3_' + title + '_' + expID
+    file_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + "_HL_P3_" + title + "_" + expID
 
     #the quartet control will be copied both in its own folder AND in all folder
     os.makedirs(general_path + '\\' + folder_path, exist_ok=True)
@@ -45,16 +45,16 @@ def saveQuartetControlFile(title):
     shutil.copy(original_path, final_all_path)
 
     #We don't insert timings anymore
-    # for path in [final_personal_path,final_all_path]:
-    #     workbook = openpyxl.open(path,keep_vba=True)
-    #     generalSheet = workbook.get_sheet_by_name('General')
-    #     date = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day)
-    #     generalSheet.cell(row=3, column=2).value = date
+    for path in [final_personal_path,final_all_path]:
+         workbook = openpyxl.open(path,keep_vba=True)
+         generalSheet = workbook.get_sheet_by_name('General')
+         date = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day)
+         generalSheet.cell(row=3, column=2).value = date
     #     generalSheet.cell(row=59, column=2).value = dispTime25_nuc
     #     generalSheet.cell(row=60, column=2).value = dispTime25_enzyme
     #     generalSheet.cell(row=61, column=2).value = dispDBTime
     #     generalSheet.cell(row=62, column=2).value = dispBBTime
-    #     workbook.save(path)
+         workbook.save(path)
 
 def force2digits(number):
     if number<10:

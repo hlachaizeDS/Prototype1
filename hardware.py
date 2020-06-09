@@ -29,7 +29,7 @@ class HardWare(Frame):
         self.secondCard=0
         self.vacuumController=0
         self.arduino=1
-        self.thermalCam=0   #Will impact rightFrame in guitab1
+        self.thermalCam=1   #Will impact rightFrame in guitab1
         self.pump_card_1 = 1
         self.pump_card_2 = 1
 
