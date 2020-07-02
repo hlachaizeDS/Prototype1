@@ -35,8 +35,8 @@ class MiddleFrame(Frame):
         self.initAllFirstButton.grid(row=1, column=1, padx=30, pady=5)
 
         # Priming premix
-        self.PrimingPremixButton = Button(self, text="Prime 2mL",
-                                             command=lambda: multiDispensePumps(hardware,[2000,2000,2000,2000,2000,2000]))
+        self.PrimingPremixButton = Button(self, text="Prime 2.5mL",
+                                             command=lambda: multiDispensePumps(hardware,[2500,2500,2500,2500,2500,2500]))
         self.PrimingPremixButton.grid(row=2, column=1, padx=30, pady=5)
 
         # Priming DB

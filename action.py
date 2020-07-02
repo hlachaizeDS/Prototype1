@@ -9,7 +9,7 @@ def actionButton_Callback(directCommand):
     hardware=directCommand.parent.hardware
 
     #dispensePumps(hardware,[25,50,75,90,75,25],[1,2,3,4,5,6,7,8,9],[10],[11],[12],[13],[14],0)
-    #goToWell(hardware,"DB",1,0)
+    #goToWell(hardware,"A",1,1)
     #multiDispensePumps(hardware,[200,25,25,0,0,0])
     #ElongationAether(hardware,0)
     #hardware.vacuum.start()
@@ -20,6 +20,7 @@ def actionButton_Callback(directCommand):
     #ElongationCycleSeparatedOneEnz(hardware,0)
     #ElongationCycleSeparatedTwoEnz_384Test(hardware,1)
     ElongationCycleSeparatedTwoEnz(hardware, 0)
+    #ElongationDegenerate(hardware, 0)
     #ElongationCycleTwoEnzymesWithWater(hardware, 0)
     #ElongationCycleNGS(hardware,0)
     #ElongationTimesTwoEnzymes(hardware,0)

@@ -63,7 +63,7 @@ def splitSequences(sequences,cycle):
 
     return nucleo_arrays
 
-def splitSequencesAether(sequences,cycle):
+def splitSequencesDegenerate(sequences,cycle):
 
     ended_wells = []
     A_wells=[]
@@ -163,12 +163,12 @@ if __name__ == "__main__":
     synthesis_sheet=getExcelSheet(path)
     sequences=getSequences(synthesis_sheet)
     print(sequences)
-    nucleo_arrays=splitSequencesAether(sequences,1)
+    nucleo_arrays=splitSequencesDegenerate(sequences,1)
     print(nucleo_arrays[0])
     print(nucleo_arrays[1])
     print(nucleo_arrays[2])
     print(nucleo_arrays[3])
     print(nucleo_arrays[4])
     #params=getParameters(synthesis_sheet)
-    print(getUsedWells(sequences))
-    print(getActiveWells(sequences,4))
+    #print(getUsedWells(sequences))
+    #print(getActiveWells(sequences,4))

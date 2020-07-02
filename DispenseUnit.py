@@ -17,8 +17,8 @@ class DispenseUnit():
         self.dist_per_full_step=0.01 #mm
         self.radius=3/2
 
-        self.max_disp=90 #ul
-        self.pullback=2 #ul
+        self.max_disp=80 #ul
+        self.pullback=3 #ul
 
         #init
         self.init_forward=110 #ul

@@ -5,8 +5,8 @@ import easygui
 from Thermal import FakeThermalImageThread
 
 proteinase=0
-dispDBTime = 0.14
-dispBBTime = 0.11
+dispDBTime = 0.11
+dispBBTime = 0.09
 dispBuff1Time=0.155
 dispBuff2Time=0.13
 dispWater50=0.16
@@ -373,7 +373,7 @@ def ElongationCycleSeparatedTwoEnz(hardware,is384):
     hardware.arduinoControl.stopHeating()
 
 def ElongationCycleSeparatedTwoEnz_384Test(hardware,is384):
-    wellnumberThreshold=25
+    wellnumberThreshold=49
 
     title = easygui.enterbox("Name of the run ?")
 
@@ -433,8 +433,8 @@ def ElongationCycleSeparatedTwoEnz_384Test(hardware,is384):
         #Premix
         updateCycleLabel(hardware,cycle,"Premix")
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'BefPremix')
-        dispensePremixesAndEnzyme(hardware, dispTime25_nuc, dispTime25_enzyme,upperThreshold([well for well in activeWells if well%2==1],wellnumberThreshold),upperThreshold([well for well in activeWells if well%2==0],wellnumberThreshold), upperThreshold(nucleo_arrays[1],wellnumberThreshold), upperThreshold(nucleo_arrays[2],wellnumberThreshold), upperThreshold(nucleo_arrays[3],wellnumberThreshold), upperThreshold(nucleo_arrays[4],wellnumberThreshold),is384)
-        dispensePremixesAndEnzyme(hardware, dispTime25_nuc/2, dispTime25_enzyme/2,underThreshold([well for well in activeWells if well%2==1],wellnumberThreshold),underThreshold([well for well in activeWells if well%2==0],wellnumberThreshold), underThreshold(nucleo_arrays[1],wellnumberThreshold), underThreshold(nucleo_arrays[2],wellnumberThreshold), underThreshold(nucleo_arrays[3],wellnumberThreshold), underThreshold(nucleo_arrays[4],wellnumberThreshold),is384)
+        dispensePumps(hardware, [enz_vol, enz_vol, nuc_vol, nuc_vol, nuc_vol, nuc_vol],upperThreshold([well for well in activeWells if well%2==1],wellnumberThreshold),upperThreshold([well for well in activeWells if well%2==0],wellnumberThreshold), upperThreshold(nucleo_arrays[1],wellnumberThreshold), upperThreshold(nucleo_arrays[2],wellnumberThreshold), upperThreshold(nucleo_arrays[3],wellnumberThreshold), upperThreshold(nucleo_arrays[4],wellnumberThreshold),is384)
+        dispensePumps(hardware, [enz_vol/2, enz_vol/2, nuc_vol/2, nuc_vol/2, nuc_vol/2, nuc_vol/2],underThreshold([well for well in activeWells if well%2==1],wellnumberThreshold),underThreshold([well for well in activeWells if well%2==0],wellnumberThreshold), underThreshold(nucleo_arrays[1],wellnumberThreshold), underThreshold(nucleo_arrays[2],wellnumberThreshold), underThreshold(nucleo_arrays[3],wellnumberThreshold), underThreshold(nucleo_arrays[4],wellnumberThreshold),is384)
 
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixDisp')
         waitAndStir(hardware, Elong_time)
@@ -490,7 +490,7 @@ def ElongationCycleSeparatedTwoEnz_384Test(hardware,is384):
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
 
-def ElongationAether(hardware,is384):
+def ElongationDegenerate(hardware,is384):
     title = easygui.enterbox("Name of the run ?")
 
     # Save Quartet Control File
@@ -512,15 +512,6 @@ def ElongationAether(hardware,is384):
 
     cycle = int(easygui.enterbox("What cycle do you wanna start at ?"))
 
-    #dispTime = 0.12 * 2  # 0.10pour 20
-    #dispDBTime = 0.06 * 2
-    #dispBBTime = 0.06 * 2
-    #Elong_time=4*60
-    #DBTime=60
-    #BBTime=30
-    #VacuumTime=20
-
-
     while cycle!=0:
 
         updateCycleLabel(hardware, cycle, "")
@@ -529,7 +520,7 @@ def ElongationAether(hardware,is384):
         synthesis_sheet=getExcelSheet(path)
         getParameters(synthesis_sheet)
         sequences=getSequences(synthesis_sheet)
-        [ended_wells,A_wells,C_wells,G_wells,T_wells]=splitSequencesAether(sequences,cycle)
+        [ended_wells,A_wells,C_wells,G_wells,T_wells]=splitSequencesDegenerate(sequences,cycle)
         usedWells=getUsedWells(sequences)
         activeWells=getActiveWells(sequences,cycle)
 
@@ -548,7 +539,7 @@ def ElongationAether(hardware,is384):
         #Premix
         updateCycleLabel(hardware,cycle,"Premix")
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'BefPremix')
-        dispenseAllAether(hardware, dispTime25_enzyme, [[well, 1] for well in activeWells if well % 2 == 1], [[well, 1] for well in activeWells if well % 2 == 0], A_wells, C_wells, G_wells, T_wells, 0)
+        dispenseAllDegenerate(hardware,[enz_vol,enz_vol,nuc_vol,nuc_vol,nuc_vol,nuc_vol],[[well, 1] for well in activeWells if well % 2 == 1],[[well, 1] for well in activeWells if well % 2 == 0], A_wells, C_wells, G_wells, T_wells, is384)
         #The 1 next to enzyme wells is only to make it like the nucs
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixDisp')
         waitAndStir(hardware, Elong_time)
@@ -841,9 +832,15 @@ def dispensePumps(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_arr
                     nuclArrays[nucl].remove(plateWellToRealWell6Nozzles(wells[nucl]))
             if any(vol!=0 for vol in disp ):
                 if is384:
-                    for i in range(1,5):
-                        goToRealWell6Nozzles(hardware,m_well,i)
-                        multiDispensePumps(hardware,disp)
+                    # for i in range(1,5):
+                    #     goToRealWell6Nozzles(hardware,m_well,i)
+                    #     multiDispensePumps(hardware,disp)
+                    for i in range(1,3):
+                        goToRealWell6Nozzles(hardware, m_well, i)
+                        multiDispensePumps(hardware, disp)
+                    for i in range(3,5):
+                        goToRealWell6Nozzles(hardware, m_well, i)
+                        multiDispensePumps(hardware, [v/2 for v in disp])
                 else:
                     goToRealWell6Nozzles(hardware, m_well, 0)
                     multiDispensePumps(hardware,disp)
@@ -855,9 +852,8 @@ def dispensePumps(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_arr
     goToWell(hardware, "thermalCamera", 1, 0)
 
 
-def dispenseAllAether(hardware,time_enz,M_array,N_array,A_array,C_array,G_array,T_array,is384):
+def dispenseAllDegenerate(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_array,is384):
 
-    vol_times=[0.23,0.115,0.076,0.058]
 
     nuclArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy()]
     'we loop for every position possible'
@@ -869,24 +865,21 @@ def dispenseAllAether(hardware,time_enz,M_array,N_array,A_array,C_array,G_array,
             g_well=m_well+4
             t_well=m_well+5
             wells=[m_well,n_well,a_well,c_well,g_well,t_well]
-            disp=[0,0,0,0,0,0] #Flag to know if we should dispense
+            vols=[0,0,0,0,0,0] #Flag to know if we should dispense
             for nucl in range(6):
                 #print (plateWellToRealWell(wells[nucl]))
                 for wellVol in nuclArrays[nucl]:
                     if plateWellToRealWell6Nozzles(wells[nucl])==wellVol[0]:
-                        disp[nucl]=wellVol[1]
+                        vols[nucl]=volumes[nucl]/wellVol[1]
                         nuclArrays[nucl].remove(wellVol)
-            if (1 in disp) or (2 in disp) or (3 in disp) or (4 in disp):
+            if vols!=[0,0,0,0,0,0]:
                 if is384:
                     for i in range(1,5):
                         goToRealWell6Nozzles(hardware,m_well,i)
-                        multiDispenseAether(hardware, disp, time_enz, vol_times[disp[2]-1], vol_times[disp[3]-1], vol_times[disp[4]-1], vol_times[disp[5]-1])
+                        multiDispensePumps(hardware,vols)
                 else:
                     goToRealWell6Nozzles(hardware, m_well, 0)
-                    multiDispenseAether(hardware, disp, time_enz, vol_times[disp[2]-1], vol_times[disp[3]-1], vol_times[disp[4]-1], vol_times[disp[5]-1])
-                    #multiDispense(hardware, disp, time)
-                    # 0.22 for 48uL
-                    # 0.48 for 96uL
+                    multiDispensePumps(hardware,vols)
             hardware.parent.update()
 
     goToWell(hardware, "thermalCamera", 1, 0)
@@ -909,20 +902,38 @@ def dispenseWashes(hardware,time,solution,array,is384):
             #Either we can dispense only once
             if largest_well-smallest_well<4:
                 if is384:
-                    for i in range(1,5):
+                    # for i in range(1,5):
+                    #     goToWell(hardware, solution, min(smallest_well, col * 8 + 5), i)
+                    #     dispense(hardware, solution, time)
+                    for i in range(1,3):
                         goToWell(hardware, solution, min(smallest_well, col * 8 + 5), i)
                         dispense(hardware, solution, time)
+                    for i in range(3,5):
+                        goToWell(hardware, solution, min(smallest_well, col * 8 + 5), i)
+                        dispense(hardware, solution, time/2)
                 else:
                     goToWell(hardware, solution, min(smallest_well, col * 8 + 5), 0)
                     dispense(hardware, solution, time)
             else:
                 if is384:
-                    for i in range(1,5):
+                    # for i in range(1,5):
+                    #     goToWell(hardware, solution, col * 8 + 1, i)
+                    #     dispense(hardware, solution, time)
+                    # for i in range(1,5):
+                    #     goToWell(hardware, solution, col * 8 + 5, i)
+                    #     dispense(hardware, solution, time)
+                    for i in range(1, 3):
                         goToWell(hardware, solution, col * 8 + 1, i)
                         dispense(hardware, solution, time)
-                    for i in range(1,5):
+                    for i in range(3, 5):
+                        goToWell(hardware, solution, col * 8 + 1, i)
+                        dispense(hardware, solution, time/2)
+                    for i in range(1, 3):
                         goToWell(hardware, solution, col * 8 + 5, i)
                         dispense(hardware, solution, time)
+                    for i in range(3, 5):
+                        goToWell(hardware, solution, col * 8 + 5, i)
+                        dispense(hardware, solution, time/2)
                 else:
                     goToWell(hardware,solution,col*8+1,0)
                     dispense(hardware,solution,time)
