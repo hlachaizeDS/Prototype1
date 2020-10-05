@@ -1,5 +1,5 @@
 MODULE_ADDRESS = 1
-PORT = "COM7"
+PORT = "COM3"
 PORT_2 = "COM5"
 PORT_VACUUM = "COM6"
 PORT_PUMP_1="COM9"
@@ -28,10 +28,10 @@ class HardWare(Frame):
         self.firstCard=1
         self.secondCard=0
         self.vacuumController=0
-        self.arduino=1
-        self.thermalCam=1   #Will impact rightFrame in guitab1
-        self.pump_card_1 = 1
-        self.pump_card_2 = 1
+        self.arduino=0
+        self.thermalCam=0   #Will impact rightFrame in guitab1
+        self.pump_card_1 = 0
+        self.pump_card_2 = 0
 
         if self.firstCard :
             #try:
@@ -200,8 +200,10 @@ class HardWare(Frame):
 
         #initialiseMotorList(self, [self.zMotor,self.magnetMotor])
         #self.zMotor.move_absolute_wait(self,9149)
-        initialiseMotorList(self, [self.xMotor,self.yMotor])
-        self.arduinoControl.stopShaking()
+        if self.firstCard:
+            initialiseMotorList(self, [self.xMotor,self.yMotor])
+        if self.arduino:
+            self.arduinoControl.stopShaking()
 
         self.parent.directCommand.initialisationLed.configure(bg='green')
 
