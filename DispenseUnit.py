@@ -4,24 +4,35 @@ import time
 
 
 class DispenseUnit():
-    def __init__(self, parent,motor ,motor_parameters,bus_pump,digOut):
+    def __init__(self, parent,motor ,motor_parameters,bus_pump,digOut,size="small"):
         self.parent = parent
 
         self.motor = motor
         self.motor_parameters = motor_parameters
+
+        self.set_param_std()
 
         self.bus_tmcl=bus_pump
         self.digOut=digOut
 
         self.microsteps=2**6
         self.dist_per_full_step=0.01 #mm
-        self.radius=3/2
 
         self.max_disp=80 #ul
         self.pullback=3 #ul
 
+        if (size=="small"):
+            self.radius = 3 / 2
+            self.max_disp = 80  # ul
+            self.pullback = 3  # ul
+            self.init_forward = 110  # ul
+        elif (size=="big"):
+            self.radius = 4.6 / 2
+            self.max_disp = 200  # ul
+            self.pullback = 10  # ul
+            self.init_forward = 210  # ul
+
         #init
-        self.init_forward=110 #ul
         self.init_backward=self.max_disp+self.pullback+1 #ul
 
 
@@ -87,7 +98,7 @@ class DispenseUnit():
 
     def set_param_std(self):
         self.wait_for_pos()
-        self.motor_parameters.set(6, 130)
+        self.motor_parameters.set(6, 162)
         self.motor_parameters.set(5, 6629278)
         self.motor_parameters.set(17, 6629278)
         self.motor_parameters.set(4, 350000)

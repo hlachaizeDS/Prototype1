@@ -4,6 +4,7 @@ from tkinter import *
 from hardware import *
 from action import actionButton_Callback
 import TMCL
+from cycles_steps import *
 
 
 
@@ -36,18 +37,14 @@ class MiddleFrame(Frame):
 
         # Priming premix
         self.PrimingPremixButton = Button(self, text="Prime 2.5mL",
-                                             command=lambda: multiDispensePumps(hardware,[2500,2500,2500,2500,2500,2500]))
+                                             command=lambda: multiDispensePumps(hardware,[2500,2500,2500,2500,2500,2500,0,0]))
         self.PrimingPremixButton.grid(row=2, column=1, padx=30, pady=5)
 
         # Priming DB
-        self.primingDBButton = Button(self, text="DB 10s",
-                                          command=lambda: primerBuffer_Callback(hardware,"DB"))
-        self.primingDBButton.grid(row=3, column=1, padx=30, pady=5)
+        self.primingWashesButton = Button(self, text="Buffers 5mL",
+                                          command=lambda: multiDispensePumps(hardware,[0,0,0,0,0,0,5000,5000]))
+        self.primingWashesButton.grid(row=3, column=1, padx=30, pady=5)
 
-        ## Priming BB
-        self.primingBBButton = Button(self, text="BB 10s",
-                                          command=lambda: primerBuffer_Callback(hardware,"BB"))
-        self.primingBBButton.grid(row=4, column=1, padx=30, pady=5)
 
         ##Vent 7s
         self.ventButton = Button(self, text="Vent 7s",
@@ -103,20 +100,21 @@ class MiddleFrame(Frame):
         self.volumeToDisp_value.set('25')
 
         self.multidispMNACGTButton = Button(self, text="MNACGT",
-                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(6)]))
+                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(6)]+[0,0]))
         self.multidispMNACGTButton.grid(row=2, column=5, padx=5, pady=5)
 
-        self.multidispButton = Button(self, text="ACGT", command=lambda : multiDispensePumps(hardware, [0,0]+[float(self.volumeToDisp_value.get()) for i in range(4)]))
+        self.multidispButton = Button(self, text="ACGT", command=lambda : multiDispensePumps(hardware, [0,0]+[float(self.volumeToDisp_value.get()) for i in range(4)]+[0,0]))
         self.multidispButton.grid(row=3, column=5, padx=5, pady=5)
 
         self.multidispMNButton = Button(self, text="MN",
-                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(2)]+[0,0,0,0]))
+                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(2)]+[0,0,0,0,0,0]))
         self.multidispMNButton.grid(row=4, column=5, padx=5, pady=5)
 
-        channelList=['M', 'N', 'A', 'C','G','T']
+        channelList=['M', 'N', 'A', 'C','G','T','DB','BB']
+        dividerList=[1,1,1,1,1,1,4,4]
         self.bufferButton = [None] * len(channelList)
         for buffer in channelList:
-            self.bufferButton[channelList.index(buffer)] = Button(self, text=buffer, command=lambda buffer=buffer: multiDispensePumps(hardware,disp_pattern(channelList.index(buffer),float(self.volumeToDisp_value.get()) )))
+            self.bufferButton[channelList.index(buffer)] = Button(self, text=buffer, command=lambda buffer=buffer: multiDispensePumps(hardware,disp_pattern(channelList.index(buffer),float(self.volumeToDisp_value.get())*dividerList[channelList.index(buffer)]) ))
             self.bufferButton[channelList.index(buffer)].grid(row=5 + channelList.index(buffer),column=5,padx=5, pady=5)
 
         self.initButton= Button(self, text='Init', command=lambda : hardware.init_du(int(self.volumeToDisp_value.get())))
@@ -126,20 +124,20 @@ class MiddleFrame(Frame):
                                  command=lambda: hardware.init_all_du())
         self.initAllButton.grid(row=5 + channelList.index(buffer) + 2, column=5, padx=5, pady=5)
         ##Entry
-        self.timeToDisp_value = StringVar()
-        self.timeToDisp = Entry(self, textvariable=self.timeToDisp_value)
-        self.timeToDisp.grid(row=1, column=6)
-        self.timeToDisp_value.set('0.1')
+        # self.timeToDisp_value = StringVar()
+        # self.timeToDisp = Entry(self, textvariable=self.timeToDisp_value)
+        # self.timeToDisp.grid(row=1, column=6)
+        # self.timeToDisp_value.set('0.1')
 
-        buffersList = ['DB', 'BB', 'Buff1', 'Buff2']
-        self.bufferButton = [None] * len(buffersList)
-        for buffer in buffersList:
-            self.bufferButton[buffersList.index(buffer)] = Button(self, text=buffer,
-                                                                  command=lambda buffer=buffer: dispense(hardware,
-                                                                                                         buffer, float(
-                                                                          self.timeToDisp_value.get())))
-            self.bufferButton[buffersList.index(buffer)].grid(row=2 + buffersList.index(buffer), column=6, padx=5,
-                                                              pady=5)
+        # buffersList = ['DB', 'BB', 'Buff1', 'Buff2']
+        # self.bufferButton = [None] * len(buffersList)
+        # for buffer in buffersList:
+        #     self.bufferButton[buffersList.index(buffer)] = Button(self, text=buffer,
+        #                                                           command=lambda buffer=buffer: dispense(hardware,
+        #                                                                                                  buffer, float(
+        #                                                                   self.timeToDisp_value.get())))
+        #     self.bufferButton[buffersList.index(buffer)].grid(row=2 + buffersList.index(buffer), column=6, padx=5,
+        #                                                       pady=5)
 
         '''GoToWell Block'''
         self.colToGo_value = StringVar()
@@ -147,13 +145,58 @@ class MiddleFrame(Frame):
         self.colToGo.grid(row=1, column=7)
         self.colToGo_value.set('1')
 
-        buffersList = ['A', 'C', 'G', 'T', 'M', 'N', 'DB', 'BB', 'Buff1', 'Buff2']
+        buffersList = ['A', 'C', 'G', 'T', 'M', 'N', 'DB', 'BB', 'Buff1', 'Buff2','PosPressure']
         self.bufferButton2 = [None] * len(buffersList)
         for buffer in buffersList:
             self.bufferButton2[buffersList.index(buffer)] = Button(self, text=buffer,
                                                                   command=lambda buffer=buffer: goToColumn_Callback(self,hardware,buffer))
             self.bufferButton2[buffersList.index(buffer)].grid(row=3 + buffersList.index(buffer), column=7, padx=5,
                                                               pady=5)
+
+        '''PositivePressure'''
+        self.posPressTime_value = StringVar()
+        self.posPressTime = Entry(self, textvariable=self.posPressTime_value)
+        self.posPressTime.grid(row=1, column=8)
+        self.posPressTime_value.set('0.3')
+
+        self.posPressDessButton = Button(self, text="P+ Dessalt + Quant",command=lambda: removeSupernatantPosPressure(hardware,"excel",float(self.posPressTime_value.get()),"dessalt",0))
+        self.posPressDessButton .grid(row=2, column=8, padx=5,pady=5)
+
+        self.posPressSynDessButton = Button(self, text="P+ Syn+Dessalt",
+                                         command=lambda: removeSupernatantPosPressure(hardware, "excel", float(
+                                             self.posPressTime_value.get()), "synDessaltStack", 0))
+        self.posPressSynDessButton.grid(row=3, column=8, padx=5, pady=5)
+
+        self.posPressSynButton = Button(self, text="P+ Synthesis",
+                                        command=lambda: removeSupernatantPosPressure(hardware, "excel", float(
+                                            self.posPressTime_value.get()), "synthesis", 0))
+        self.posPressSynButton.grid(row=4, column=8, padx=5, pady=5)
+
+        '''Fill'''
+        self.fillVol_value = StringVar()
+        self.fillVol = Entry(self, textvariable=self.fillVol_value)
+        self.fillVol.grid(row=6, column=8)
+        self.fillVol_value.set('25')
+
+        self.fillVolLabel = Label(self, text="ul to fill", justify="center")
+        self.fillVolLabel.grid(row=6, column=9)
+
+        self.is384_value = StringVar()
+        self.is384 = Entry(self, textvariable=self.is384_value)
+        self.is384.grid(row=7, column=8)
+        self.is384_value.set('1')
+        self.is384flag = Label(self, text="1=384 0=96", justify="center")
+        self.is384flag.grid(row=7, column=9)
+
+        fillList = ['nucs', 'DB', 'BB']
+        self.fillButtons = [None] * len(fillList)
+        for fill in fillList:
+            self.fillButtons[fillList.index(fill)] = Button(self, text=fill,
+                                                                   command=lambda buffer=fill: fillPlate(hardware,buffer,float(self.fillVol_value.get()),float(self.is384_value.get())))
+            self.fillButtons[fillList.index(fill)].grid(row=8 + fillList.index(fill), column=8, padx=5,
+                                                               pady=5)
+        self.PSPWashesButton = Button(self, text="PSP Washes",command=lambda : PSPWashes(hardware, float(self.is384_value.get())))
+        self.PSPWashesButton.grid(row=12,column=8,padx=5,pady=5)
 
 '''CALLBACK FUNCTIONS'''
 
@@ -202,8 +245,10 @@ def goToColumn_Callback(MiddleFrame,hardware,buffer):
     goToWell(hardware,buffer,(colToGo-1)*4+1,0)
     MiddleFrame.colToGo_value.set(colToGo+1)
 
+
+
 def disp_pattern(id,vol):
-    pattern=[0,0,0,0,0,0]
+    pattern=[0,0,0,0,0,0,0,0]
     pattern[id]=vol
 
     return pattern

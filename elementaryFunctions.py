@@ -3,8 +3,11 @@ import time
 from hardware import STIRRING_VELOCITY
 import math
 
-X_A1=100124
-Y_A1=25696
+X_A1=130869
+Y_A1=33916
+
+X_step=9300
+Y_step=9217
 
 def initialiseMotorList(hardware,motor_list):
 
@@ -45,38 +48,38 @@ def goToWell(hardware,element,well,quadrant):
     Y_1 = Y_A1
 
     if quadrant==1:
-        X_1=X_1-2287
-        Y_1=Y_1-2300
+        X_1=X_1-int(X_step/4)
+        Y_1=Y_1-int(Y_step/4)
     if quadrant==2:
-        X_1 = X_1 + 2287
-        Y_1 = Y_1 - 2300
+        X_1 = X_1 + int(X_step/4)
+        Y_1 = Y_1 - int(Y_step/4)
     if quadrant==3:
-        X_1 = X_1 - 2287
-        Y_1 = Y_1 + 2300
+        X_1 = X_1 - int(X_step/4)
+        Y_1 = Y_1 + int(Y_step/4)
     if quadrant==4:
-        X_1 = X_1 + 2287
-        Y_1 = Y_1 + 2300
+        X_1 = X_1 + int(X_step/4)
+        Y_1 = Y_1 + int(Y_step/4)
 
     if element=='A':
         X_1=X_1
         Y_1=Y_1
 
     if element=='M':
-        X_1=X_1+2*9150
+        X_1=X_1+2*X_step
         Y_1=Y_1
 
     if element=='N':
-        X_1=X_1+9150
+        X_1=X_1+X_step
         Y_1=Y_1
 
     if element=='DB':
         'Positions of A1 for DB'
-        X_1= X_1 - 46051
-        Y_1= Y_1 - 9350
+        X_1= X_1 - 36095
+        Y_1= Y_1 - 9642
 
     if element=='BB':
         'Positions of A1 for wash'
-        X_1 = X_1 - 45901
+        X_1 = X_1 - 36095
         Y_1 = Y_1 + 68
 
     if element=='Buff1':
@@ -89,17 +92,26 @@ def goToWell(hardware,element,well,quadrant):
         X_1 = X_1 - 46207
         Y_1 = Y_1 + 19350
 
+    if element=='PosPressure':
+        'Positions of A1 for PosPressure'
+        #X_A1 = 131757
+        #Y_A1 = 33916
+        #X_1 = X_1 - 142800
+        #Y_1 = Y_1 + 14981
+        X_1=-11043
+        Y_1=48897
+
     if element=='safe':
         X_1 = 0
-        Y_1 = 117106
+        Y_1 = 149639
 
     if element=='thermo':
         X_1=0
-        Y_1=117106
+        Y_1=123614
 
     if element == "thermalCamera":
         X_1 = 0
-        Y_1 = 117106
+        Y_1 = 123614
 
     if element == "washPrime":
         #X_1 = 167686
@@ -129,11 +141,11 @@ def goToWell(hardware,element,well,quadrant):
     #     equivalent_well=realWellToPlateWell(1)
     equivalent_well=plateWell
 
-    plateX1=X_1-(3*9200)
+    plateX1=X_1-(3*X_step)
     plateY1=Y_1
 
-    X = plateX1 + ((equivalent_well - 1) % 14) * 9150
-    Y = plateY1 + ((equivalent_well - 1) // 14) * 9200
+    X = plateX1 + ((equivalent_well - 1) % 14) * X_step
+    Y = plateY1 + ((equivalent_well - 1) // 14) * Y_step
     hardware.xMotor.move_absolute(X)
     hardware.yMotor.move_absolute(Y)
     sleep(0.4)
@@ -152,25 +164,24 @@ def goToRealWell(hardware,realWell,quadrant):
     #'needlesGoUp(hardware)
 
     'Positions of A1 with the up left Lee vann'
-    X_1 = X_A1 -(3*9200)
+    X_1 = X_A1 -(3*X_step)
     Y_1 = Y_A1
 
+    if quadrant == 1:
+        X_1 = X_1 - int(X_step / 4)
+        Y_1 = Y_1 - int(Y_step / 4)
+    if quadrant == 2:
+        X_1 = X_1 + int(X_step / 4)
+        Y_1 = Y_1 - int(Y_step / 4)
+    if quadrant == 3:
+        X_1 = X_1 - int(X_step / 4)
+        Y_1 = Y_1 + int(Y_step / 4)
+    if quadrant == 4:
+        X_1 = X_1 + int(X_step / 4)
+        Y_1 = Y_1 + int(Y_step / 4)
 
-    if quadrant==1:
-        X_1=X_1-2287
-        Y_1=Y_1-2300
-    if quadrant==2:
-        X_1 = X_1 + 2287
-        Y_1 = Y_1 - 2300
-    if quadrant==3:
-        X_1 = X_1 - 2287
-        Y_1 = Y_1 + 2300
-    if quadrant==4:
-        X_1 = X_1 + 2287
-        Y_1 = Y_1 + 2300
-
-    X = X_1 + ((realWell - 1) % 14) * 9200
-    Y = Y_1 + ((realWell - 1) // 14) * 9150
+    X = X_1 + ((realWell - 1) % 14) * X_step
+    Y = Y_1 + ((realWell - 1) // 14) * Y_step
     hardware.xMotor.move_absolute(X)
     hardware.yMotor.move_absolute(Y)
     sleep(0.2)
@@ -189,25 +200,24 @@ def goToRealWell6Nozzles(hardware,realWell,quadrant):
     #'needlesGoUp(hardware)
 
     'Positions of A1 with the up left Lee vann'
-    X_1 = X_A1 -(3*9200)
+    X_1 = X_A1 -(3*X_step)
     Y_1 = Y_A1
 
+    if quadrant == 1:
+        X_1 = X_1 - int(X_step / 4)
+        Y_1 = Y_1 - int(Y_step / 4)
+    if quadrant == 2:
+        X_1 = X_1 + int(X_step / 4)
+        Y_1 = Y_1 - int(Y_step / 4)
+    if quadrant == 3:
+        X_1 = X_1 - int(X_step / 4)
+        Y_1 = Y_1 + int(Y_step / 4)
+    if quadrant == 4:
+        X_1 = X_1 + int(X_step / 4)
+        Y_1 = Y_1 + int(Y_step / 4)
 
-    if quadrant==1:
-        X_1=X_1-2287
-        Y_1=Y_1-2300
-    if quadrant==2:
-        X_1 = X_1 + 2287
-        Y_1 = Y_1 - 2300
-    if quadrant==3:
-        X_1 = X_1 - 2287
-        Y_1 = Y_1 + 2300
-    if quadrant==4:
-        X_1 = X_1 + 2287
-        Y_1 = Y_1 + 2300
-
-    X = X_1 + ((realWell - 1) % 18) * 9200
-    Y = Y_1 + ((realWell - 1) // 18) * 9150
+    X = X_1 + ((realWell - 1) % 18) * X_step
+    Y = Y_1 + ((realWell - 1) // 18) * Y_step
     hardware.xMotor.move_absolute(X)
     hardware.yMotor.move_absolute(Y)
     sleep(0.2)
@@ -275,7 +285,7 @@ def waitAndStir(hardware,timeToWait):
 
     goToWell(hardware, 'thermalCamera', 1,0)
 
-    hardware.arduinoControl.startShaking(900)
+    hardware.arduinoControl.startShaking(400)
     wait(hardware,timeToWait)
     hardware.arduinoControl.stopShaking()
 
@@ -325,15 +335,15 @@ def magnetGoDown(hardware):
         return
     hardware.magnetMotor.move_absolute_wait(hardware, -642511)
 
-def needlesGoDown(hardware):
+def pressureGoDown(hardware):
     if hardware.parent.directCommand.stopButton_value.get()==1:
         return
-    hardware.zMotor.move_absolute_wait(hardware,-250877)
+    hardware.posPressure.goDown('dessalt')
 
-def needlesGoUp(hardware):
+def pressureGoUp(hardware):
     if hardware.parent.directCommand.stopButton_value.get()==1:
         return
-    hardware.zMotor.move_absolute_wait(hardware, 9149)
+    hardware.posPressure.goUp()
 
 def aspirate(hardware,time):
     if hardware.parent.directCommand.stopButton_value.get()==1:
@@ -395,7 +405,7 @@ def multiDispensePumps(hardware,volumes):
     pullback=3  #uls
 
     volumes=volumes.copy()
-    while volumes!=[0,0,0,0,0,0]:
+    while volumes!=[0,0,0,0,0,0,0,0]:
 
         dus=[]
         for i in range(3):
@@ -421,6 +431,18 @@ def multiDispensePumps(hardware,volumes):
 
                 du.push(vol_to_disp)
                 volumes[j+3] -= vol_to_disp
+
+        for k in range(2):
+            if volumes[k+6] != 0:
+                du = hardware.dispense_units_3[k]
+                dus.append(du)
+                if volumes[k+6] <= du.max_disp:
+                    vol_to_disp = volumes[k+6]
+                else:
+                    vol_to_disp = du.max_disp
+
+                du.push(vol_to_disp)
+                volumes[k+6] -= vol_to_disp
 
         for du in dus:
             du.pull(du.pullback)

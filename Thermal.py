@@ -14,7 +14,7 @@ from PIL import Image, ImageTk
 import datetime
 import os
 from time import *
-
+from elementaryFunctions import goToWell
 
 __all__ = ['ThermalImage', 'ThermalImageParams', 'default_TheramlImageParams']
 
@@ -229,9 +229,11 @@ class ThermalImageThread:
             if (folder_path[len(folder_path) - 4:] == "test"):
                 return
 
+            #We go to thermal cam pos
+            goToWell(self.rightFrame.parent.hardware,'thermalCamera',1,0)
 
-            sleep(0.5)
-            root_path = "C:\\Users\\Eleanor Hawkins\\Desktop\\Prototype3\\Thermal_Camera"
+            sleep(1)
+            root_path = "C:\\Users\\Prototype 4\\Desktop\\Prototype4\\Thermal_Camera"
 
             now = datetime.datetime.now()
 

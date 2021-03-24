@@ -2,8 +2,9 @@ MODULE_ADDRESS = 1
 PORT = "COM3"
 PORT_2 = "COM5"
 PORT_VACUUM = "COM6"
-PORT_PUMP_1="COM9"
-PORT_PUMP_2="COM8"
+PORT_PUMP_1="COM4"
+PORT_PUMP_2="COM5"
+PORT_PUMP_3="COM6"
 STALLGUARD_THRESHOLD = 0
 STIRRING_VELOCITY=1050000
 
@@ -18,6 +19,7 @@ from thermometre import *
 #from thermalCamera import *
 from arduinoControl import *
 from DispenseUnit import *
+from PosPressure import*
 
 
 
@@ -28,10 +30,12 @@ class HardWare(Frame):
         self.firstCard=1
         self.secondCard=0
         self.vacuumController=0
-        self.arduino=0
-        self.thermalCam=0   #Will impact rightFrame in guitab1
-        self.pump_card_1 = 0
-        self.pump_card_2 = 0
+        self.arduino=1
+        self.positive_pressure=1
+        self.thermalCam=1   #Will impact rightFrame in guitab1
+        self.pump_card_1 = 1
+        self.pump_card_2 = 1
+        self.pump_card_3 = 1
 
         if self.firstCard :
             #try:
@@ -49,18 +53,19 @@ class HardWare(Frame):
 
                 stallguard_value = 30  # -64..+63
                 stallguard_minimum_speed = 5000  # 0...7999774
-                current_max = [150, 200, 30, 255, 60]  # 0..255
+                current_max = [150, 200, 120, 255, 60]  # 0..255
                 current_standby = [20, 50, 8, 25, 8]  # 0..255
-                acceleration_max = [1000000, 100000000, 20000000, 400000, 500000]  # 0...7629278
+                acceleration_max = [3629278, 3629278, 7629278, 400000, 500000]  # 0...7629278
                 deceleration_max = acceleration_max  # 0...7629278
-                reference_type = [1, 1, 1, 1, 65]
+                reference_type = [1, 1, 2, 1, 65]
                 swap_switches = [0, 0, 1, 0, 0]
                 right_limit_switch_polarity = [0, 0, 0, 0, 1]
                 left_limit_switch_polarity = [0, 0, 0, 0, 0]
                 reference_search_velocity = [50000, 50000, 150000, 100000, 100000]
                 precise_reference_search_velocity = [5000, 5000, 5000, 15000, 5000]
-                velocity_max = [400000, 400000, 2000000, STIRRING_VELOCITY, 300000]  # 0...7999774
+                velocity_max = [400000, 400000, 200000, STIRRING_VELOCITY, 300000]  # 0...7999774
                 velocity_V1 = 0  # the target velocity to attain before going to a second phase of velocity
+                microsteps = [8,8,6]
                 # Disables the feature if set to 0
 
                 motors = [self.xMotor, self.yMotor, self.zMotor]
@@ -81,11 +86,13 @@ class HardWare(Frame):
                     motor.set(193, reference_type[motorsParametersInterface.index(motor)])
                     motor.set(194, reference_search_velocity[motorsParametersInterface.index(motor)])
                     motor.set(195, precise_reference_search_velocity[motorsParametersInterface.index(motor)])
+                    motor.set(140, microsteps[motorsParametersInterface.index(motor)])
 
                     digitalOutputsNb2 = 8
                     for i in range(digitalOutputsNb2):
                         self.set_output(i, 0)
 
+                initialiseMotorList(self,[self.zMotor])
 
             #except  SerialException:
              #   print ("Port " + PORT + " not Found")
@@ -119,6 +126,9 @@ class HardWare(Frame):
         if self.arduino:
             self.arduinoControl=ArduinoControl(self)
             self.arduinoControl.stopShaking()
+
+        if self.positive_pressure:
+            self.posPressure=PosPressure(self,self.zMotor,1)
 
         if self.pump_card_1 :
 
@@ -194,6 +204,44 @@ class HardWare(Frame):
             for i in range(3):
                 self.dispense_units_2.append(DispenseUnit(self,self.motors_pump_2[i],self.motors_parameters_pump_2[i],self.bus_pump_2,i))
 
+
+        if self.pump_card_3 :
+
+            serial_port_pump_2 = Serial(PORT_PUMP_3, 9600)
+            self.bus_pump_3 = TMCL.connect(serial_port_pump_2)
+
+            self.motors_pump_3=[]
+            self.motors_parameters_pump_3=[]
+            for i in range(3):
+                self.motors_pump_3.append(self.bus_pump_3.get_motor(MODULE_ADDRESS,i))
+                self.motors_parameters_pump_3.append(TMCL.motor.AxisParameterInterface(self.motors_pump_3[-1]))
+
+            stallguard_value = 30  # -64..+63
+            stallguard_minimum_speed = 5000  # 0...7999774
+            current_max = [130 for i in range(3)]   # 0..255
+            current_standby = [8 for i in range(3)]   # 0..255
+            acceleration_max = [6629278 for i in range(3)]  # 0...7629278
+            deceleration_max = acceleration_max  # 0...7629278
+            reference_type = [65,65,65]
+            swap_switches = [0,0,0]
+            right_limit_switch_polarity = [0,0,0]
+            left_limit_switch_polarity = [0,0,0]
+            reference_search_velocity = [100000 for i in range(3)]
+            precise_reference_search_velocity = [5000 for i in range(3)]
+            velocity_max = [350000 for i in range(3)]
+            microsteps = [6 for i in range(3)]
+            velocity_V1=0
+
+            self.apply_axis_parameters(self.motors_parameters_pump_3, velocity_max, acceleration_max, current_max, current_standby,
+                                       deceleration_max, velocity_V1, swap_switches, right_limit_switch_polarity,
+                                       left_limit_switch_polarity, reference_type,reference_search_velocity,
+                                       precise_reference_search_velocity, microsteps
+                                       )
+
+            self.dispense_units_3=[]
+            for i in range(3):
+                self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[i],self.motors_parameters_pump_3[i],self.bus_pump_3,i,"big"))
+
     def initialisation(self):
 
         self.parent.directCommand.initialisationLed.configure(bg='red')
@@ -201,6 +249,7 @@ class HardWare(Frame):
         #initialiseMotorList(self, [self.zMotor,self.magnetMotor])
         #self.zMotor.move_absolute_wait(self,9149)
         if self.firstCard:
+            initialiseMotorList(self, [self.zMotor])
             initialiseMotorList(self, [self.xMotor,self.yMotor])
         if self.arduino:
             self.arduinoControl.stopShaking()
@@ -229,12 +278,20 @@ class HardWare(Frame):
     def vacValveClose(self):
         self.set_output(2, 0)
 
+    def pressureOpen(self):
+        self.set_output(1,1)
+
+    def pressureClose(self):
+        self.set_output(1, 0)
+
     def init_du(self,du_index):
         #du_index from 0 to 5
         if du_index in [0,1,2]:
             self.dispense_units_1[du_index].initialise_position()
-        else:
+        elif du_index in [3,4,5]:
             self.dispense_units_2[du_index-3].initialise_position()
+        else:
+            self.dispense_units_3[du_index - 6].initialise_position()
 
     def init_all_du(self):
 
@@ -242,27 +299,35 @@ class HardWare(Frame):
         for du_index in [0,1,2]:
             self.dispense_units_1[du_index].set_param_init()
             self.dispense_units_2[du_index].set_param_init()
+            self.dispense_units_3[du_index].set_param_init()
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].push(self.dispense_units_1[du_index].init_forward)
             self.dispense_units_2[du_index].push(self.dispense_units_1[du_index].init_forward)
+            self.dispense_units_3[du_index].push(self.dispense_units_1[du_index].init_forward)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].set_param_std()
             self.dispense_units_2[du_index].set_param_std()
+            self.dispense_units_3[du_index].set_param_std()
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].pull(self.dispense_units_1[du_index].pullback)
             self.dispense_units_2[du_index].pull(self.dispense_units_1[du_index].pullback)
+            self.dispense_units_3[du_index].pull(self.dispense_units_1[du_index].pullback)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].pull_from_reservoir(self.dispense_units_1[du_index].init_backward)
             self.dispense_units_2[du_index].pull_from_reservoir(self.dispense_units_1[du_index].init_backward)
+            self.dispense_units_3[du_index].pull_from_reservoir(self.dispense_units_1[du_index].init_backward)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].wait_for_pos()
             self.dispense_units_2[du_index].wait_for_pos()
+            self.dispense_units_3[du_index].wait_for_pos()
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].motor_parameters.set(1, 0)
             self.dispense_units_2[du_index].motor_parameters.set(1, 0)
+            self.dispense_units_3[du_index].motor_parameters.set(1, 0)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].motor_parameters.set(0, 0)
             self.dispense_units_2[du_index].motor_parameters.set(0, 0)
+            self.dispense_units_3[du_index].motor_parameters.set(0, 0)
 
     def apply_axis_parameters(self,motor_parameters_list, velocity_max, acceleration_max, current_max, current_standby,
                                   deceleration_max, velocity_V1, swap_switches, right_limit_switch_polarity,

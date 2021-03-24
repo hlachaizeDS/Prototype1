@@ -1,6 +1,6 @@
 import xlrd
 
-path = r'C:\Users\Eleanor Hawkins\Desktop\Prototype3\Quartet_Control.xlsm'
+path = r'C:\Users\Prototype 4\Desktop\Prototype4\Quartet_Control.xlsm'
 
 #Parameters
 
@@ -8,6 +8,8 @@ stirVel=0
 firstRemoval=0
 atTheEnd=0
 PremixVolume=0
+NucsVolume=0
+EBVolume=0
 DBVolume1=0
 DBVolume2=0
 WashVolume=0

@@ -106,36 +106,41 @@ class DirectCommand(Frame):
                                            command=lambda: positionsButton_CallBack(self))
         self.PositionsButton.grid(row=1,column=2, columnspan=2, padx=5, pady=5)
         #UP
-        self.needlesLabel = Label(self, text="Needles")
+        self.needlesLabel = Label(self, text="Positive Pressure")
         self.needlesLabel.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
         self.goUpButton_value = IntVar()
         self.goUpButton = Checkbutton(self, text="UP", command=lambda: goButton_CallBack(self,"goUp"),indicatoron=0, variable=self.goUpButton_value)
-        self.goUpButton.grid(row=3, column=0,columnspan=2, padx=5, pady=5)
+        self.goUpButton.grid(row=3, column=0,columnspan=2, padx=5, pady=5,sticky='e')
         #DOWN
         self.goDownButton_value = IntVar()
         self.goDownButton = Checkbutton(self, text="DOWN", command=lambda: goButton_CallBack(self,"goDown"), indicatoron=0,variable=self.goDownButton_value)
         self.goDownButton.grid(row=4, column=0,columnspan=2,padx=5,pady=5,sticky='e')
 
-        # BOTTOM NEEDLES
-        self.goBottomNeedles = Button(self, text="BOT", font=('Helvetica', '7'),
-                                        command=lambda: needlesGoDown(self.parent.hardware))
-        self.goBottomNeedles.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="w")
+        # BOTTOM Pressure
+        self.goBottomPressure = Button(self, text="BOT", font=('Helvetica', '7'),
+                                        command=lambda: pressureGoDown(self.parent.hardware))
+        self.goBottomPressure.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="w")
 
-        # UP MAGNET
-        self.magnetLabel=Label(self,text="Magnet")
-        self.magnetLabel.grid(row=2, column=2, columnspan=2, padx=5, pady=5)
-        self.goUpMagnetButton_value = IntVar()
-        self.goUpMagnetButton = Checkbutton(self, text="UP", command=lambda: goButton_CallBack(self, "goUpMagnet"), indicatoron=0,
-                                      variable=self.goUpMagnetButton_value)
-        self.goUpMagnetButton.grid(row=3, column=3, columnspan=1, padx=5, pady=5,sticky="w")
-        # TOP MAGNET
-        self.goTopMagnetButton = Button(self, text="TOP",font=('Helvetica', '7'), command=lambda: magnetGoUp(self.parent.hardware))
-        self.goTopMagnetButton.grid(row=3, column=3, columnspan=1, padx=5, pady=5,sticky="e")
-        # DOWN MAGNET
-        self.goDownMagnetButton_value = IntVar()
-        self.goDownMagnetButton = Checkbutton(self, text="DOWN", command=lambda: goButton_CallBack(self, "goDownMagnet"),
-                                        indicatoron=0, variable=self.goDownMagnetButton_value)
-        self.goDownMagnetButton.grid(row=4, column=2, columnspan=2, padx=5, pady=5)
+        # TOP Pressure
+        self.goTopPressureButton = Button(self, text="TOP", font=('Helvetica', '7'),
+                                        command=lambda: pressureGoUp(self.parent.hardware))
+        self.goTopPressureButton.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="e")
+
+        # # UP MAGNET
+        # self.magnetLabel=Label(self,text="Magnet")
+        # self.magnetLabel.grid(row=2, column=2, columnspan=2, padx=5, pady=5)
+        # self.goUpMagnetButton_value = IntVar()
+        # self.goUpMagnetButton = Checkbutton(self, text="UP", command=lambda: goButton_CallBack(self, "goUpMagnet"), indicatoron=0,
+        #                               variable=self.goUpMagnetButton_value)
+        # self.goUpMagnetButton.grid(row=3, column=3, columnspan=1, padx=5, pady=5,sticky="w")
+        # # TOP MAGNET
+        # self.goTopMagnetButton = Button(self, text="TOP",font=('Helvetica', '7'), command=lambda: magnetGoUp(self.parent.hardware))
+        # self.goTopMagnetButton.grid(row=3, column=3, columnspan=1, padx=5, pady=5,sticky="e")
+        # # DOWN MAGNET
+        # self.goDownMagnetButton_value = IntVar()
+        # self.goDownMagnetButton = Checkbutton(self, text="DOWN", command=lambda: goButton_CallBack(self, "goDownMagnet"),
+        #                                 indicatoron=0, variable=self.goDownMagnetButton_value)
+        # self.goDownMagnetButton.grid(row=4, column=2, columnspan=2, padx=5, pady=5)
         #RIGHT
         self.goRightButton_value=IntVar()
         self.goRightButton = Checkbutton(self, text="RIGHT", command=lambda: goButton_CallBack(self,"goRight"), indicatoron=0,variable=self.goRightButton_value)
@@ -244,15 +249,15 @@ def goButton_CallBack(directCommand,button):
     elif button == "goUp":
         value = directCommand.goUpButton_value.get()
         motor = directCommand.parent.hardware.zMotor
-        velocity = VELOCITY*3
-        sens = "left"
+        velocity = VELOCITY*6
+        sens = "right"
         oppositeButtonValue = directCommand.goDownButton_value
 
     elif button == "goDown":
         value = directCommand.goDownButton_value.get()
         motor = directCommand.parent.hardware.zMotor
-        velocity = VELOCITY*3
-        sens = "right"
+        velocity = VELOCITY*6
+        sens = "left"
         oppositeButtonValue = directCommand.goUpButton_value
 
     elif button == "goUpMagnet":
@@ -291,7 +296,7 @@ def stirring_Callback(directCommand):
     #Turns on and off digital Ouputs
     value = directCommand.stirringButton_value.get()
     if value:
-        directCommand.parent.hardware.arduinoControl.startShaking(900)
+        directCommand.parent.hardware.arduinoControl.startShaking(260)
     else:
         directCommand.parent.hardware.arduinoControl.stopShaking()
 

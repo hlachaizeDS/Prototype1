@@ -1,8 +1,8 @@
-from elementaryFunctions import *
-from excelRead import *
+from cycles_steps import *
 import datetime
 import easygui
 from Thermal import FakeThermalImageThread
+from quartetControlSave import saveQuartetControlFile,force2digits
 
 proteinase=0
 dispDBTime = 0.11
@@ -15,148 +15,21 @@ enz_vol=25
 nuc_vol=25
 
 
-from quartetControlSave import saveQuartetControlFile,force2digits
-
-def ElongationCycle(hardware,is384):
-    title = easygui.enterbox("Name of the run ?")
-
-    thermalImages=1
-    if thermalImages:
-        TT=hardware.parent.rightFrame.thermalThread
-
-    # Save Quartet Control File
-    saveQuartet = int(easygui.enterbox("Do you want to save quartet control file ? (1 yes, 0 No)"))
-    if saveQuartet:
-        saveQuartetControlFile(title)
-
-    # Set up recording file for thermal snapshots
-    now = datetime.datetime.now()
-    folder_path = str(now.year) + force2digits(now.month) + '\\' + str(now.year) + force2digits(
-        now.month) + force2digits(now.day) + '_' + force2digits(now.hour) + force2digits(now.minute) + force2digits(
-        now.second) + "_" + title
-
-    TT.snapshot_in_cycle(thermalImages, folder_path, 1, 'BeforeAnything')
-
-    cycle = int(easygui.enterbox("What cycle do you wanna start at ?"))
-
-    #dispTime = 0.12 * 2  # 0.10pour 20
-    #dispDBTime = 0.06 * 2
-    #dispBBTime = 0.06 * 2
-    #Elong_time=4*60
-    #DBTime=60
-    #BBTime=30
-    #VacuumTime=20
-
-
-    while cycle!=0:
-
-        updateCycleLabel(hardware,cycle,"")
-
-
-        # We read the excel and get the parameters back
-        synthesis_sheet=getExcelSheet(path)
-        getParameters(synthesis_sheet)
-        sequences=getSequences(synthesis_sheet)
-        nucleo_arrays=splitSequences(sequences,cycle)
-        usedWells=getUsedWells(sequences)
-        activeWells=getActiveWells(sequences,cycle)
-
-        #print(nucleo_arrays)
-
-        if (cycle==1):
-            updateCycleLabel(hardware, cycle, "First Wash")
-            removeSupernatant(hardware, VacuumTime)
-
-            dispenseWashes(hardware, dispBBTime, 'BB', usedWells, is384)
-
-            waitAndStir(hardware, BBTime)
-            removeSupernatant(hardware, VacuumTime)
-
-
-        #Premix
-        updateCycleLabel(hardware,cycle,"Premix")
-        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'BefPremix')
-        dispensePremixes(hardware, dispTime, nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],is384)
-        for wellM in nucleo_arrays[5]:
-            goToWell(hardware,"M",wellM,0)
-            dispense(hardware,"M",dispM)
-        for wellN in nucleo_arrays[6]:
-            goToWell(hardware,"N",wellN,0)
-            dispense(hardware,"N",dispN)
-        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixDisp')
-        waitAndStir(hardware, Elong_time)
-        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixInc')
-        removeSupernatant(hardware, VacuumTime)
-        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixVac')
-
-        if (proteinase==1):
-            if (cycle%25==0):
-                print('Proteinase')
-                dispenseWashes(hardware, dispBuff1Time, 'Buff1', usedWells, is384)
-                TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDProtDisp')
-                waitAndStir(hardware, 60)
-                TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftProtInc')
-
-                removeSupernatant(hardware, VacuumTime)
-                TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftProtVac')
-
-        #DB1
-        updateCycleLabel(hardware,cycle,"DB1")
-        dispenseWashes(hardware, dispDBTime, 'DB', usedWells, is384)
-        TT.snapshot_in_cycle(thermalImages,folder_path, cycle, 'AftDB1Disp')
-        waitAndStir(hardware, DBTime)
-        TT.snapshot_in_cycle(thermalImages,folder_path, cycle, 'AftDB1Inc')
-
-        removeSupernatant(hardware, VacuumTime)
-        TT.snapshot_in_cycle(thermalImages,folder_path, cycle, 'AftDB1Vac')
-
-        #DB2
-        updateCycleLabel(hardware, cycle, "DB2")
-        dispenseWashes(hardware, dispDBTime, 'DB', usedWells, is384)
-        TT.snapshot_in_cycle(thermalImages,folder_path, cycle, 'AftDB2Disp')
-        waitAndStir(hardware, DBTime)
-        TT.snapshot_in_cycle(thermalImages,folder_path, cycle, 'AftDB2Inc')
-
-        removeSupernatant(hardware, VacuumTime)
-        TT.snapshot_in_cycle(thermalImages,folder_path, cycle, 'AftDB2Vac')
-
-        #Wash
-        updateCycleLabel(hardware, cycle, "Wash")
-        dispenseWashes(hardware, dispBBTime, 'BB', usedWells,is384)
-        TT.snapshot_in_cycle(thermalImages,folder_path, cycle, 'AftBBDisp')
-        waitAndStir(hardware, BBTime)
-        TT.snapshot_in_cycle(thermalImages,folder_path, cycle, 'AftBBInc')
-
-        removeSupernatant(hardware, VacuumTime)
-        TT.snapshot_in_cycle(thermalImages,folder_path, cycle, 'AftBBVac')
-
-        #We carry on with next cycle or we end the loop
-        nucleo_arrays_nextcycle=splitSequences(sequences,cycle+1)
-        if len(nucleo_arrays_nextcycle[0])==len(sequences):
-            cycle=0
-        else:
-            cycle+=1
-
-    dispenseWashes(hardware, dispBBTime, 'BB', usedWells,is384)
-
-    goToWell(hardware, 'thermalCamera', 1,0)
-
-    updateCycleLabel(hardware, cycle, "Synthesis End")
-
-    hardware.arduinoControl.stopHeating()
 
 
 def ElongationCycleSeparatedOneEnz(hardware,is384):
     title = easygui.enterbox("Name of the run ?")
 
-    thermalImages = 1
-    if thermalImages:
-        TT = hardware.parent.rightFrame.thermalThread
-
     # Save Quartet Control File
     saveQuartet = int(easygui.enterbox("Do you want to save quartet control file ? (1 yes, 0 No)"))
     if saveQuartet:
         saveQuartetControlFile(title)
+
+    thermalImages = 1
+    if thermalImages:
+        TT = hardware.parent.rightFrame.thermalThread
+    else:
+        TT=FakeThermalImageThread()
 
     # Set up recording file for thermal snapshots
     now = datetime.datetime.now()
@@ -179,8 +52,7 @@ def ElongationCycleSeparatedOneEnz(hardware,is384):
 
     while cycle!=0:
 
-        updateCycleLabel(hardware,cycle,"")
-
+        updateCycleLabel(hardware, cycle, "")
 
         # We read the excel and get the parameters back
         synthesis_sheet=getExcelSheet(path)
@@ -191,21 +63,24 @@ def ElongationCycleSeparatedOneEnz(hardware,is384):
         activeWells=getActiveWells(sequences,cycle)
 
         #print(nucleo_arrays)
+        enz_vol=EBVolume
+        nuc_vol=NucsVolume
 
         if (cycle==1):
-            updateCycleLabel(hardware, cycle, "First Wash")
             removeSupernatant(hardware, VacuumTime)
 
-            dispenseWashes(hardware, dispBBTime, 'BB', usedWells, is384)
+            dispenseWashes(hardware, BBVolume2, 'BB', usedWells, is384)
 
             waitAndStir(hardware, BBTime)
             removeSupernatant(hardware, VacuumTime)
 
 
+
         #Premix
         updateCycleLabel(hardware,cycle,"Premix")
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'BefPremix')
-        dispensePremixesAndEnzyme(hardware, dispTime25_nuc, dispTime25_enzyme,activeWells,nucleo_arrays[6], nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],is384)
+
+        dispensePumps(hardware, [enz_vol,nuc_vol,nuc_vol,nuc_vol,nuc_vol,nuc_vol], activeWells, nucleo_arrays[6], nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],is384)
 
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixDisp')
         waitAndStir(hardware, Elong_time)
@@ -213,9 +88,11 @@ def ElongationCycleSeparatedOneEnz(hardware,is384):
         removeSupernatant(hardware, VacuumTime)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixVac')
 
+
+
         #DB1
-        updateCycleLabel(hardware,cycle,"DB1")
-        dispenseWashes(hardware, dispDBTime, 'DB', usedWells, is384)
+        updateCycleLabel(hardware, cycle, "DB1")
+        dispenseWashes(hardware, DBVolume1, 'DB', usedWells, is384)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Disp')
         waitAndStir(hardware, DBTime)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Inc')
@@ -225,7 +102,7 @@ def ElongationCycleSeparatedOneEnz(hardware,is384):
 
         #DB2
         updateCycleLabel(hardware, cycle, "DB2")
-        dispenseWashes(hardware, dispDBTime, 'DB', usedWells, is384)
+        dispenseWashes(hardware, DBVolume2, 'DB', usedWells, is384)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Disp')
         waitAndStir(hardware, DBTime)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Inc')
@@ -235,7 +112,7 @@ def ElongationCycleSeparatedOneEnz(hardware,is384):
 
         #Wash
         updateCycleLabel(hardware, cycle, "Wash")
-        dispenseWashes(hardware, dispBBTime, 'BB', usedWells,is384)
+        dispenseWashes(hardware, BBVolume2, 'BB', usedWells,is384)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBDisp')
         waitAndStir(hardware, BBTime)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBInc')
@@ -250,11 +127,10 @@ def ElongationCycleSeparatedOneEnz(hardware,is384):
         else:
             cycle+=1
 
-    dispenseWashes(hardware, dispBBTime, 'BB', usedWells,is384)
+    dispenseWashes(hardware, BBVolume2, 'BB', usedWells,is384)
 
     goToWell(hardware, 'thermalCamera', 1,0)
-    updateCycleLabel(hardware, cycle, "Synthesis end")
-
+    updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
 
 
@@ -304,11 +180,13 @@ def ElongationCycleSeparatedTwoEnz(hardware,is384):
         activeWells=getActiveWells(sequences,cycle)
 
         #print(nucleo_arrays)
+        enz_vol = EBVolume
+        nuc_vol = NucsVolume
 
         if (cycle==1):
             removeSupernatant(hardware, VacuumTime)
 
-            dispenseWashes(hardware, dispBBTime, 'BB', usedWells, is384)
+            dispenseWashes(hardware, BBVolume2, 'BB', usedWells, is384)
 
             waitAndStir(hardware, BBTime)
             removeSupernatant(hardware, VacuumTime)
@@ -331,7 +209,7 @@ def ElongationCycleSeparatedTwoEnz(hardware,is384):
 
         #DB1
         updateCycleLabel(hardware, cycle, "DB1")
-        dispenseWashes(hardware, dispDBTime, 'DB', usedWells, is384)
+        dispenseWashes(hardware, DBVolume1, 'DB', usedWells, is384)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Disp')
         waitAndStir(hardware, DBTime)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Inc')
@@ -341,7 +219,7 @@ def ElongationCycleSeparatedTwoEnz(hardware,is384):
 
         #DB2
         updateCycleLabel(hardware, cycle, "DB2")
-        dispenseWashes(hardware, dispDBTime, 'DB', usedWells, is384)
+        dispenseWashes(hardware, DBVolume2, 'DB', usedWells, is384)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Disp')
         waitAndStir(hardware, DBTime)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Inc')
@@ -351,7 +229,7 @@ def ElongationCycleSeparatedTwoEnz(hardware,is384):
 
         #Wash
         updateCycleLabel(hardware, cycle, "Wash")
-        dispenseWashes(hardware, dispBBTime, 'BB', usedWells,is384)
+        dispenseWashes(hardware, BBVolume2, 'BB', usedWells,is384)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBDisp')
         waitAndStir(hardware, BBTime)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBInc')
@@ -366,15 +244,13 @@ def ElongationCycleSeparatedTwoEnz(hardware,is384):
         else:
             cycle+=1
 
-    dispenseWashes(hardware, dispBBTime, 'BB', usedWells,is384)
+    dispenseWashes(hardware, BBVolume2, 'BB', usedWells,is384)
 
     goToWell(hardware, 'thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
 
-def ElongationCycleSeparatedTwoEnz_384Test(hardware,is384):
-    wellnumberThreshold=49
-
+def ElongationCycleSeparatedTwoEnz_EvacuationTimings(hardware,is384):
     title = easygui.enterbox("Name of the run ?")
 
     # Save Quartet Control File
@@ -385,6 +261,8 @@ def ElongationCycleSeparatedTwoEnz_384Test(hardware,is384):
     thermalImages = 1
     if thermalImages:
         TT = hardware.parent.rightFrame.thermalThread
+    else:
+        TT=FakeThermalImageThread()
 
     # Set up recording file for thermal snapshots
     now = datetime.datetime.now()
@@ -418,12 +296,13 @@ def ElongationCycleSeparatedTwoEnz_384Test(hardware,is384):
         activeWells=getActiveWells(sequences,cycle)
 
         #print(nucleo_arrays)
+        enz_vol = EBVolume
+        nuc_vol = NucsVolume
 
         if (cycle==1):
             removeSupernatant(hardware, VacuumTime)
 
-            dispenseWashes(hardware, dispBBTime, 'BB', upperThreshold(usedWells,wellnumberThreshold), is384)
-            dispenseWashes(hardware, dispBBTime/2, 'BB', underThreshold(usedWells,wellnumberThreshold), is384)
+            dispenseWashes(hardware, BBVolume2, 'BB', usedWells, is384)
 
             waitAndStir(hardware, BBTime)
             removeSupernatant(hardware, VacuumTime)
@@ -433,21 +312,20 @@ def ElongationCycleSeparatedTwoEnz_384Test(hardware,is384):
         #Premix
         updateCycleLabel(hardware,cycle,"Premix")
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'BefPremix')
-        dispensePumps(hardware, [enz_vol, enz_vol, nuc_vol, nuc_vol, nuc_vol, nuc_vol],upperThreshold([well for well in activeWells if well%2==1],wellnumberThreshold),upperThreshold([well for well in activeWells if well%2==0],wellnumberThreshold), upperThreshold(nucleo_arrays[1],wellnumberThreshold), upperThreshold(nucleo_arrays[2],wellnumberThreshold), upperThreshold(nucleo_arrays[3],wellnumberThreshold), upperThreshold(nucleo_arrays[4],wellnumberThreshold),is384)
-        dispensePumps(hardware, [enz_vol/2, enz_vol/2, nuc_vol/2, nuc_vol/2, nuc_vol/2, nuc_vol/2],underThreshold([well for well in activeWells if well%2==1],wellnumberThreshold),underThreshold([well for well in activeWells if well%2==0],wellnumberThreshold), underThreshold(nucleo_arrays[1],wellnumberThreshold), underThreshold(nucleo_arrays[2],wellnumberThreshold), underThreshold(nucleo_arrays[3],wellnumberThreshold), underThreshold(nucleo_arrays[4],wellnumberThreshold),is384)
+
+        dispensePumps(hardware, [enz_vol,enz_vol,nuc_vol,nuc_vol,nuc_vol,nuc_vol], [well for well in activeWells if well%2==1], [well for well in activeWells if well%2==0], nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],is384)
 
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixDisp')
         waitAndStir(hardware, Elong_time)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixInc')
-        removeSupernatant(hardware, VacuumTime)
+        removeSupernatant(hardware, 3)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixVac')
 
 
 
         #DB1
         updateCycleLabel(hardware, cycle, "DB1")
-        dispenseWashes(hardware, dispDBTime, 'DB', upperThreshold(usedWells,wellnumberThreshold), is384)
-        dispenseWashes(hardware, dispDBTime/2, 'DB', underThreshold(usedWells,wellnumberThreshold), is384)
+        dispenseWashes(hardware, DBVolume1, 'DB', usedWells, is384)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Disp')
         waitAndStir(hardware, DBTime)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Inc')
@@ -457,8 +335,7 @@ def ElongationCycleSeparatedTwoEnz_384Test(hardware,is384):
 
         #DB2
         updateCycleLabel(hardware, cycle, "DB2")
-        dispenseWashes(hardware, dispDBTime, 'DB', upperThreshold(usedWells,wellnumberThreshold), is384)
-        dispenseWashes(hardware, dispDBTime/2, 'DB', underThreshold(usedWells,wellnumberThreshold), is384)
+        dispenseWashes(hardware, DBVolume2, 'DB', usedWells, is384)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Disp')
         waitAndStir(hardware, DBTime)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Inc')
@@ -468,8 +345,7 @@ def ElongationCycleSeparatedTwoEnz_384Test(hardware,is384):
 
         #Wash
         updateCycleLabel(hardware, cycle, "Wash")
-        dispenseWashes(hardware, dispBBTime, 'BB', upperThreshold(usedWells,wellnumberThreshold),is384)
-        dispenseWashes(hardware, dispBBTime/2, 'BB', underThreshold(usedWells,wellnumberThreshold),is384)
+        dispenseWashes(hardware, BBVolume2, 'BB', usedWells,is384)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBDisp')
         waitAndStir(hardware, BBTime)
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBInc')
@@ -484,11 +360,128 @@ def ElongationCycleSeparatedTwoEnz_384Test(hardware,is384):
         else:
             cycle+=1
 
-    dispenseWashes(hardware, dispBBTime, 'BB', usedWells,is384)
+    dispenseWashes(hardware, BBVolume2, 'BB', usedWells,is384)
 
     goToWell(hardware, 'thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
+
+def ElongationCycleSeparatedTwoEnz_DiffDB1Vols(hardware,is384):
+    title = easygui.enterbox("Name of the run ?")
+
+    # Save Quartet Control File
+    saveQuartet = int(easygui.enterbox("Do you want to save quartet control file ? (1 yes, 0 No)"))
+    if saveQuartet:
+        saveQuartetControlFile(title)
+
+    thermalImages = 1
+    if thermalImages:
+        TT = hardware.parent.rightFrame.thermalThread
+    else:
+        TT=FakeThermalImageThread()
+
+    # Set up recording file for thermal snapshots
+    now = datetime.datetime.now()
+    folder_path = str(now.year) + force2digits(now.month) + '\\' + str(now.year) + force2digits(
+        now.month) + force2digits(now.day) + '_' + force2digits(now.hour) + force2digits(now.minute) + force2digits(
+        now.second) + "_" + title
+
+    TT.snapshot_in_cycle(thermalImages, folder_path, 1, 'BeforeAnything')
+
+    cycle = int(easygui.enterbox("What cycle do you wanna start at ?"))
+
+    #dispTime = 0.12 * 2  # 0.10pour 20
+    #dispDBTime = 0.06 * 2
+    #dispBBTime = 0.06 * 2
+    #Elong_time=4*60
+    #DBTime=60
+    #BBTime=30
+    #VacuumTime=20
+
+
+    while cycle!=0:
+
+        updateCycleLabel(hardware, cycle, "")
+
+        # We read the excel and get the parameters back
+        synthesis_sheet=getExcelSheet(path)
+        getParameters(synthesis_sheet)
+        sequences=getSequences(synthesis_sheet)
+        nucleo_arrays=splitSequences(sequences,cycle)
+        usedWells=getUsedWells(sequences)
+        activeWells=getActiveWells(sequences,cycle)
+
+        #print(nucleo_arrays)
+        enz_vol = EBVolume
+        nuc_vol = NucsVolume
+
+        if (cycle==1):
+            removeSupernatant(hardware, VacuumTime)
+
+            dispenseWashes(hardware, BBVolume2, 'BB', usedWells, is384)
+
+            waitAndStir(hardware, BBTime)
+            removeSupernatant(hardware, VacuumTime)
+
+
+
+        #Premix
+        updateCycleLabel(hardware,cycle,"Premix")
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'BefPremix')
+
+        dispensePumps(hardware, [enz_vol,enz_vol,nuc_vol,nuc_vol,nuc_vol,nuc_vol], [well for well in activeWells if well%2==1], [well for well in activeWells if well%2==0], nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],is384)
+
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixDisp')
+        waitAndStir(hardware, Elong_time)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixInc')
+        removeSupernatant(hardware, VacuumTime)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixVac')
+
+
+
+        #DB1
+        updateCycleLabel(hardware, cycle, "DB1")
+        dispenseWashesColDiffVols(hardware, [0,0,0,25,25,25,25,50,50,0,0,0], 'DB', usedWells, is384)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Disp')
+        waitAndStir(hardware, DBTime)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Inc')
+
+        removeSupernatant(hardware, VacuumTime)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Vac')
+
+        #DB2
+        updateCycleLabel(hardware, cycle, "DB2")
+        dispenseWashes(hardware, DBVolume2, 'DB', usedWells, is384)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Disp')
+        waitAndStir(hardware, DBTime)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Inc')
+
+        removeSupernatant(hardware, VacuumTime)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Vac')
+
+        #Wash
+        updateCycleLabel(hardware, cycle, "Wash")
+        dispenseWashes(hardware, BBVolume2, 'BB', usedWells,is384)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBDisp')
+        waitAndStir(hardware, BBTime)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBInc')
+
+        removeSupernatant(hardware, VacuumTime)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBVac')
+
+        #We carry on with next cycle or we end the loop
+        nucleo_arrays_nextcycle=splitSequences(sequences,cycle+1)
+        if len(nucleo_arrays_nextcycle[0])==len(sequences):
+            cycle=0
+        else:
+            cycle+=1
+
+    dispenseWashes(hardware, BBVolume2, 'BB', usedWells,is384)
+
+    goToWell(hardware, 'thermalCamera', 1,0)
+    updateCycleLabel(hardware, cycle, "Synthesis End")
+    hardware.arduinoControl.stopHeating()
+
 
 def ElongationDegenerate(hardware,is384):
     title = easygui.enterbox("Name of the run ?")
@@ -592,21 +585,29 @@ def ElongationDegenerate(hardware,is384):
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
 
-
-def ElongationCycleDiffVolumes(hardware,is384):
-
+def ElongationCycleTwoEnz_ColsDiffVol(hardware,volsPerCol,is384):
     title = easygui.enterbox("Name of the run ?")
 
-    #Save Quartet Control File
-    saveQuartetControlFile(title)
+    # Save Quartet Control File
+    saveQuartet = int(easygui.enterbox("Do you want to save quartet control file ? (1 yes, 0 No)"))
+    if saveQuartet:
+        saveQuartetControlFile(title)
 
-    #Set up recording file for thermal snapshots
+    thermalImages = 1
+    if thermalImages:
+        TT = hardware.parent.rightFrame.thermalThread
+    else:
+        TT=FakeThermalImageThread()
+
+    # Set up recording file for thermal snapshots
     now = datetime.datetime.now()
-    folder_path=str(now.year) + force2digits(now.month) + '\\' + str(now.year) + force2digits(now.month) + force2digits(now.day) + '_' + force2digits(now.hour) + force2digits(now.minute) + force2digits(now.second) + "_" + title
-    TC = hardware.thermalCamera
-    TC.snapshot_in_cycle(folder_path, 1, 'BeforeAnything')
+    folder_path = str(now.year) + force2digits(now.month) + '\\' + str(now.year) + force2digits(
+        now.month) + force2digits(now.day) + '_' + force2digits(now.hour) + force2digits(now.minute) + force2digits(
+        now.second) + "_" + title
 
-    cycle= int(easygui.enterbox("What cycle do you wanna start at ?"))
+    TT.snapshot_in_cycle(thermalImages, folder_path, 1, 'BeforeAnything')
+
+    cycle = int(easygui.enterbox("What cycle do you wanna start at ?"))
 
     #dispTime = 0.12 * 2  # 0.10pour 20
     #dispDBTime = 0.06 * 2
@@ -619,8 +620,7 @@ def ElongationCycleDiffVolumes(hardware,is384):
 
     while cycle!=0:
 
-        print(cycle)
-
+        updateCycleLabel(hardware, cycle, "")
 
         # We read the excel and get the parameters back
         synthesis_sheet=getExcelSheet(path)
@@ -635,70 +635,56 @@ def ElongationCycleDiffVolumes(hardware,is384):
         if (cycle==1):
             removeSupernatant(hardware, VacuumTime)
 
-            dispenseWashes(hardware, dispBBTime, 'BB', usedWells, is384)
-            dispenseWashes(hardware, dispBBTime/2, 'BB', [x + 8 for x in usedWells], is384)
+            dispenseWashesColDiffVols(hardware, volsPerCol, 'BB', usedWells, is384)
 
             waitAndStir(hardware, BBTime)
             removeSupernatant(hardware, VacuumTime)
 
 
-        #Start of the cycle
-        print('Premix')
-        TC.snapshot_in_cycle(folder_path, cycle, 'BefPremix')
-        dispensePremixes(hardware, dispTime, nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],is384)
-        dispensePremixes(hardware, dispTime/2, [x + 8 for x in nucleo_arrays[1]],  [x + 8 for x in nucleo_arrays[2]],  [x + 8 for x in nucleo_arrays[3]],  [x + 8 for x in nucleo_arrays[4]],is384)
-        for wellM in nucleo_arrays[5]:
-            goToWell(hardware,"M",wellM,0)
-            dispense(hardware,"M",dispM)
-        for wellN in nucleo_arrays[6]:
-            goToWell(hardware,"N",wellN,0)
-            dispense(hardware,"N",dispN)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftPremixDisp')
+
+        #Premix
+        updateCycleLabel(hardware,cycle,"Premix")
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'BefPremix')
+
+        dispensePumpsColDiffVols(hardware, [vol/2 for vol in volsPerCol], [well for well in activeWells if well%2==1], [well for well in activeWells if well%2==0], nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],is384)
+
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixDisp')
         waitAndStir(hardware, Elong_time)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftPremixInc')
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixInc')
         removeSupernatant(hardware, VacuumTime)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftPremixVac')
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixVac')
 
-        if (proteinase==1):
-            if (cycle%5==0):
-                print('Proteinase')
-                dispenseWashes(hardware, dispBuff1Time, 'Buff1', usedWells, is384)
-                TC.snapshot_in_cycle(folder_path, cycle, 'AftDProtDisp')
-                waitAndStir(hardware, 120)
-                TC.snapshot_in_cycle(folder_path, cycle, 'AftProtInc')
 
-                removeSupernatant(hardware, VacuumTime)
-                TC.snapshot_in_cycle(folder_path, cycle, 'AftProtVac')
 
-        print('DB1')
-        dispenseWashes(hardware, dispDBTime, 'DB', usedWells, is384)
-        dispenseWashes(hardware, dispDBTime/2, 'DB', [x + 8 for x in usedWells], is384)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftDB1Disp')
+        #DB1
+        updateCycleLabel(hardware, cycle, "DB1")
+        dispenseWashesColDiffVols(hardware, volsPerCol, 'DB', usedWells, is384)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Disp')
         waitAndStir(hardware, DBTime)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftDB1Inc')
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Inc')
 
         removeSupernatant(hardware, VacuumTime)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftDB1Vac')
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB1Vac')
 
-        print('DB2')
-        dispenseWashes(hardware, dispDBTime, 'DB', usedWells, is384)
-        dispenseWashes(hardware, dispDBTime/2, 'DB', [x + 8 for x in usedWells], is384)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftDB2Disp')
+        #DB2
+        updateCycleLabel(hardware, cycle, "DB2")
+        dispenseWashesColDiffVols(hardware, volsPerCol, 'DB', usedWells, is384)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Disp')
         waitAndStir(hardware, DBTime)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftDB2Inc')
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Inc')
 
         removeSupernatant(hardware, VacuumTime)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftDB2Vac')
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftDB2Vac')
 
-        print('Wash')
-        dispenseWashes(hardware, dispBBTime, 'BB', usedWells,is384)
-        dispenseWashes(hardware, dispBBTime/2, 'BB', [x + 8 for x in usedWells],is384)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftBBDisp')
+        #Wash
+        updateCycleLabel(hardware, cycle, "Wash")
+        dispenseWashesColDiffVols(hardware, volsPerCol, 'BB', usedWells,is384)
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBDisp')
         waitAndStir(hardware, BBTime)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftBBInc')
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBInc')
 
         removeSupernatant(hardware, VacuumTime)
-        TC.snapshot_in_cycle(folder_path, cycle, 'AftBBVac')
+        TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftBBVac')
 
         #We carry on with next cycle or we end the loop
         nucleo_arrays_nextcycle=splitSequences(sequences,cycle+1)
@@ -707,261 +693,62 @@ def ElongationCycleDiffVolumes(hardware,is384):
         else:
             cycle+=1
 
-    dispenseWashes(hardware, dispBBTime, 'BB', usedWells,is384)
-    dispenseWashes(hardware, dispBBTime/2, 'BB', [x + 8 for x in usedWells],is384)
+    dispenseWashes(hardware, BBVolume2, 'BB', usedWells,is384)
 
     goToWell(hardware, 'thermalCamera', 1,0)
-
+    updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
 
 
-def dispensePremixes(hardware,time,A_array,C_array,G_array,T_array,is384):
-
-    nuclArrays=[A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy()]
-    'we loop for every position possible'
-    for col in range(0,12,1):
-        for a_well in range(1+14*col,11+(14*col)+1,1):
-            c_well=a_well+1
-            g_well=a_well+2
-            t_well=a_well+3
-            wells=[a_well,c_well,g_well,t_well]
-            disp=[0,0,0,0] #Flag to know if we should dispense
-            for nucl in range(4):
-                #print (plateWellToRealWell(wells[nucl]))
-                if plateWellToRealWell(wells[nucl]) in nuclArrays[nucl]:
-                    disp[nucl]=1
-                    nuclArrays[nucl].remove(plateWellToRealWell(wells[nucl]))
-
-            if 1 in disp:
-                if is384:
-                    for i in range(1,5):
-                        goToRealWell(hardware,a_well,i)
-                        multiDispense(hardware, disp, time)
-                else:
-                    goToRealWell(hardware, a_well, 0)
-                    multiDispense(hardware, disp, time)
-                    # 0.22 for 48uL
-                    # 0.48 for 96uL
-            hardware.parent.update()
-
-    goToWell(hardware, "thermalCamera", 1, 0)
-
-def dispensePremixesAndEnzyme(hardware,time_nuc,time_enz,M_array,N_array,A_array,C_array,G_array,T_array,is384):
-
-    nuclArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy()]
-    'we loop for every position possible'
-    for col in range(0,12,1):
-        for m_well in range(1+18*col,13+(18*col)+1,1):
-            n_well=m_well+1
-            a_well=m_well+2
-            c_well=m_well+3
-            g_well=m_well+4
-            t_well=m_well+5
-            wells=[m_well,n_well,a_well,c_well,g_well,t_well]
-            disp=[0,0,0,0,0,0] #Flag to know if we should dispense
-            for nucl in range(6):
-                #print (plateWellToRealWell(wells[nucl]))
-                if plateWellToRealWell6Nozzles(wells[nucl]) in nuclArrays[nucl]:
-                    disp[nucl]=1
-                    nuclArrays[nucl].remove(plateWellToRealWell6Nozzles(wells[nucl]))
-            if 1 in disp:
-                if is384:
-                    for i in range(1,5):
-                        goToRealWell6Nozzles(hardware,m_well,i)
-                        multiDispenseWithEnzyme(hardware, disp, time_nuc,time_enz)
-                else:
-                    goToRealWell6Nozzles(hardware, m_well, 0)
-                    multiDispenseWithEnzyme(hardware, disp, time_nuc, time_enz)
-                    #multiDispense(hardware, disp, time)
-                    # 0.22 for 48uL
-                    # 0.48 for 96uL
-            hardware.parent.update()
-
-    goToWell(hardware, "thermalCamera", 1, 0)
-
-def dispensePremixesAndEnzymeSep(hardware,time_nuc,time_enz_M,time_enz_N,M_array,N_array,A_array,C_array,G_array,T_array,is384):
-
-    nuclArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy()]
-    'we loop for every position possible'
-    for col in range(0,12,1):
-        for m_well in range(1+18*col,13+(18*col)+1,1):
-            n_well=m_well+1
-            a_well=m_well+2
-            c_well=m_well+3
-            g_well=m_well+4
-            t_well=m_well+5
-            wells=[m_well,n_well,a_well,c_well,g_well,t_well]
-            disp=[0,0,0,0,0,0] #Flag to know if we should dispense
-            for nucl in range(6):
-                #print (plateWellToRealWell(wells[nucl]))
-                if plateWellToRealWell6Nozzles(wells[nucl]) in nuclArrays[nucl]:
-                    disp[nucl]=1
-                    nuclArrays[nucl].remove(plateWellToRealWell6Nozzles(wells[nucl]))
-            if 1 in disp:
-                if is384:
-                    for i in range(1,5):
-                        goToRealWell6Nozzles(hardware,m_well,i)
-                        multiDispenseWithEnzymeSep(hardware, disp, time_nuc,time_enz_M,time_enz_N)
-                else:
-                    goToRealWell6Nozzles(hardware, m_well, 0)
-                    multiDispenseWithEnzymeSep(hardware, disp, time_nuc, time_enz_M,time_enz_N)
-                    #multiDispense(hardware, disp, time)
-                    # 0.22 for 48uL
-                    # 0.48 for 96uL
-            hardware.parent.update()
-
-    goToWell(hardware, "thermalCamera", 1, 0)
-
-def dispensePumps(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_array,is384):
-
-    nuclArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy()]
-    'we loop for every position possible'
-    for col in range(0,12,1):
-        for m_well in range(1+18*col,13+(18*col)+1,1):
-            n_well=m_well+1
-            a_well=m_well+2
-            c_well=m_well+3
-            g_well=m_well+4
-            t_well=m_well+5
-            wells=[m_well,n_well,a_well,c_well,g_well,t_well]
-            disp=[0,0,0,0,0,0] #Flag to know if we should dispense
-            for nucl in range(6):
-                #print (plateWellToRealWell(wells[nucl]))
-                if plateWellToRealWell6Nozzles(wells[nucl]) in nuclArrays[nucl]:
-                    disp[nucl]=volumes[nucl]
-                    nuclArrays[nucl].remove(plateWellToRealWell6Nozzles(wells[nucl]))
-            if any(vol!=0 for vol in disp ):
-                if is384:
-                    # for i in range(1,5):
-                    #     goToRealWell6Nozzles(hardware,m_well,i)
-                    #     multiDispensePumps(hardware,disp)
-                    for i in range(1,3):
-                        goToRealWell6Nozzles(hardware, m_well, i)
-                        multiDispensePumps(hardware, disp)
-                    for i in range(3,5):
-                        goToRealWell6Nozzles(hardware, m_well, i)
-                        multiDispensePumps(hardware, [v/2 for v in disp])
-                else:
-                    goToRealWell6Nozzles(hardware, m_well, 0)
-                    multiDispensePumps(hardware,disp)
-                    #multiDispense(hardware, disp, time)
-                    # 0.22 for 48uL
-                    # 0.48 for 96uL
-            hardware.parent.update()
-
-    goToWell(hardware, "thermalCamera", 1, 0)
 
 
-def dispenseAllDegenerate(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_array,is384):
+def fillPlate(hardware, buffer, vol, is384):
 
+    # We read the excel and get the parameters back
+    synthesis_sheet = getExcelSheet(path)
+    getParameters(synthesis_sheet)
+    sequences = getSequences(synthesis_sheet)
+    nucleo_arrays = splitSequences(sequences, 1)
+    usedWells = getUsedWells(sequences)
+    activeWells = getActiveWells(sequences, 1)
+    if buffer=="nucs":
+        dispensePumps(hardware, [vol, vol, vol, vol, vol, vol],
+                      nucleo_arrays[5], nucleo_arrays[6],
+                      nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4], is384)
+    elif buffer=="DB":
+        dispenseWashes(hardware,vol,"DB",activeWells,is384)
+    elif buffer=="BB":
+        dispenseWashes(hardware,vol,"BB",activeWells,is384)
 
-    nuclArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy()]
-    'we loop for every position possible'
-    for col in range(0,12,1):
-        for m_well in range(1+18*col,13+(18*col)+1,1):
-            n_well=m_well+1
-            a_well=m_well+2
-            c_well=m_well+3
-            g_well=m_well+4
-            t_well=m_well+5
-            wells=[m_well,n_well,a_well,c_well,g_well,t_well]
-            vols=[0,0,0,0,0,0] #Flag to know if we should dispense
-            for nucl in range(6):
-                #print (plateWellToRealWell(wells[nucl]))
-                for wellVol in nuclArrays[nucl]:
-                    if plateWellToRealWell6Nozzles(wells[nucl])==wellVol[0]:
-                        vols[nucl]=volumes[nucl]/wellVol[1]
-                        nuclArrays[nucl].remove(wellVol)
-            if vols!=[0,0,0,0,0,0]:
-                if is384:
-                    for i in range(1,5):
-                        goToRealWell6Nozzles(hardware,m_well,i)
-                        multiDispensePumps(hardware,vols)
-                else:
-                    goToRealWell6Nozzles(hardware, m_well, 0)
-                    multiDispensePumps(hardware,vols)
-            hardware.parent.update()
+def PSPWashes(hardware, is384):
 
-    goToWell(hardware, "thermalCamera", 1, 0)
+    # We read the excel and get the parameters back
+    synthesis_sheet = getExcelSheet(path)
+    getParameters(synthesis_sheet)
+    sequences = getSequences(synthesis_sheet)
+    nucleo_arrays = splitSequences(sequences, 1)
+    usedWells = getUsedWells(sequences)
+    activeWells = getActiveWells(sequences, 1)
 
-def dispenseWashes(hardware,time,solution,array,is384):
+    if is384:
+        volToDisp=50
+    else:
+        volToDisp = 100
 
-    washArray=array.copy()
+    #Water Washes
+    for i in range(3):
+        updateCycleLabel(hardware, i+1, " Water Wash")
+        dispenseWashes(hardware,volToDisp,"DB",usedWells,is384)
+        waitAndStir(hardware,30)
+        removeSupernatant(hardware,VacuumTime+2)
+    #TH1X Washes
+    for i in range(3):
+        updateCycleLabel(hardware, i+1, " TH1X Wash")
+        dispenseWashes(hardware,volToDisp,"BB",usedWells,is384)
+        waitAndStir(hardware,30)
+        removeSupernatant(hardware,VacuumTime+2)
 
-    for col in range(0, 12, 1):
-        #Let's find the smallest and largest well in the column
-        smallest_well=96
-        largest_well=0
-        for washWell in washArray:
-            if washWell>=col*8+1 and washWell<col*8+9:
-                if washWell>largest_well:
-                    largest_well=washWell
-                if washWell<smallest_well:
-                    smallest_well=washWell
-        if smallest_well!=96 or largest_well!=0: #meaning if there is a non empty well in the column
-            #Either we can dispense only once
-            if largest_well-smallest_well<4:
-                if is384:
-                    # for i in range(1,5):
-                    #     goToWell(hardware, solution, min(smallest_well, col * 8 + 5), i)
-                    #     dispense(hardware, solution, time)
-                    for i in range(1,3):
-                        goToWell(hardware, solution, min(smallest_well, col * 8 + 5), i)
-                        dispense(hardware, solution, time)
-                    for i in range(3,5):
-                        goToWell(hardware, solution, min(smallest_well, col * 8 + 5), i)
-                        dispense(hardware, solution, time/2)
-                else:
-                    goToWell(hardware, solution, min(smallest_well, col * 8 + 5), 0)
-                    dispense(hardware, solution, time)
-            else:
-                if is384:
-                    # for i in range(1,5):
-                    #     goToWell(hardware, solution, col * 8 + 1, i)
-                    #     dispense(hardware, solution, time)
-                    # for i in range(1,5):
-                    #     goToWell(hardware, solution, col * 8 + 5, i)
-                    #     dispense(hardware, solution, time)
-                    for i in range(1, 3):
-                        goToWell(hardware, solution, col * 8 + 1, i)
-                        dispense(hardware, solution, time)
-                    for i in range(3, 5):
-                        goToWell(hardware, solution, col * 8 + 1, i)
-                        dispense(hardware, solution, time/2)
-                    for i in range(1, 3):
-                        goToWell(hardware, solution, col * 8 + 5, i)
-                        dispense(hardware, solution, time)
-                    for i in range(3, 5):
-                        goToWell(hardware, solution, col * 8 + 5, i)
-                        dispense(hardware, solution, time/2)
-                else:
-                    goToWell(hardware,solution,col*8+1,0)
-                    dispense(hardware,solution,time)
-                    goToWell(hardware, solution, col * 8 + 5,0)
-                    dispense(hardware, solution, time)
-        hardware.parent.update()
-
-    goToWell(hardware, "thermalCamera", 1, 0)
-
-def removeSupernatant(hardware,vacuumTime):
-
-    goToWell(hardware, 'thermalCamera', 1,0)
-
-    hardware.vacValveOpen()
-
-    wait(hardware, vacuumTime)
-    hardware.vacValveClose()
-
-    wait(hardware, 3)
-
-    #hardware.set_output(7,1)
-    #wait(hardware,10)
-    #hardware.set_output(7, 0)
-    #hardware.vacuum.ventOff()
-
-
-
-
+    updateCycleLabel(hardware, 0, "PSP Washes Done")
 
 def getParameters(synthesis_sheet):
 
@@ -973,29 +760,8 @@ def getParameters(synthesis_sheet):
         #print(code)
         exec(code,globals())
 
-def updateCycleLabel(hardware,cycle,step):
-    print("Cycle " + str(cycle) + " " + step)
-    hardware.parent.leftFrame.cycleLabelString.set("Cycle " + str(cycle) + " " + step)
-
-def upperThreshold(wellList,threshold):
-    return [well for well in wellList if well>=threshold]
-
-def underThreshold(wellList,threshold):
-    return [well for well in wellList if well<threshold]
-
-def wellListFromHalfColumns(halfColsList):
-
-    wellList=[]
-    for halfCol in halfColsList:
-        wellList.append((halfCol-1)*4+1)
-        wellList.append((halfCol-1)*4+2)
-        wellList.append((halfCol-1)*4+3)
-        wellList.append((halfCol-1)*4+4)
-    return wellList
-
 
 if __name__ == "__main__":
     wells=[1,2,4,7,9,16,18,16,10]
-    print(underThreshold(wells,10))
-    print(upperThreshold(wells,10))
+
 
