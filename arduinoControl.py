@@ -21,26 +21,30 @@ class ArduinoControl():
         self.ser.close()
 
     def startShaking(self,velocity): # Velocity between 38 and 1300rpm
-        # while True:
-        #     try:
+        while True:
+            try:
                 self.ser = serial.Serial(COMPORT, 115200)
                 command=str(velocity)+'\r\n'
                 self.ser.write(bytes(command,'utf-8'))
                 self.ser.close()
-            #     break
-            # except SerialException:
-            #     usbErrorHandling.restartArduinoUSB()
-            #     sleep(10)
+                break
+            except SerialException:
+                usbErrorHandling.restartArduinoUSB()
 
 
 
 
 
     def stopShaking(self):
-        self.ser = serial.Serial(COMPORT, 115200)
-        self.ser.write(b'1\r\n')
-        self.ser.read()
-        self.ser.close()
+        while True:
+            try:
+                self.ser = serial.Serial(COMPORT, 115200)
+                self.ser.write(b'1\r\n')
+                self.ser.read()
+                self.ser.close()
+                break
+            except SerialException:
+                usbErrorHandling.restartArduinoUSB()
 
 if __name__ == "__main__":
     # On crée la racine de notre interface

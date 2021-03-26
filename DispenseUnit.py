@@ -6,6 +6,7 @@ import time
 class DispenseUnit():
     def __init__(self, parent,motor ,motor_parameters,bus_pump,digOut,size="small"):
         self.parent = parent
+        self.size=size
 
         self.motor = motor
         self.motor_parameters = motor_parameters
@@ -15,18 +16,28 @@ class DispenseUnit():
         self.bus_tmcl=bus_pump
         self.digOut=digOut
 
-        self.microsteps=2**6
-        self.dist_per_full_step=0.01 #mm
-
         self.max_disp=80 #ul
         self.pullback=3 #ul
 
         if (size=="small"):
+            self.microsteps = 2 ** 6
+            self.dist_per_full_step = 0.01  # mm
             self.radius = 3 / 2
             self.max_disp = 80  # ul
             self.pullback = 3  # ul
             self.init_forward = 110  # ul
+
         elif (size=="big"):
+            self.microsteps = 2 ** 6
+            self.dist_per_full_step = 0.01  # mm
+            self.radius = 4.6 / 2
+            self.max_disp = 200  # ul
+            self.pullback = 10  # ul
+            self.init_forward = 210  # ul
+
+        elif (size=="very big"):
+            self.microsteps = 2 ** 6
+            self.dist_per_full_step = 0.0254  # mm
             self.radius = 4.6 / 2
             self.max_disp = 200  # ul
             self.pullback = 10  # ul
@@ -91,17 +102,31 @@ class DispenseUnit():
     def set_param_init(self):
         self.wait_for_pos()
         # we reduce current, velocity,acceleration and deceleration
-        self.motor_parameters.set(6, 90)
-        self.motor_parameters.set(5, int(7629278 / 10))
-        self.motor_parameters.set(17, int(7629278 / 10))
-        self.motor_parameters.set(4, int(450000 / 10))
+        if self.size=="small" or self.size=="big":
+            self.motor_parameters.set(6, 90)
+            self.motor_parameters.set(5, int(7629278 / 10))
+            self.motor_parameters.set(17, int(7629278 / 10))
+            self.motor_parameters.set(4, int(450000 / 10))
+
+        if self.size=="very big":
+            self.motor_parameters.set(6, 70)
+            self.motor_parameters.set(5, int(7629278 / 10))
+            self.motor_parameters.set(17, int(7629278 / 10))
+            self.motor_parameters.set(4, int(250000 / 10))
 
     def set_param_std(self):
         self.wait_for_pos()
-        self.motor_parameters.set(6, 162)
-        self.motor_parameters.set(5, 6629278)
-        self.motor_parameters.set(17, 6629278)
-        self.motor_parameters.set(4, 350000)
+        if self.size == "small" or self.size == "big":
+            self.motor_parameters.set(6, 162)
+            self.motor_parameters.set(5, 6629278)
+            self.motor_parameters.set(17, 6629278)
+            self.motor_parameters.set(4, 350000)
+
+        if self.size == "very big":
+            self.motor_parameters.set(6, 200)
+            self.motor_parameters.set(5, 7629278)
+            self.motor_parameters.set(17, 7629278)
+            self.motor_parameters.set(4, 250000)
 
     def initialise_position(self):
 
