@@ -16,8 +16,6 @@ class DispenseUnit():
         self.bus_tmcl=bus_pump
         self.digOut=digOut
 
-        self.max_disp=80 #ul
-        self.pullback=3 #ul
 
         if (size=="small"):
             self.microsteps = 2 ** 6
@@ -109,10 +107,10 @@ class DispenseUnit():
             self.motor_parameters.set(4, int(450000 / 10))
 
         if self.size=="very big":
-            self.motor_parameters.set(6, 70)
+            self.motor_parameters.set(6, 90)
             self.motor_parameters.set(5, int(7629278 / 10))
             self.motor_parameters.set(17, int(7629278 / 10))
-            self.motor_parameters.set(4, int(250000 / 10))
+            self.motor_parameters.set(4, int(200000 / 10))
 
     def set_param_std(self):
         self.wait_for_pos()
@@ -126,7 +124,7 @@ class DispenseUnit():
             self.motor_parameters.set(6, 200)
             self.motor_parameters.set(5, 7629278)
             self.motor_parameters.set(17, 7629278)
-            self.motor_parameters.set(4, 250000)
+            self.motor_parameters.set(4, 200000)
 
     def initialise_position(self):
 

@@ -3,7 +3,7 @@ import time
 from hardware import STIRRING_VELOCITY
 import math
 
-X_A1=130869
+X_A1=132069
 Y_A1=33916
 
 X_step=9300
@@ -74,18 +74,18 @@ def goToWell(hardware,element,well,quadrant):
 
     if element=='DB':
         'Positions of A1 for DB'
-        X_1= X_1 - 36095
+        X_1= X_1 - 37795
         Y_1= Y_1 - 9642
 
     if element=='BB':
         'Positions of A1 for wash'
-        X_1 = X_1 - 36095
+        X_1 = X_1 - 37795
         Y_1 = Y_1 + 68
 
     if element=='Buff1':
         'Positions of A1 for Buff1'
-        X_1= X_1 - 46207
-        Y_1= Y_1 + 9805
+        X_1= X_1 - 36295
+        Y_1= Y_1 + 8805
 
     if element=='Buff2':
         'Positions of A1 for Buff2'
@@ -285,7 +285,7 @@ def waitAndStir(hardware,timeToWait):
 
     goToWell(hardware, 'thermalCamera', 1,0)
 
-    hardware.arduinoControl.startShaking(400)
+    hardware.arduinoControl.startShaking(280)
     wait(hardware,timeToWait)
     hardware.arduinoControl.stopShaking()
 
@@ -405,7 +405,7 @@ def multiDispensePumps(hardware,volumes):
     pullback=3  #uls
 
     volumes=volumes.copy()
-    while volumes!=[0,0,0,0,0,0,0,0]:
+    while volumes!=[0,0,0,0,0,0,0,0,0]:
 
         dus=[]
         for i in range(3):
@@ -432,7 +432,7 @@ def multiDispensePumps(hardware,volumes):
                 du.push(vol_to_disp)
                 volumes[j+3] -= vol_to_disp
 
-        for k in range(2):
+        for k in range(3):
             if volumes[k+6] != 0:
                 du = hardware.dispense_units_3[k]
                 dus.append(du)

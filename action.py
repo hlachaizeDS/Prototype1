@@ -11,7 +11,8 @@ def actionButton_Callback(directCommand):
     #ElongationCycleSeparatedTwoEnz(hardware,0)
     #ElongationCycleSeparatedOneEnz(hardware,0)
 
-    ElongationCycleSeparatedTwoEnz_EvacuationTimings(hardware,1)
+
+    #ElongationCycleSeparatedTwoEnz_EvacuationTimings(hardware,1)
 
     #goToWell(hardware,"BB",93,1)
     #hardware.posPressure.goDown("synthesis")
@@ -21,3 +22,7 @@ def actionButton_Callback(directCommand):
     #goToWell(hardware,"BB",95,4)
 
     #ElongationCycleSeparatedTwoEnz_DiffDB1Vols(hardware, 1)
+    #ElongationCycleSeparatedOneEnz_ProtK(hardware, 0)
+    ElongationCycleSeparatedTwoEnz_EDTA(hardware, 1)
+    #ElongationCycleSeparatedTwoEnz_SlightVolChange(hardware, 0)
+    #ElongationCycleSeparatedTwoEnz_ProtK(hardware, 0)

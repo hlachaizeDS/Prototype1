@@ -239,8 +239,10 @@ class HardWare(Frame):
                                        )
 
             self.dispense_units_3=[]
-            for i in range(3):
+            for i in range(2):
                 self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[i],self.motors_parameters_pump_3[i],self.bus_pump_3,i,"big"))
+            self.dispense_units_3.append(DispenseUnit(self, self.motors_pump_3[2], self.motors_parameters_pump_3[2], self.bus_pump_3, 2, "very big"))
+
 
     def initialisation(self):
 
@@ -302,20 +304,20 @@ class HardWare(Frame):
             self.dispense_units_3[du_index].set_param_init()
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].push(self.dispense_units_1[du_index].init_forward)
-            self.dispense_units_2[du_index].push(self.dispense_units_1[du_index].init_forward)
-            self.dispense_units_3[du_index].push(self.dispense_units_1[du_index].init_forward)
+            self.dispense_units_2[du_index].push(self.dispense_units_2[du_index].init_forward)
+            self.dispense_units_3[du_index].push(self.dispense_units_3[du_index].init_forward)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].set_param_std()
             self.dispense_units_2[du_index].set_param_std()
             self.dispense_units_3[du_index].set_param_std()
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].pull(self.dispense_units_1[du_index].pullback)
-            self.dispense_units_2[du_index].pull(self.dispense_units_1[du_index].pullback)
-            self.dispense_units_3[du_index].pull(self.dispense_units_1[du_index].pullback)
+            self.dispense_units_2[du_index].pull(self.dispense_units_2[du_index].pullback)
+            self.dispense_units_3[du_index].pull(self.dispense_units_3[du_index].pullback)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].pull_from_reservoir(self.dispense_units_1[du_index].init_backward)
-            self.dispense_units_2[du_index].pull_from_reservoir(self.dispense_units_1[du_index].init_backward)
-            self.dispense_units_3[du_index].pull_from_reservoir(self.dispense_units_1[du_index].init_backward)
+            self.dispense_units_2[du_index].pull_from_reservoir(self.dispense_units_2[du_index].init_backward)
+            self.dispense_units_3[du_index].pull_from_reservoir(self.dispense_units_3[du_index].init_backward)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].wait_for_pos()
             self.dispense_units_2[du_index].wait_for_pos()
