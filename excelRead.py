@@ -50,11 +50,12 @@ def splitSequences(sequences,cycle):
     T_wells=[]
     M_wells=[]
     N_wells=[]
+    X_wells=[]
 
-    nucleos=['A','C','G','T','M','N']
-    nucleo_arrays=[ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells]
+    nucleos=['A','C','G','T','M','N','X']
+    nucleo_arrays=[ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells,X_wells]
 
-    for nucleo in range(1,6+1):
+    for nucleo in range(1,7+1):
         for sample in range(len(sequences)):
             if (cycle<=len(sequences[sample][1]) and sequences[sample][1][cycle-1]==nucleos[nucleo-1]):
                 nucleo_arrays[nucleo].append(sequences[sample][0])
@@ -140,6 +141,31 @@ def getActiveWells(sequences,cycle):
 
     return activeWells
 
+def getActiveWellsButX(sequences,cycle):
+    #Return all the wells in the synthesis minus the finished ones
+    usedWells=getUsedWells(sequences)
+    ended_wells=splitSequences(sequences,cycle)[0]
+    X_wells=splitSequences(sequences,cycle)[7]
+    activeWells=[]
+
+    for well in usedWells:
+        if (well not in ended_wells) and (well not in X_wells):
+            activeWells.append(well)
+
+    return activeWells
+
+def getEndedWellsPlusX(sequences,cycle):
+    #Return all the wells in the synthesis minus the finished ones
+    usedWells=getUsedWells(sequences)
+    ended_wells=splitSequences(sequences,cycle)[0]
+    X_wells = splitSequences(sequences, cycle)[7]
+    activeWells=[]
+
+    for well in X_wells:
+        ended_wells.append(well)
+
+    return ended_wells
+
 def findIndexes(eltToFind,synthesis_sheet):
 
     for row in range(synthesis_sheet.nrows):
@@ -165,12 +191,8 @@ if __name__ == "__main__":
     synthesis_sheet=getExcelSheet(path)
     sequences=getSequences(synthesis_sheet)
     print(sequences)
-    nucleo_arrays=splitSequencesDegenerate(sequences,1)
-    print(nucleo_arrays[0])
-    print(nucleo_arrays[1])
-    print(nucleo_arrays[2])
-    print(nucleo_arrays[3])
-    print(nucleo_arrays[4])
+
+    print(getEndedWellsPlusX(sequences,1))
     #params=getParameters(synthesis_sheet)
     #print(getUsedWells(sequences))
     #print(getActiveWells(sequences,4))

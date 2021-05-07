@@ -40,10 +40,16 @@ class MiddleFrame(Frame):
                                              command=lambda: multiDispensePumps(hardware,[2500,2500,2500,2500,2500,2500,0,0,0]))
         self.PrimingPremixButton.grid(row=2, column=1, padx=30, pady=5)
 
-        # Priming DB
+        # Priming Washes
         self.primingWashesButton = Button(self, text="Buffers 5mL",
                                           command=lambda: multiDispensePumps(hardware,[0,0,0,0,0,0,5000,5000,0]))
         self.primingWashesButton.grid(row=3, column=1, padx=30, pady=5)
+
+        # Priming Buff1
+        self.primingWashesButton = Button(self, text="Buff1 5mL",
+                                          command=lambda: multiDispensePumps(hardware,
+                                                                             [0, 0, 0, 0, 0, 0, 0, 0, 5000]))
+        self.primingWashesButton.grid(row=4, column=1, padx=30, pady=5)
 
 
         ##Vent 7s
