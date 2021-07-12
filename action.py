@@ -24,7 +24,16 @@ def actionButton_Callback(directCommand):
     #ElongationCycleSeparatedTwoEnz_DiffDB1Vols(hardware, 1)
     #ElongationCycleSeparatedOneEnz_ProtK(hardware, 0)
     #ElongationCycleSeparatedTwoEnz_EDTA(hardware, 1)
-    #ElongationCycleSeparatedTwoEnz_TwoWashes(hardware, 1)
+    #ElongationCycleSeparatedTwoEnz_SeveralWashes(hardware, 1)
+    ElongationCycleSeparatedTwoEnz_TwoWashes(hardware, 0)
+    #ElongationCycleSeparatedTwoEnz_SpikeAndWashes(hardware, 1)
     #ElongationCycleSeparatedTwoEnz_SlightVolChange(hardware, 0)
     #ElongationCycleSeparatedTwoEnz_ProtK(hardware, 0)
-    ElongationCycle_SpecialLong(hardware, 0)
+    #ElongationCycleSeparatedTwoEnz_DiffDB_TwoWash(hardware, 1)
+    #ElongationCycle_SpecialLong(hardware, 0)
+    #ElongationCycle_SpecialLong_DBIncub(hardware, 0)
+    #ElongationCycleSeparatedTwoEnz_OneDB(hardware, 0)
+
+    #Carry_over(hardware,1)
+
+    #RNAProcess(hardware,0)

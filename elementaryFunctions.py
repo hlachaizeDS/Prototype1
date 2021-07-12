@@ -3,7 +3,7 @@ import time
 from hardware import STIRRING_VELOCITY
 import math
 
-X_A1=132069
+X_A1=131469
 Y_A1=33916
 
 X_step=9300
@@ -74,17 +74,17 @@ def goToWell(hardware,element,well,quadrant):
 
     if element=='DB':
         'Positions of A1 for DB'
-        X_1= X_1 - 37795
+        X_1= X_1 - 37195
         Y_1= Y_1 - 9642
 
     if element=='BB':
         'Positions of A1 for wash'
-        X_1 = X_1 - 37795
+        X_1 = X_1 - 37195
         Y_1 = Y_1 + 68
 
     if element=='Buff1':
         'Positions of A1 for Buff1'
-        X_1= X_1 - 36295
+        X_1= X_1 - 35895
         Y_1= Y_1 + 8805
 
     if element=='Buff2':
@@ -111,7 +111,7 @@ def goToWell(hardware,element,well,quadrant):
 
     if element == "thermalCamera":
         X_1 = 0
-        Y_1 = 123614
+        Y_1 = 125816
 
     if element == "washPrime":
         #X_1 = 167686

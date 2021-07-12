@@ -31,7 +31,7 @@ class HardWare(Frame):
         self.secondCard=0
         self.vacuumController=0
         self.arduino=1
-        self.positive_pressure=1
+        self.positive_pressure=0
         self.thermalCam=1   #Will impact rightFrame in guitab1
         self.pump_card_1 = 1
         self.pump_card_2 = 1
@@ -91,8 +91,8 @@ class HardWare(Frame):
                     digitalOutputsNb2 = 8
                     for i in range(digitalOutputsNb2):
                         self.set_output(i, 0)
-
-                initialiseMotorList(self,[self.zMotor])
+                if self.positive_pressure:
+                    initialiseMotorList(self,[self.zMotor])
 
             #except  SerialException:
              #   print ("Port " + PORT + " not Found")
@@ -239,8 +239,9 @@ class HardWare(Frame):
                                        )
 
             self.dispense_units_3=[]
-            for i in range(2):
-                self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[i],self.motors_parameters_pump_3[i],self.bus_pump_3,i,"big"))
+
+            self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[0],self.motors_parameters_pump_3[0],self.bus_pump_3,0,"very big"))
+            self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[1],self.motors_parameters_pump_3[1],self.bus_pump_3,1,"chineseMotor"))
             self.dispense_units_3.append(DispenseUnit(self, self.motors_pump_3[2], self.motors_parameters_pump_3[2], self.bus_pump_3, 2, "very big"))
 
 
@@ -251,7 +252,8 @@ class HardWare(Frame):
         #initialiseMotorList(self, [self.zMotor,self.magnetMotor])
         #self.zMotor.move_absolute_wait(self,9149)
         if self.firstCard:
-            initialiseMotorList(self, [self.zMotor])
+            if self.positive_pressure:
+                initialiseMotorList(self, [self.zMotor])
             initialiseMotorList(self, [self.xMotor,self.yMotor])
         if self.arduino:
             self.arduinoControl.stopShaking()

@@ -220,7 +220,7 @@ class ThermalImageThread:
 
     def snapshot_in_cycle(self,thermalImages,folder_path,cycle,step):
         #try:
-            sleep(1.0)
+
             #if thermalImages are not active, we return
             if thermalImages==0 or self.rightFrame.parent.hardware.thermalCam==0:
                 return
