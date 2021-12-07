@@ -21,7 +21,7 @@ def saveQuartetControlFile(title):
     now=datetime.datetime.now()
 
     #original Quartet file
-    original_path="C:\\Users\\Prototype 4\\Desktop\\Prototype4\\Quartet_Control.xlsm"
+    original_path=r'D:\Prototype4\Quartet_Control.xlsm'
     expID=readExpID()
 
     #new folder path
@@ -44,17 +44,17 @@ def saveQuartetControlFile(title):
     shutil.copy(original_path, final_personal_path)
     shutil.copy(original_path, final_all_path)
 
-    #We don't insert timings anymore
-    for path in [final_personal_path,final_all_path]:
-         workbook = openpyxl.open(path,keep_vba=True)
-         generalSheet = workbook.get_sheet_by_name('General')
-         date = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day)
-         generalSheet.cell(row=3, column=2).value = date
+    #We don't insert timings anymore,nor date
+    # for path in [final_personal_path,final_all_path]:
+    #      workbook = openpyxl.open(path,keep_vba=True)
+    #      generalSheet = workbook.get_sheet_by_name('General')
+    #      date = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day)
+    #      generalSheet.cell(row=3, column=2).value = date
     #     generalSheet.cell(row=59, column=2).value = dispTime25_nuc
     #     generalSheet.cell(row=60, column=2).value = dispTime25_enzyme
     #     generalSheet.cell(row=61, column=2).value = dispDBTime
     #     generalSheet.cell(row=62, column=2).value = dispBBTime
-         workbook.save(path)
+    #      workbook.save(path)
 
 def force2digits(number):
     if number<10:
@@ -64,5 +64,5 @@ def force2digits(number):
 
 if __name__ == "__main__":
     # On crée la racine de notre interface
-    #saveQuartetControlFile()
-    readExpID()
+    saveQuartetControlFile("test")
+    #readExpID()

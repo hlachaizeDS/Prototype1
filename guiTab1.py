@@ -55,7 +55,8 @@ class RightFrame(Frame):
 
         self.tempLabel=Label(self,text="",width=40)
         self.tempLabel.pack(side="bottom",fill="x")
-
+        self.tempmeanLabel=Label(self,text="",width=40)
+        self.tempmeanLabel.pack(side="bottom",fill="x")
 
         #Binding to get temperatures live
         self.ImageLabel.bind("<Enter>",self.on_enter)

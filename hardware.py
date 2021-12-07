@@ -240,9 +240,9 @@ class HardWare(Frame):
 
             self.dispense_units_3=[]
 
-            self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[0],self.motors_parameters_pump_3[0],self.bus_pump_3,0,"very big"))
+            self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[0],self.motors_parameters_pump_3[0],self.bus_pump_3,0,"chineseMotor"))
             self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[1],self.motors_parameters_pump_3[1],self.bus_pump_3,1,"chineseMotor"))
-            self.dispense_units_3.append(DispenseUnit(self, self.motors_pump_3[2], self.motors_parameters_pump_3[2], self.bus_pump_3, 2, "very big"))
+            self.dispense_units_3.append(DispenseUnit(self, self.motors_pump_3[2], self.motors_parameters_pump_3[2], self.bus_pump_3, 2, "chineseMotor"))
 
 
     def initialisation(self):

@@ -92,9 +92,11 @@ class DispenseUnit():
 
     def open_valve(self):
         self.bus_tmcl.send(1, TMCL.commands.Command.SIO, self.digOut, 2, 1)
+        time.sleep(0.01)
 
     def close_valve(self):
         self.bus_tmcl.send(1, TMCL.commands.Command.SIO, self.digOut, 2, 0)
+        time.sleep(0.01)
 
     def zero(self):
         self.wait_for_pos()

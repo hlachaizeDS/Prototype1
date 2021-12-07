@@ -403,6 +403,20 @@ def wellListFromHalfColumns(halfColsList):
         wellList.append((halfCol-1)*4+4)
     return wellList
 
+def wellListFromColumns(ColsList):
+
+    wellList=[]
+    for Col in ColsList:
+        wellList.append((Col-1)*8+1)
+        wellList.append((Col-1)*8+2)
+        wellList.append((Col-1)*8+3)
+        wellList.append((Col-1)*8+4)
+        wellList.append((Col-1)*8+5)
+        wellList.append((Col-1)*8+6)
+        wellList.append((Col-1)*8+7)
+        wellList.append((Col-1)*8+8)
+    return wellList
+
 def getParameters(synthesis_sheet):
 
     param_indexes=findIndexes('Parameter',synthesis_sheet)

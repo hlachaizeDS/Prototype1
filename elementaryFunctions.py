@@ -4,7 +4,7 @@ from hardware import STIRRING_VELOCITY
 import math
 
 X_A1=131469
-Y_A1=33916
+Y_A1=37995
 
 X_step=9300
 Y_step=9217
@@ -99,19 +99,19 @@ def goToWell(hardware,element,well,quadrant):
         #X_1 = X_1 - 142800
         #Y_1 = Y_1 + 14981
         X_1=-11043
-        Y_1=48897
+        Y_1=52976
 
     if element=='safe':
         X_1 = 0
-        Y_1 = 149639
+        Y_1 = 129895
 
     if element=='thermo':
         X_1=0
-        Y_1=123614
+        Y_1=127693
 
     if element == "thermalCamera":
         X_1 = 0
-        Y_1 = 125816
+        Y_1 = 129895
 
     if element == "washPrime":
         #X_1 = 167686
@@ -286,6 +286,7 @@ def waitAndStir(hardware,timeToWait):
     goToWell(hardware, 'thermalCamera', 1,0)
 
     hardware.arduinoControl.startShaking(280)
+    #hardware.arduinoControl.startShaking(330) #RNA
     wait(hardware,timeToWait)
     hardware.arduinoControl.stopShaking()
 
