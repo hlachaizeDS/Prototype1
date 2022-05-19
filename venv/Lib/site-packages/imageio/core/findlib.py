@@ -5,8 +5,6 @@
 """ This module contains generic code to find and load a dynamic library.
 """
 
-from __future__ import absolute_import, print_function, division
-
 import os
 import sys
 import ctypes
@@ -19,8 +17,8 @@ SYSTEM_LIBS_ONLY = False
 
 
 def looks_lib(fname):
-    """ Returns True if the given filename looks like a dynamic library.
-    Based on extension, but cross-platform and more flexible. 
+    """Returns True if the given filename looks like a dynamic library.
+    Based on extension, but cross-platform and more flexible.
     """
     fname = fname.lower()
     if sys.platform.startswith("win"):
@@ -32,7 +30,7 @@ def looks_lib(fname):
 
 
 def generate_candidate_libs(lib_names, lib_dirs=None):
-    """ Generate a list of candidate filenames of what might be the dynamic
+    """Generate a list of candidate filenames of what might be the dynamic
     library corresponding with the given list of names.
     Returns (lib_dirs, lib_paths)
     """
@@ -43,12 +41,13 @@ def generate_candidate_libs(lib_names, lib_dirs=None):
         "/lib",
         "/usr/lib",
         "/usr/lib/x86_64-linux-gnu",
+        "/usr/lib/aarch64-linux-gnu",
         "/usr/local/lib",
         "/opt/local/lib",
     ]
 
     # Get Python dirs to search (shared if for Pyzo)
-    py_sub_dirs = ["lib", "DLLs", "Library/bin", "shared"]
+    py_sub_dirs = ["bin", "lib", "DLLs", "Library/bin", "shared"]
     py_lib_dirs = [os.path.join(sys.prefix, d) for d in py_sub_dirs]
     if hasattr(sys, "base_prefix"):
         py_lib_dirs += [os.path.join(sys.base_prefix, d) for d in py_sub_dirs]
@@ -84,16 +83,16 @@ def generate_candidate_libs(lib_names, lib_dirs=None):
 
 
 def load_lib(exact_lib_names, lib_names, lib_dirs=None):
-    """ load_lib(exact_lib_names, lib_names, lib_dirs=None)
-    
-    Load a dynamic library. 
-    
+    """load_lib(exact_lib_names, lib_names, lib_dirs=None)
+
+    Load a dynamic library.
+
     This function first tries to load the library from the given exact
     names. When that fails, it tries to find the library in common
     locations. It searches for files that start with one of the names
     given in lib_names (case insensitive). The search is performed in
     the given lib_dirs and a set of common library dirs.
-    
+
     Returns ``(ctypes_library, library_path)``
     """
 
@@ -135,22 +134,19 @@ def load_lib(exact_lib_names, lib_names, lib_dirs=None):
         try:
             the_lib = loader.LoadLibrary(fname)
             break
-        except Exception:
+        except Exception as err:
             # Don't record errors when it couldn't load the library from an
             # exact name -- this fails often, and doesn't provide any useful
             # debugging information anyway, beyond "couldn't find library..."
             if fname not in exact_lib_names:
-                # Get exception instance in Python 2.x/3.x compatible manner
-                e_type, e_value, e_tb = sys.exc_info()
-                del e_tb
-                errors.append((fname, e_value))
+                errors.append((fname, err))
 
     # No success ...
     if the_lib is None:
         if errors:
             # No library loaded, and load-errors reported for some
             # candidate libs
-            err_txt = ["%s:\n%s" % (l, str(e)) for l, e in errors]
+            err_txt = ["%s:\n%s" % (lib, str(e)) for lib, e in errors]
             msg = (
                 "One or more %s libraries were found, but "
                 + "could not be loaded due to the following errors:\n%s"

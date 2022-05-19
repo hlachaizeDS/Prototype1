@@ -5,6 +5,8 @@ from libirimager import *
 import time
 import logging
 
+
+
 class Optris:
     INITTIME = 4.0
 
@@ -16,6 +18,7 @@ class Optris:
         Initialize USB, etc.
         """
         evo_irimager_usb_init()
+        evo_irimager_set_focusmotor_pos(68)
         self.size = evo_irimager_get_thermal_image_size()
         self._inittime = time.time()
         return

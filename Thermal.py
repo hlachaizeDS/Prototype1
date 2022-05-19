@@ -1,7 +1,7 @@
 """
 This module handles extracting well temperatures from Optris images
 """
-from  Optris import *
+from Optris import *
 import numpy as np
 #import imageio
 from pathlib import Path
@@ -17,6 +17,9 @@ from time import *
 from elementaryFunctions import goToWell
 import cv2 as cv
 import pandas as pd
+import pickle
+from MTM import matchTemplates
+
 
 #from action import thermal_is384
 __all__ = ['ThermalImage', 'ThermalImageParams', 'default_TheramlImageParams']
@@ -163,6 +166,7 @@ class ThermalImageThread:
         # store the video stream object and output path, then initialize
         # the most recently read frame, thread for reading frames, and
         # the thread stop event
+
         self.o = Optris()
         self.thermalFrame = None    #Contains temperature data
         self.topng = None    #the frame we'll save as png
@@ -174,55 +178,22 @@ class ThermalImageThread:
         #ColorMap
         self.cm = plt.get_cmap('seismic')
         #Zoom Factor
-        self.zoom=3
+        self.zoom=1.2
+        self.width=382
+        self.height=288
         self.letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
         self.nb_numbers = 12
         self.nb_letters = 8
-        self.base_line = 323
-        self.base_column = 63
-        self.offset_h = 300
 
-        self.line_coordinates = np.array([[15, 15, 13, 14, 14, 16, 17, 18, 22, 22, 23, 24],
-                                     [51, 50, 52, 51, 52, 54, 53, 56, 55, 56, 58, 60],
-                                     [89, 88, 90, 90, 90, 92, 92, 94, 94, 96, 97, 97],
-                                     [126, 127, 127, 128, 129, 130, 130, 131, 132, 133, 135, 136],
-                                     [164, 164, 166, 166, 167, 169, 168, 170, 171, 172, 173, 175],
-                                     [202, 202, 203, 205, 204, 206, 207, 208, 210, 211, 213, 213],
-                                     [238, 239, 241, 244, 243, 245, 245, 247, 247, 247, 248, 248],
-                                     [275, 277, 279, 280, 281, 280, 282, 283, 282, 284, 285, 284]])
-        self.column_coordinates = np.array([[31, 66, 103, 143, 179, 218, 256, 295, 333, 368, 405, 442],
-                                       [30, 67, 104, 141, 178, 217, 255, 294, 329, 366, 405, 441],
-                                       [29, 65, 103, 140, 178, 215, 255, 293, 329, 366, 405, 442],
-                                       [29, 65, 103, 140, 177, 215, 254, 293, 329, 366, 405, 443],
-                                       [28, 64, 101, 139, 176, 214, 253, 291, 328, 365, 404, 443],
-                                       [27, 63, 101, 138, 176, 214, 253, 291, 328, 366, 404, 442],
-                                       [27, 63, 100, 138, 175, 213, 252, 291, 327, 365, 403, 440],
-                                       [27, 63, 100, 137, 175, 213, 252, 290, 327, 364, 402, 439]])
-        self.line_coordinates -= self.base_line
-        self.column_coordinates -= self.base_column
+        protoTF = 5
 
-        if self.thermal_is384:
-            self.start = [22, 0]
-            self.delta_col = 19
-            self.delta_row = 19  # 20
-            self.end = [453, 294]
-            self.first_last_line = [14, 283]
-            self.nb_rows = 16
-            self.nb_cols = 24
-            self.d_delta_col = 0.375
-            self.d_delta_row = 0.46
-            self.base_col = 65
-            self.base_row = 320
-            self.letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
-            self.nb_numbers = 24
-            self.nb_letters = 16
-            self.start[0] -= self.base_col
-            self.start[1] -= self.base_row
+        db_template = pickle.load(open('db_template_proto' + str(protoTF) + '.p', "rb"))
 
-        self.template_tempfin = cv.cvtColor(cv.imread('template_P4_full.png', 1),cv.COLOR_RGB2BGR)
-        self.w_tempfin, self.h_tempfin = cv.imread('template_P4_full.png', 0).shape[::-1]
-        meth = 'cv.TM_CCOEFF'
-        self.method_tempfin = eval(meth)
+        self.listTemplate = db_template['listTemplates']
+        self.dictTemplates = db_template['dictTemplates']
+        self.line_coordinates = db_template['line_coordinates']
+        self.column_coordinates = db_template['column_coordinates']
+        self.detection_limit = db_template['detection_limit']
 
         # start a thread that constantly pools the video sensor for
         # the most recently read frame
@@ -240,8 +211,9 @@ class ThermalImageThread:
         frame = Optris.C_to_uint8(self.o, frame)
 
         ti = ThermalImage(self.cm(frame), default_TheramlImageParams)
-        frame = Image.fromarray((ti.img[:, :, :3] * 255).astype(np.uint8)).resize((160 * self.zoom, 120 * self.zoom))
+        frame = Image.fromarray((ti.img[:, :, :3] * 255).astype(np.uint8)).resize((int(self.width * self.zoom), int(self.height * self.zoom)))
         self.topng = frame
+        #self.img_to_display = np.array(self.topng)
         # self.frame = ImageTk.PhotoImage(frame)
         self.mean_temperature()
         self.frame = ImageTk.PhotoImage(Image.fromarray(self.img_to_display.astype(np.uint8)))
@@ -249,12 +221,12 @@ class ThermalImageThread:
         self.rightFrame.ImageLabel.configure(image=self.frame)
         self.rightFrame.ImageLabel.Image = self.frame
 
-        # -5 pour le padx pady
-        x = (self.rightFrame.ImageLabel.winfo_pointerx() - 5 - self.rightFrame.ImageLabel.winfo_rootx()) / self.zoom
-        y = (self.rightFrame.ImageLabel.winfo_pointery() - 5 - self.rightFrame.ImageLabel.winfo_rooty()) / self.zoom
+        # moins quelque chose pour le décalage
+        x = (self.rightFrame.ImageLabel.winfo_pointerx() - 11 - self.rightFrame.ImageLabel.winfo_rootx()) / self.zoom
+        y = (self.rightFrame.ImageLabel.winfo_pointery() - 8 - self.rightFrame.ImageLabel.winfo_rooty()) / self.zoom
 
-        if x < 160 and x > -1:
-            if y < 120 and y > -1:
+        if x < self.width and x > -1:
+            if y < self.height and y > -1:
                 self.rightFrame.tempLabel.configure(
                     text=str(self.rightFrame.thermalThread.thermalFrame[int(y)][int(x)]) + "°C")
 
@@ -286,7 +258,7 @@ class ThermalImageThread:
             sleep(0.3)
             self.in_video_loop()
 
-            root_path = "D:\\Prototype4\\Thermal_Camera"
+            root_path = "C:\\Users\\Proto\\Desktop\\Prototype\\Thermal_Camera"
 
             now = datetime.datetime.now()
 
@@ -309,96 +281,93 @@ class ThermalImageThread:
             #print('Couldnt take snapshot')
 
     def generate_temperature_table(self, final_path):
-        """
-        cv.imshow("template",self.template_tempfin)
-        cv.waitKey()
-        cv.destroyAllWindows()
-        """
         wells_dict = {'Temperatures': self.letters}
 
-        img = np.array(self.topng)
-        img_c = img
-        img_for_matching = img[self.offset_h:]
-        # Apply template Matching
-        res = cv.matchTemplate(img_for_matching, self.template_tempfin, self.method_tempfin)
-        min_val, max_val, min_loc, max_loc = cv.minMaxLoc(res)
-        top_left = (max_loc[0],max_loc[1] + self.offset_h)
+        input_img = np.array(self.topng)
+        img_c = input_img
+        input_img = cv.cvtColor(input_img, cv.COLOR_BGR2GRAY)
+        img_p, img_q = input_img.shape[0], input_img.shape[1]
+        img_for_matching = input_img[self.detection_limit[0]:self.detection_limit[1], :]
+
+        hits = matchTemplates(self.listTemplate,
+                              img_for_matching,
+                              score_threshold=0,
+                              N_object=1,
+                              method=cv.TM_CCOEFF_NORMED,
+                              maxOverlap=0)
+        dictTemplate = self.dictTemplates[hits[:1]['TemplateName'].values[0]]
+        w = dictTemplate['width']
+        h = dictTemplate['height']
+        offset_line = dictTemplate['base_line']
+        offset_column = dictTemplate['base_column']
+
+        top_left0 = hits[:1]['BBox'].values[0][:2]
+        top_left = (top_left0[0], top_left0[1] + self.detection_limit[0])
+
+        bottom_right = (top_left[0] + w, top_left[1] + h)
+
+        line_coordinates_shifted = self.line_coordinates + top_left[1] - offset_line
+        column_coordinates_shifted = self.column_coordinates + top_left[0] - offset_column
+
         temperature_table = self.thermalFrame
-        #bottom_right = (top_left[0]+125,top_left[1]+ 46)
+        xl_p, xl_q = temperature_table.shape[0], temperature_table.shape[1]
+        fp, fq = img_p / xl_p, img_q / xl_q
 
-        if self.thermal_is384:
-            row_offset_0 = self.start[1] + top_left[1]
-            col_offset_0 = self.start[0] + top_left[0]
-            for n in range(self.nb_cols):
-                wells_dict[n+1] = []
-            for m in range(self.nb_rows):
-                col_offset = col_offset_0 - self.d_delta_col * m
-                row_offset = row_offset_0 + self.delta_row * m
-                for n in range(self.nb_cols):
-                    img_c = cv.circle(img_c, (int(col_offset), int(row_offset)), radius=2, color=(0, 0, 0),thickness=-1)
-                    try:
-                        wells_dict[n+1].append(temperature_table[int(row_offset) // 3, int(col_offset) // 3])
-                    except:
-                        wells_dict[n+1].append(None)
-                    col_offset += self.delta_col
-                    row_offset += self.d_delta_row
-        else:
-            line_coordinates_shifted = self.line_coordinates + top_left[1]
-            column_coordinates_shifted = self.column_coordinates + top_left[0]
-
-            idx = 0
-            for n in range(self.nb_numbers):
-                idx += 1
-                wells_dict[idx] = []
-                for m in range(self.nb_letters):
-                    x = column_coordinates_shifted[m,n]
-                    y = line_coordinates_shifted[m,n]
-                    try:
-                        wells_dict[idx].append(temperature_table[y // 3, x // 3])
-                    except:
-                        wells_dict[idx].append(None)
+        idx = 0
+        for n in range(self.nb_numbers):
+            idx += 1
+            wells_dict[idx] = []
+            for m in range(self.nb_letters):
+                x = column_coordinates_shifted[m, n]
+                y = line_coordinates_shifted[n, m]
+                try:
+                    wells_dict[idx].append(temperature_table[int(y / fp), int(x/fq)])
+                except:
+                    wells_dict[idx].append(None)
 
         df = pd.DataFrame(wells_dict)
-        df.to_excel(final_path + '.xlsx', sheet_name='temp_table', index=False)
+        df.to_excel(final_path + '_wells.xlsx', sheet_name='temp_table', index=False)
 
     def mean_temperature(self):
         temperatures = []
         self.img_to_display = np.array(self.topng)
-        img_for_matching = self.img_to_display[self.offset_h:]
-        # Apply template Matching
-        res = cv.matchTemplate(img_for_matching, self.template_tempfin, self.method_tempfin)
-        min_val, max_val, min_loc, max_loc = cv.minMaxLoc(res)
-        top_left = (max_loc[0],max_loc[1] + self.offset_h)
-        bottom_right = (top_left[0]+self.w_tempfin,top_left[1]+ self.h_tempfin)
-        cv.rectangle(self.img_to_display,top_left,bottom_right,(0,255,0),2)
+        img_p, img_q = self.img_to_display.shape[0], self.img_to_display.shape[1]
+        input_img = cv.cvtColor(self.img_to_display, cv.COLOR_BGR2GRAY)
+        img_for_matching = input_img[self.detection_limit[0]:self.detection_limit[1], :]
 
-        if self.thermal_is384:
-            row_offset_0 = self.start[1] + top_left[1]
-            col_offset_0 = self.start[0] + top_left[0]
-            for m in range(self.nb_rows):
-                col_offset = col_offset_0 - self.d_delta_col * m
-                row_offset = row_offset_0 + self.delta_row * m
-                for n in range(self.nb_cols):
-                    self.img_to_display = cv.circle(self.img_to_display, (int(col_offset), int(row_offset)), radius=2, color=(0, 255, 0),thickness=-1)
-                    try:
-                        temperatures.append(self.thermalFrame[int(row_offset) // 3, int(col_offset) // 3])
-                    except:
-                        pass
-                    col_offset += self.delta_col
-                    row_offset += self.d_delta_row
-        else:
-            line_coordinates_shifted = self.line_coordinates + top_left[1]
-            column_coordinates_shifted = self.column_coordinates + top_left[0]
-            for n in range(self.nb_numbers):
-                for m in range(self.nb_letters):
-                    x = column_coordinates_shifted[m,n]
-                    y = line_coordinates_shifted[m,n]
-                    self.img_to_display = cv.circle(self.img_to_display, (x, y), radius=2, color=(0, 255, 0), thickness=-1)
-                    try:
-                        temperatures.append(self.thermalFrame [y // 3, x // 3])
-                    except:
-                        pass
-        self.rightFrame.tempmeanLabel.configure(text="Mean temperature " + str(round(np.mean(temperatures),2)) + "°C")
+        hits = matchTemplates(self.listTemplate,
+                              img_for_matching,
+                              score_threshold=0,
+                              N_object=1,
+                              method=cv.TM_CCOEFF_NORMED,
+                              maxOverlap=0)
+
+        dictTemplate = self.dictTemplates[hits[:1]['TemplateName'].values[0]]
+        w = dictTemplate['width']
+        h = dictTemplate['height']
+        offset_line = dictTemplate['base_line']
+        offset_column = dictTemplate['base_column']
+
+        top_left0 = hits[:1]['BBox'].values[0][:2]
+        top_left = (top_left0[0], top_left0[1] + self.detection_limit[0])
+
+        bottom_right = (top_left[0] + w, top_left[1] + h)
+
+        line_coordinates_shifted = self.line_coordinates + top_left[1] - offset_line
+        column_coordinates_shifted = self.column_coordinates + top_left[0] - offset_column
+        xl_p, xl_q = self.thermalFrame.shape
+        fp, fq = img_p / xl_p, img_q / xl_q
+        cv.rectangle(self.img_to_display, top_left, bottom_right, (0, 255, 0), 2)
+        for n in range(self.nb_numbers):
+            for m in range(self.nb_letters):
+                x = int(column_coordinates_shifted[m, n])
+                y = int(line_coordinates_shifted[n, m])
+                self.img_to_display = cv.circle(self.img_to_display, (x, y), radius=2, color=(0, 255, 0), thickness=-1)
+                try:
+                    temperatures.append(self.thermalFrame[int(y / fp), int(x/fq)])
+                except:
+                    pass
+        self.rightFrame.tempmeanLabel.configure(text="Mean temperature " + str(round(np.mean(temperatures), 2)) + "°C")
 
 class FakeThermalImageThread:
 

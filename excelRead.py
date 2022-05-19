@@ -1,6 +1,6 @@
 import xlrd
 
-path = r'D:\Prototype4\Quartet_Control.xlsm'
+path = r'C:\Users\Proto\Desktop\Prototype\Quartet_Control.xlsm'
 
 #Parameters
 
@@ -50,12 +50,14 @@ def splitSequences(sequences,cycle):
     T_wells=[]
     M_wells=[]
     N_wells=[]
+    O_wells=[]
+    P_wells=[]
     X_wells=[]
 
-    nucleos=['A','C','G','T','M','N','X']
-    nucleo_arrays=[ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells,X_wells]
+    nucleos=['A','C','G','T','M','N','O','P','X']
+    nucleo_arrays=[ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells,O_wells,P_wells,X_wells]
 
-    for nucleo in range(1,7+1):
+    for nucleo in range(1,9+1):
         for sample in range(len(sequences)):
             if (cycle<=len(sequences[sample][1]) and sequences[sample][1][cycle-1]==nucleos[nucleo-1]):
                 nucleo_arrays[nucleo].append(sequences[sample][0])
@@ -145,7 +147,7 @@ def getActiveWellsButX(sequences,cycle):
     #Return all the wells in the synthesis minus the finished ones
     usedWells=getUsedWells(sequences)
     ended_wells=splitSequences(sequences,cycle)[0]
-    X_wells=splitSequences(sequences,cycle)[7]
+    X_wells=splitSequences(sequences,cycle)[9]
     activeWells=[]
 
     for well in usedWells:
@@ -158,7 +160,7 @@ def getEndedWellsPlusX(sequences,cycle):
     #Return all the wells in the synthesis minus the finished ones
     usedWells=getUsedWells(sequences)
     ended_wells=splitSequences(sequences,cycle)[0]
-    X_wells = splitSequences(sequences, cycle)[7]
+    X_wells = splitSequences(sequences, cycle)[9]
     activeWells=[]
 
     for well in X_wells:
@@ -185,6 +187,24 @@ def getParameters(synthesis_sheet):
         exec(code,globals())
 
 '''
+
+def inter(listOfListsOfWell):
+
+    final_list=listOfListsOfWell[0]
+    for wellList in listOfListsOfWell:
+        final_list=[well for well in final_list if well in wellList]
+
+    return final_list
+
+def union(listOfListsOfWell):
+
+    final_list=[]
+    for wellList in listOfListsOfWell:
+        for well in wellList:
+            if well not in final_list:
+                final_list.append(well)
+
+    return final_list
 
 if __name__ == "__main__":
 

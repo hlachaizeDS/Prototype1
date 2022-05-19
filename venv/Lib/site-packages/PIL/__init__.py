@@ -16,10 +16,9 @@ Use PIL.__version__ for this Pillow version.
 from . import _version
 
 # VERSION was removed in Pillow 6.0.0.
-# PILLOW_VERSION was removed in Pillow 7.0.0.
+# PILLOW_VERSION was removed in Pillow 9.0.0.
 # Use __version__ instead.
 __version__ = _version.__version__
-
 del _version
 
 
@@ -72,5 +71,9 @@ _plugins = [
 ]
 
 
-class UnidentifiedImageError(IOError):
+class UnidentifiedImageError(OSError):
+    """
+    Raised in :py:meth:`PIL.Image.open` if an image cannot be opened and identified.
+    """
+
     pass

@@ -31,25 +31,30 @@ class MiddleFrame(Frame):
         #print(self.parent.parent.tab(1))
         hardware = self.parent.parent.children['!mainframetab1'].hardware
 
-        # Priming Premix
+        # Init Pumps
         self.initAllFirstButton = Button(self, text="Init All Pumps", command=lambda: hardware.init_all_du())
-        self.initAllFirstButton.grid(row=1, column=1, padx=30, pady=5)
+        self.initAllFirstButton.grid(row=1, column=1, padx=5, pady=5)
 
-        # Priming premix
-        self.PrimingPremixButton = Button(self, text="Prime 2.5mL",
-                                             command=lambda: multiDispensePumps(hardware,[2500,2500,2500,2500,2500,2500,0,0,0]))
-        self.PrimingPremixButton.grid(row=2, column=1, padx=30, pady=5)
+        # Priming MNACGT
+        self.PrimingPremixButton = Button(self, text="Prime MNACGT 3mL",
+                                             command=lambda: multiDispensePumps(hardware,[3000]*6))
+        self.PrimingPremixButton.grid(row=2, column=1, padx=5, pady=5)
 
-        # Priming Washes
-        self.primingWashesButton = Button(self, text="Buffers 5mL",
-                                          command=lambda: multiDispensePumps(hardware,[0,0,0,0,0,0,5000,5000,0]))
-        self.primingWashesButton.grid(row=3, column=1, padx=30, pady=5)
+        # Priming All single lines
+        self.PrimingPremixButton = Button(self, text="Prime MNACGTOP 3mL",
+                                          command=lambda: multiDispensePumps(hardware, [3000] * 8))
+        self.PrimingPremixButton.grid(row=3, column=1, padx=5, pady=5)
 
-        # Priming Buff1
-        self.primingWashesButton = Button(self, text="Buff1 5mL",
+        # Priming BB DB
+        self.primingWashesButton = Button(self, text="Prime DB BB 5mL",
+                                          command=lambda: multiDispensePumps(hardware,[0,0,0,0,0,0,0,0,5000,5000]))
+        self.primingWashesButton.grid(row=4, column=1, padx=5, pady=5)
+
+        # Priming all multi lines
+        self.primingWashesButton = Button(self, text="Prime DB BB Buff1 Buff2 5mL",
                                           command=lambda: multiDispensePumps(hardware,
-                                                                             [0, 0, 0, 0, 0, 0, 0, 0, 5000]))
-        self.primingWashesButton.grid(row=4, column=1, padx=30, pady=5)
+                                                                             [0,0,0,0,0,0,0,0,5000,5000,5000,5000]))
+        self.primingWashesButton.grid(row=5, column=1, padx=5, pady=5)
 
 
         ##Vent 7s
@@ -85,7 +90,7 @@ class MiddleFrame(Frame):
         ##Go To Safe position
         self.safeButton = Button(self, text="Safe Pos",
                                         command=lambda: goToWell(hardware, 'safe', 1, 0))
-        self.safeButton.grid(row=9, column=1, padx=30, pady=5)
+        self.safeButton.grid(row=9, column=1, padx=5, pady=5)
 
         ##Go To Priming position
         self.primeWashesButton = Button(self, text="Wash Prime Pos",
@@ -106,29 +111,37 @@ class MiddleFrame(Frame):
         self.volumeToDisp_value.set('25')
 
         self.multidispMNACGTButton = Button(self, text="MNACGT",
-                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(6)]+[0,0,0]))
+                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(6)]+[0,0,0,0,0,0]))
         self.multidispMNACGTButton.grid(row=2, column=5, padx=5, pady=5)
 
-        self.multidispButton = Button(self, text="ACGT", command=lambda : multiDispensePumps(hardware, [0,0]+[float(self.volumeToDisp_value.get()) for i in range(4)]+[0,0,0]))
+        self.multidispButton = Button(self, text="ACGT", command=lambda : multiDispensePumps(hardware, [0,0]+[float(self.volumeToDisp_value.get()) for i in range(4)]+[0,0,0,0,0,0]))
         self.multidispButton.grid(row=3, column=5, padx=5, pady=5)
 
         self.multidispMNButton = Button(self, text="MN",
-                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(2)]+[0,0,0,0,0,0,0]))
+                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(2)]+[0,0,0,0,0,0,0,0,0,0]))
         self.multidispMNButton.grid(row=4, column=5, padx=5, pady=5)
 
-        channelList=['M', 'N', 'A', 'C','G','T','DB','BB','Buff1']
-        dividerList=[1,1,1,1,1,1,4,4,4]
-        self.bufferButton = [None] * len(channelList)
-        for buffer in channelList:
-            self.bufferButton[channelList.index(buffer)] = Button(self, text=buffer, command=lambda buffer=buffer: multiDispensePumps(hardware,disp_pattern(channelList.index(buffer),float(self.volumeToDisp_value.get())*dividerList[channelList.index(buffer)]) ))
-            self.bufferButton[channelList.index(buffer)].grid(row=5 + channelList.index(buffer),column=5,padx=5, pady=5)
+        simpleChannelList=['M', 'N', 'A', 'C','G','T', 'O', 'P', ]
+        self.bufferButton = [None] * len(simpleChannelList)
+        for buffer in simpleChannelList:
+            self.bufferButton[simpleChannelList.index(buffer)] = Button(self, text=buffer, command=lambda buffer=buffer: multiDispensePumps(hardware,disp_pattern(simpleChannelList.index(buffer),float(self.volumeToDisp_value.get())*1) ))
+            self.bufferButton[simpleChannelList.index(buffer)].grid(row=5 + simpleChannelList.index(buffer),column=5,padx=5, pady=5)
+
+        quadChannelList = ['DB', 'BB', 'Buff1', 'Buff2']
+        self.quadBufferButton = [None] * len(quadChannelList)
+        for buffer in quadChannelList:
+            self.quadBufferButton[quadChannelList.index(buffer)] = Button(self, text=buffer, command=lambda
+                buffer=buffer: multiDispensePumps(hardware, disp_pattern(len(simpleChannelList)+quadChannelList.index(buffer),
+                                                                         float(self.volumeToDisp_value.get()) * 4)))
+            self.quadBufferButton[quadChannelList.index(buffer)].grid(row=5 + quadChannelList.index(buffer), column=6,
+                                                                    padx=5, pady=5)
 
         self.initButton= Button(self, text='Init', command=lambda : hardware.init_du(int(self.volumeToDisp_value.get())))
-        self.initButton.grid(row=5 + channelList.index(buffer) + 1,column=5,padx=5, pady=5)
+        self.initButton.grid(row=5 + quadChannelList.index(buffer) + 3,column=6,padx=5, pady=5)
 
         self.initAllButton = Button(self, text='Init All',
                                  command=lambda: hardware.init_all_du())
-        self.initAllButton.grid(row=5 + channelList.index(buffer) + 2, column=5, padx=5, pady=5)
+        self.initAllButton.grid(row=5 + quadChannelList.index(buffer) + 4, column=6, padx=5, pady=5)
         ##Entry
         # self.timeToDisp_value = StringVar()
         # self.timeToDisp = Entry(self, textvariable=self.timeToDisp_value)
@@ -254,7 +267,7 @@ def goToColumn_Callback(MiddleFrame,hardware,buffer):
 
 
 def disp_pattern(id,vol):
-    pattern=[0,0,0,0,0,0,0,0,0]
+    pattern=[0,0,0,0,0,0,0,0,0,0,0,0]
     pattern[id]=vol
 
     return pattern

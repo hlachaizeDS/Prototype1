@@ -6,7 +6,7 @@ import openpyxl
 #from cycles import dispTime25_nuc,dispTime25_enzyme,dispDBTime,dispBBTime
 
 def readExpID():
-    path="C:\\Users\\Prototype 4\\PycharmProjects\\Prototype1\\ExpID.txt"
+    path="C:\\Users\\Proto\\PycharmProjects\\Prototype5\\ExpID.txt"
     file=open(path,"r")
     number=file.readline()
     file.close()
@@ -21,16 +21,16 @@ def saveQuartetControlFile(title):
     now=datetime.datetime.now()
 
     #original Quartet file
-    original_path=r'D:\Prototype4\Quartet_Control.xlsm'
+    original_path=r'C:\Users\Proto\Desktop\Prototype\Quartet_Control.xlsm'
     expID=readExpID()
 
     #new folder path
-    general_path = "C:\\Users\\Prototype 4\\DNA Script\\Thomas YBERT - SYNTHESIS OPERATIONS\\S.3 - P4\\Quartets"
+    general_path = "C:\\Users\\Proto\\DNA Script\\Thomas YBERT - SYNTHESIS OPERATIONS\\S.6 - P5\\Quartets"
     folder_path=str(now.year)[2:]+ force2digits(now.month)
 
     # new file path
-    personal_folder_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_P4_' + title + '_' + expID
-    file_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + "_P4_" + title + "_" + expID
+    personal_folder_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_P5_' + title + '_' + expID
+    file_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + "_P5_" + title + "_" + expID
 
     #the quartet control will be copied both in its own folder AND in all folder
     os.makedirs(general_path + '\\' + folder_path, exist_ok=True)

@@ -5,6 +5,7 @@ PORT_VACUUM = "COM6"
 PORT_PUMP_1="COM4"
 PORT_PUMP_2="COM5"
 PORT_PUMP_3="COM6"
+PORT_PUMP_4="COM7"
 STALLGUARD_THRESHOLD = 0
 STIRRING_VELOCITY=1050000
 
@@ -36,6 +37,7 @@ class HardWare(Frame):
         self.pump_card_1 = 1
         self.pump_card_2 = 1
         self.pump_card_3 = 1
+        self.pump_card_4 = 1
 
         if self.firstCard :
             #try:
@@ -165,7 +167,7 @@ class HardWare(Frame):
 
             self.dispense_units_1=[]
             for i in range(3):
-                self.dispense_units_1.append(DispenseUnit(self,self.motors_pump_1[i],self.motors_parameters_pump_1[i],self.bus_pump_1,i))
+                self.dispense_units_1.append(DispenseUnit(self,self.motors_pump_1[i],self.motors_parameters_pump_1[i],self.bus_pump_1,i,"chineseMotor"))
 
         if self.pump_card_2 :
 
@@ -202,13 +204,13 @@ class HardWare(Frame):
 
             self.dispense_units_2=[]
             for i in range(3):
-                self.dispense_units_2.append(DispenseUnit(self,self.motors_pump_2[i],self.motors_parameters_pump_2[i],self.bus_pump_2,i))
+                self.dispense_units_2.append(DispenseUnit(self,self.motors_pump_2[i],self.motors_parameters_pump_2[i],self.bus_pump_2,i,"chineseMotor"))
 
 
         if self.pump_card_3 :
 
-            serial_port_pump_2 = Serial(PORT_PUMP_3, 9600)
-            self.bus_pump_3 = TMCL.connect(serial_port_pump_2)
+            serial_port_pump_3 = Serial(PORT_PUMP_3, 9600)
+            self.bus_pump_3 = TMCL.connect(serial_port_pump_3)
 
             self.motors_pump_3=[]
             self.motors_parameters_pump_3=[]
@@ -244,6 +246,45 @@ class HardWare(Frame):
             self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[1],self.motors_parameters_pump_3[1],self.bus_pump_3,1,"chineseMotor"))
             self.dispense_units_3.append(DispenseUnit(self, self.motors_pump_3[2], self.motors_parameters_pump_3[2], self.bus_pump_3, 2, "chineseMotor"))
 
+        if self.pump_card_4 :
+
+            serial_port_pump_4 = Serial(PORT_PUMP_4, 9600)
+            self.bus_pump_4 = TMCL.connect(serial_port_pump_4)
+
+            self.motors_pump_4=[]
+            self.motors_parameters_pump_4=[]
+            for i in range(3):
+                self.motors_pump_4.append(self.bus_pump_4.get_motor(MODULE_ADDRESS,i))
+                self.motors_parameters_pump_4.append(TMCL.motor.AxisParameterInterface(self.motors_pump_4[-1]))
+
+            stallguard_value = 30  # -64..+63
+            stallguard_minimum_speed = 5000  # 0...7999774
+            current_max = [130 for i in range(3)]  # 0..255
+            current_standby = [8 for i in range(3)]  # 0..255
+            acceleration_max = [6629278 for i in range(3)]  # 0...7629278
+            deceleration_max = acceleration_max  # 0...7629278
+            reference_type = [65, 65, 65]
+            swap_switches = [0, 0, 0]
+            right_limit_switch_polarity = [0, 0, 0]
+            left_limit_switch_polarity = [0, 0, 0]
+            reference_search_velocity = [100000 for i in range(3)]
+            precise_reference_search_velocity = [5000 for i in range(3)]
+            velocity_max = [350000 for i in range(3)]
+            microsteps = [6 for i in range(3)]
+            velocity_V1 = 0
+
+            self.apply_axis_parameters(self.motors_parameters_pump_4, velocity_max, acceleration_max, current_max,
+                                       current_standby,
+                                       deceleration_max, velocity_V1, swap_switches, right_limit_switch_polarity,
+                                       left_limit_switch_polarity, reference_type, reference_search_velocity,
+                                       precise_reference_search_velocity, microsteps
+                                       )
+
+            self.dispense_units_4=[]
+
+            self.dispense_units_4.append(DispenseUnit(self,self.motors_pump_4[0],self.motors_parameters_pump_4[0],self.bus_pump_4,0,"chineseMotor"))
+            self.dispense_units_4.append(DispenseUnit(self,self.motors_pump_4[1],self.motors_parameters_pump_4[1],self.bus_pump_4,1,"chineseMotor"))
+            self.dispense_units_4.append(DispenseUnit(self, self.motors_pump_4[2], self.motors_parameters_pump_4[2], self.bus_pump_4, 2, "chineseMotor"))
 
     def initialisation(self):
 
@@ -294,8 +335,10 @@ class HardWare(Frame):
             self.dispense_units_1[du_index].initialise_position()
         elif du_index in [3,4,5]:
             self.dispense_units_2[du_index-3].initialise_position()
-        else:
+        elif du_index in [6,7,8]:
             self.dispense_units_3[du_index - 6].initialise_position()
+        else:
+            self.dispense_units_4[du_index - 9].initialise_position()
 
     def init_all_du(self):
 
@@ -304,34 +347,42 @@ class HardWare(Frame):
             self.dispense_units_1[du_index].set_param_init()
             self.dispense_units_2[du_index].set_param_init()
             self.dispense_units_3[du_index].set_param_init()
+            self.dispense_units_4[du_index].set_param_init()
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].push(self.dispense_units_1[du_index].init_forward)
             self.dispense_units_2[du_index].push(self.dispense_units_2[du_index].init_forward)
             self.dispense_units_3[du_index].push(self.dispense_units_3[du_index].init_forward)
+            self.dispense_units_4[du_index].push(self.dispense_units_3[du_index].init_forward)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].set_param_std()
             self.dispense_units_2[du_index].set_param_std()
             self.dispense_units_3[du_index].set_param_std()
+            self.dispense_units_4[du_index].set_param_std()
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].pull(self.dispense_units_1[du_index].pullback)
             self.dispense_units_2[du_index].pull(self.dispense_units_2[du_index].pullback)
             self.dispense_units_3[du_index].pull(self.dispense_units_3[du_index].pullback)
+            self.dispense_units_4[du_index].pull(self.dispense_units_3[du_index].pullback)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].pull_from_reservoir(self.dispense_units_1[du_index].init_backward)
             self.dispense_units_2[du_index].pull_from_reservoir(self.dispense_units_2[du_index].init_backward)
             self.dispense_units_3[du_index].pull_from_reservoir(self.dispense_units_3[du_index].init_backward)
+            self.dispense_units_4[du_index].pull_from_reservoir(self.dispense_units_3[du_index].init_backward)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].wait_for_pos()
             self.dispense_units_2[du_index].wait_for_pos()
             self.dispense_units_3[du_index].wait_for_pos()
+            self.dispense_units_4[du_index].wait_for_pos()
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].motor_parameters.set(1, 0)
             self.dispense_units_2[du_index].motor_parameters.set(1, 0)
             self.dispense_units_3[du_index].motor_parameters.set(1, 0)
+            self.dispense_units_4[du_index].motor_parameters.set(1, 0)
         for du_index in [0, 1, 2]:
             self.dispense_units_1[du_index].motor_parameters.set(0, 0)
             self.dispense_units_2[du_index].motor_parameters.set(0, 0)
             self.dispense_units_3[du_index].motor_parameters.set(0, 0)
+            self.dispense_units_4[du_index].motor_parameters.set(0, 0)
 
     def apply_axis_parameters(self,motor_parameters_list, velocity_max, acceleration_max, current_max, current_standby,
                                   deceleration_max, velocity_V1, swap_switches, right_limit_switch_polarity,

@@ -98,131 +98,77 @@ def dispensePremixesAndEnzymeSep(hardware,time_nuc,time_enz_M,time_enz_N,M_array
 
     goToWell(hardware, "thermalCamera", 1, 0)
 
-def dispensePumps(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_array,is384):
 
-    nuclArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy()]
+def dispensePumps(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_array,O_array,P_array,is384):
+
+    pump_nb=8
+
+    wellArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy(),O_array.copy(),P_array.copy()]
     'we loop for every position possible'
-    for col in range(0,12,1):
-        for m_well in range(1+18*col,13+(18*col)+1,1):
-            n_well=m_well+1
-            a_well=m_well+2
-            c_well=m_well+3
-            g_well=m_well+4
-            t_well=m_well+5
-            wells=[m_well,n_well,a_well,c_well,g_well,t_well]
-            disp=[0,0,0,0,0,0,0,0,0] #Flag to know if we should dispense
-            for nucl in range(6):
-                #print (plateWellToRealWell(wells[nucl]))
-                if plateWellToRealWell6Nozzles(wells[nucl]) in nuclArrays[nucl]:
-                    disp[nucl]=volumes[nucl]
-                    nuclArrays[nucl].remove(plateWellToRealWell6Nozzles(wells[nucl]))
+    dispHead_dims=[6,2] # 6 rows lines, 2 columns, when looking at it like the plate
+    fake_plate_dims=[8 + 2*(dispHead_dims[0] - 1), 12 + 2*(dispHead_dims[1] - 1)] # only for first nozzle
+
+    for col in range(0,fake_plate_dims[1] - (dispHead_dims[1]-1),1):
+        for m_well in range(1 + fake_plate_dims[0]  * col, 1 + fake_plate_dims[0]  * (col+1) - (dispHead_dims[0] - 1), 1):
+            n_well= m_well + 1
+            o_well= m_well + 2
+            p_well= m_well + 3
+            a_well= m_well + 2 + fake_plate_dims[0] * 1
+            c_well= m_well + 3 + fake_plate_dims[0] * 1
+            g_well= m_well + 4 + fake_plate_dims[0] * 1
+            t_well= m_well + 5 + fake_plate_dims[0] * 1
+            wells= [m_well,n_well,a_well,c_well,g_well,t_well,o_well,p_well]
+            disp=[0] * pump_nb #Flag to know if we should dispense
+            for nozzle in range(pump_nb):
+                if fake_plate_well_to_real_well(wells[nozzle], fake_plate_dims, dispHead_dims) in wellArrays[nozzle]:
+                    disp[nozzle]=volumes[nozzle]
+                    wellArrays[nozzle].remove(fake_plate_well_to_real_well(wells[nozzle], fake_plate_dims, dispHead_dims))
             if any(vol!=0 for vol in disp ):
                 if is384:
                     for i in range(1,5):
-                        goToRealWell6Nozzles(hardware,m_well,i)
+                        goToFakeWell(hardware, m_well, fake_plate_dims, dispHead_dims, i)
                         multiDispensePumps(hardware,disp)
                 else:
-                    goToRealWell6Nozzles(hardware, m_well, 0)
+                    goToFakeWell(hardware, m_well, fake_plate_dims, dispHead_dims, 0)
                     multiDispensePumps(hardware,disp)
             hardware.parent.update()
 
     goToWell(hardware, "thermalCamera", 1, 0)
 
-def dispensePumpsColDiffVols(hardware,volumesPerCol,M_array,N_array,A_array,C_array,G_array,T_array,is384):
+def dispensePumpsDiffCols(hardware,volumesPerCol,M_array,N_array,A_array,C_array,G_array,T_array,O_array,P_array,is384):
 
-    nuclArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy()]
+    pump_nb=8
+
+    wellArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy(),O_array.copy(),P_array.copy()]
     'we loop for every position possible'
-    for col in range(0,12,1):
-        for m_well in range(1+18*col,13+(18*col)+1,1):
-            n_well=m_well+1
-            a_well=m_well+2
-            c_well=m_well+3
-            g_well=m_well+4
-            t_well=m_well+5
-            wells=[m_well,n_well,a_well,c_well,g_well,t_well]
-            disp=[0,0,0,0,0,0,0,0,0] #Flag to know if we should dispense
-            for nucl in range(6):
-                #print (plateWellToRealWell(wells[nucl]))
-                if plateWellToRealWell6Nozzles(wells[nucl]) in nuclArrays[nucl]:
-                    disp[nucl]=volumesPerCol[col]
-                    nuclArrays[nucl].remove(plateWellToRealWell6Nozzles(wells[nucl]))
+    dispHead_dims=[6,2] # 6 rows lines, 2 columns, when looking at it like the plate
+    fake_plate_dims=[8 + 2*(dispHead_dims[0] - 1), 12 + 2*(dispHead_dims[1] - 1)] # only for first nozzle
+
+    for col in range(0,fake_plate_dims[1] - (dispHead_dims[1]-1),1):
+        for m_well in range(1 + fake_plate_dims[0]  * col, 1 + fake_plate_dims[0]  * (col+1) - (dispHead_dims[0] - 1), 1):
+            n_well= m_well + 1
+            o_well= m_well + 2
+            p_well= m_well + 3
+            a_well= m_well + 2 + fake_plate_dims[0] * 1
+            c_well= m_well + 3 + fake_plate_dims[0] * 1
+            g_well= m_well + 4 + fake_plate_dims[0] * 1
+            t_well= m_well + 5 + fake_plate_dims[0] * 1
+            wells= [m_well,n_well,a_well,c_well,g_well,t_well,o_well,p_well]
+            disp=[0] * pump_nb #Flag to know if we should dispense
+            for nozzle in range(pump_nb):
+                real_well=fake_plate_well_to_real_well(wells[nozzle], fake_plate_dims, dispHead_dims)
+                real_column=((real_well-1)//8)+1
+                if real_well in wellArrays[nozzle]:
+                    disp[nozzle]=volumesPerCol[real_column-1]
+                    wellArrays[nozzle].remove(real_well)
             if any(vol!=0 for vol in disp ):
                 if is384:
                     for i in range(1,5):
-                        goToRealWell6Nozzles(hardware,m_well,i)
+                        goToFakeWell(hardware, m_well, fake_plate_dims, dispHead_dims, i)
                         multiDispensePumps(hardware,disp)
                 else:
-                    goToRealWell6Nozzles(hardware, m_well, 0)
+                    goToFakeWell(hardware, m_well, fake_plate_dims, dispHead_dims, 0)
                     multiDispensePumps(hardware,disp)
-            hardware.parent.update()
-
-    goToWell(hardware, "thermalCamera", 1, 0)
-
-
-def dispensePumpsColDiffVols_SlightVols(hardware,volumesPerCol,M_array,N_array,A_array,C_array,G_array,T_array,is384):
-
-    nuclArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy()]
-    'we loop for every position possible'
-    enzColsVols=[25,25,25,23,24,23,25,25,25,23,24,23]
-    nucColsVols=[25,24,23,25,25,23,25,24,23,25,25,23]
-    for col in range(0,12,1):
-        for m_well in range(1+18*col,13+(18*col)+1,1):
-            n_well=m_well+1
-            a_well=m_well+2
-            c_well=m_well+3
-            g_well=m_well+4
-            t_well=m_well+5
-            wells=[m_well,n_well,a_well,c_well,g_well,t_well]
-            disp=[0,0,0,0,0,0,0,0,0] #Flag to know if we should dispense
-            for nucl in range(6):
-                #print (plateWellToRealWell(wells[nucl]))
-                if plateWellToRealWell6Nozzles(wells[nucl]) in nuclArrays[nucl]:
-                    if nucl<2:
-                        disp[nucl] = enzColsVols[col]
-                    else:
-                        disp[nucl] = nucColsVols[col]
-                    nuclArrays[nucl].remove(plateWellToRealWell6Nozzles(wells[nucl]))
-            if any(vol!=0 for vol in disp ):
-                if is384:
-                    for i in range(1,5):
-                        goToRealWell6Nozzles(hardware,m_well,i)
-                        multiDispensePumps(hardware,disp)
-                else:
-                    goToRealWell6Nozzles(hardware, m_well, 0)
-                    multiDispensePumps(hardware,disp)
-            hardware.parent.update()
-
-    goToWell(hardware, "thermalCamera", 1, 0)
-
-
-def dispenseAllDegenerate(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_array,is384):
-
-
-    nuclArrays=[M_array.copy(),N_array.copy(),A_array.copy(),C_array.copy(),G_array.copy(),T_array.copy()]
-    'we loop for every position possible'
-    for col in range(0,12,1):
-        for m_well in range(1+18*col,13+(18*col)+1,1):
-            n_well=m_well+1
-            a_well=m_well+2
-            c_well=m_well+3
-            g_well=m_well+4
-            t_well=m_well+5
-            wells=[m_well,n_well,a_well,c_well,g_well,t_well]
-            vols=[0,0,0,0,0,0] #Flag to know if we should dispense
-            for nucl in range(6):
-                #print (plateWellToRealWell(wells[nucl]))
-                for wellVol in nuclArrays[nucl]:
-                    if plateWellToRealWell6Nozzles(wells[nucl])==wellVol[0]:
-                        vols[nucl]=volumes[nucl]/wellVol[1]
-                        nuclArrays[nucl].remove(wellVol)
-            if vols!=[0,0,0,0,0,0]:
-                if is384:
-                    for i in range(1,5):
-                        goToRealWell6Nozzles(hardware,m_well,i)
-                        multiDispensePumps(hardware,vols)
-                else:
-                    goToRealWell6Nozzles(hardware, m_well, 0)
-                    multiDispensePumps(hardware,vols)
             hardware.parent.update()
 
     goToWell(hardware, "thermalCamera", 1, 0)
@@ -231,11 +177,13 @@ def dispenseWashes(hardware,volume,solution,array,is384):
 
     washArray=array.copy()
     if solution=="BB":
-        disp_pattern=[0,0,0,0,0,0,0,volume*4,0]
+        disp_pattern=[0,0,0,0,0,0,0,0,0,volume*4,0,0]
     if solution=="DB":
-        disp_pattern=[0,0,0,0,0,0,volume*4,0,0]
+        disp_pattern=[0,0,0,0,0,0,0,0,volume*4,0,0,0]
     if solution=="Buff1":
-        disp_pattern=[0,0,0,0,0,0,0,0,volume*4]
+        disp_pattern=[0,0,0,0,0,0,0,0,0,0,volume*4,0]
+    if solution=="Buff2":
+        disp_pattern=[0,0,0,0,0,0,0,0,0,0,0,volume*4]
 
     for col in range(0, 12, 1):
         #Let's find the smallest and largest well in the column
@@ -274,18 +222,21 @@ def dispenseWashes(hardware,volume,solution,array,is384):
 
     goToWell(hardware, "thermalCamera", 1, 0)
 
-def dispenseWashesColDiffVols(hardware,volumesPerCol,solution,array,is384):
+def dispenseWashesColDiffVols(hardware,volPerCol,solution,array,is384):
 
     washArray=array.copy()
 
     for col in range(0, 12, 1):
-        #Let's find the smallest and largest well in the column
         if solution == "BB":
-            disp_pattern = [0, 0, 0, 0, 0, 0, 0, volumesPerCol[col] * 4,0]
+            disp_pattern = [0, 0, 0, 0, 0, 0, 0, 0, 0, volPerCol[col] * 4, 0, 0]
         if solution == "DB":
-            disp_pattern = [0, 0, 0, 0, 0, 0, volumesPerCol[col] * 4, 0,0]
+            disp_pattern = [0, 0, 0, 0, 0, 0, 0, 0, volPerCol[col] * 4, 0, 0, 0]
         if solution == "Buff1":
-            disp_pattern = [0, 0, 0, 0, 0, 0, 0, 0,volumesPerCol[col] * 4]
+            disp_pattern = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, volPerCol[col] * 4, 0]
+        if solution == "Buff2":
+            disp_pattern = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, volPerCol[col] * 4]
+
+        #Let's find the smallest and largest well in the column
         smallest_well=96
         largest_well=0
         for washWell in washArray:
@@ -320,6 +271,105 @@ def dispenseWashesColDiffVols(hardware,volumesPerCol,solution,array,is384):
         hardware.parent.update()
 
     goToWell(hardware, "thermalCamera", 1, 0)
+
+def dispenseDoubleWashes_Buff2(hardware,volume,solution,array,is384):
+
+    washArray=array.copy()
+    if solution=="BB":
+        disp_pattern=[0,0,0,0,0,0,0,0,0,volume*4,0,0]
+    if solution=="DB":
+        disp_pattern=[0,0,0,0,0,0,0,0,volume*4,0,0,0]
+    if solution=="Buff1":
+        disp_pattern=[0,0,0,0,0,0,0,0,0,0,volume*4,0]
+    if solution=="Buff2":
+        disp_pattern=[0,0,0,0,0,0,0,0,0,0,volume*4,volume*4]
+
+    for col in range(0, 12, 1):
+        #Let's find the smallest and largest well in the column
+        smallest_well=96
+        largest_well=0
+        for washWell in washArray:
+            if washWell>=col*8+1 and washWell<col*8+9:
+                if washWell>largest_well:
+                    largest_well=washWell
+                if washWell<smallest_well:
+                    smallest_well=washWell
+        if smallest_well!=96 or largest_well!=0: #meaning if there is a non empty well in the column
+            #Either we can dispense only once
+            if largest_well-smallest_well<4:
+                if is384:
+                    for i in range(1,5):
+                        goToWell(hardware, solution, min(smallest_well, col * 8 + 5), i)
+                        multiDispensePumps(hardware, disp_pattern)
+                else:
+                    goToWell(hardware, solution, min(smallest_well, col * 8 + 5), 0)
+                    multiDispensePumps(hardware, disp_pattern)
+            else:
+                if is384:
+                    for i in range(1,5):
+                        goToWell(hardware, solution, col * 8 + 1, i)
+                        multiDispensePumps(hardware, disp_pattern)
+                    for i in range(1,5):
+                        goToWell(hardware, solution, col * 8 + 5, i)
+                        multiDispensePumps(hardware, disp_pattern)
+                else:
+                    goToWell(hardware,solution,col*8+1,0)
+                    multiDispensePumps(hardware, disp_pattern)
+                    goToWell(hardware, solution, col * 8 + 5,0)
+                    multiDispensePumps(hardware, disp_pattern)
+        hardware.parent.update()
+
+    goToWell(hardware, "thermalCamera", 1, 0)
+
+def dispenseDoubleWashes_Buff1(hardware,volume,solution,array,is384):
+
+    washArray=array.copy()
+    if solution=="BB":
+        disp_pattern=[0,0,0,0,0,0,0,0,0,volume*4,0,0]
+    if solution=="DB":
+        disp_pattern=[0,0,0,0,0,0,0,0,volume*4,0,0,0]
+    if solution=="Buff1":
+        disp_pattern=[0,0,0,0,0,0,0,0,0,volume*4,volume*4,0]
+    if solution=="Buff2":
+        disp_pattern=[0,0,0,0,0,0,0,0,0,0,0,volume*4]
+
+    for col in range(0, 12, 1):
+        #Let's find the smallest and largest well in the column
+        smallest_well=96
+        largest_well=0
+        for washWell in washArray:
+            if washWell>=col*8+1 and washWell<col*8+9:
+                if washWell>largest_well:
+                    largest_well=washWell
+                if washWell<smallest_well:
+                    smallest_well=washWell
+        if smallest_well!=96 or largest_well!=0: #meaning if there is a non empty well in the column
+            #Either we can dispense only once
+            if largest_well-smallest_well<4:
+                if is384:
+                    for i in range(1,5):
+                        goToWell(hardware, solution, min(smallest_well, col * 8 + 5), i)
+                        multiDispensePumps(hardware, disp_pattern)
+                else:
+                    goToWell(hardware, solution, min(smallest_well, col * 8 + 5), 0)
+                    multiDispensePumps(hardware, disp_pattern)
+            else:
+                if is384:
+                    for i in range(1,5):
+                        goToWell(hardware, solution, col * 8 + 1, i)
+                        multiDispensePumps(hardware, disp_pattern)
+                    for i in range(1,5):
+                        goToWell(hardware, solution, col * 8 + 5, i)
+                        multiDispensePumps(hardware, disp_pattern)
+                else:
+                    goToWell(hardware,solution,col*8+1,0)
+                    multiDispensePumps(hardware, disp_pattern)
+                    goToWell(hardware, solution, col * 8 + 5,0)
+                    multiDispensePumps(hardware, disp_pattern)
+        hardware.parent.update()
+
+    goToWell(hardware, "thermalCamera", 1, 0)
+
 
 
 def removeSupernatant(hardware,vacuumTime):
@@ -377,9 +427,9 @@ def fillPlate(hardware, buffer, vol, is384):
     activeWells = getActiveWells(sequences, 1)
 
     if buffer=="nucs":
-        dispensePumps(hardware, [vol, vol, vol, vol, vol, vol],
+        dispensePumps(hardware, [vol]*8,
                       nucleo_arrays[5], nucleo_arrays[6],
-                      nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4], is384)
+                      nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],[],[], is384)
     else:
         dispenseWashes(hardware,vol,buffer,activeWells,is384)
 
@@ -426,3 +476,4 @@ def getParameters(synthesis_sheet):
         code=synthesis_sheet.cell_value(row,1) + '=' + str(synthesis_sheet.cell_value(row,3))
         #print(code)
         exec(code,globals())
+

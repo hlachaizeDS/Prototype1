@@ -46,11 +46,12 @@ class DispenseUnit():
             self.dist_per_full_step = 0.0254  # mm
             self.radius = 4.6 / 2
             self.max_disp = 200  # ul
-            self.pullback = 4  # ul
+            self.pullback = 0 # ul
             self.init_forward = 210  # ul
+            self.conditioning= 5 #ul
 
         #init
-        self.init_backward=self.max_disp+self.pullback+1 #ul
+        self.init_backward=self.max_disp+self.pullback+self.conditioning+1 #ul
 
 
     def dispense(self,volume):
@@ -70,13 +71,21 @@ class DispenseUnit():
             self.motor.move_absolute_wait(self.parent,steps_nb)
             self.zero()
 
+
             remaining_vol-=vol_to_disp
 
     def push(self,volume):
         self.wait_for_pos()
         self.open_valve()
-        steps_nb = int((volume+self.pullback) * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
+        steps_nb = int((volume + self.pullback) * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
         self.motor.move_relative( steps_nb)
+
+    def push_in_reservoir(self,volume):
+        self.wait_for_pos()
+        self.close_valve()
+        steps_nb = int((volume + self.pullback) * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
+        self.motor.move_relative(steps_nb)
+
 
     def pull(self,volume):
         self.wait_for_pos()
@@ -92,11 +101,11 @@ class DispenseUnit():
 
     def open_valve(self):
         self.bus_tmcl.send(1, TMCL.commands.Command.SIO, self.digOut, 2, 1)
-        time.sleep(0.01)
+        time.sleep(0.02)
 
     def close_valve(self):
         self.bus_tmcl.send(1, TMCL.commands.Command.SIO, self.digOut, 2, 0)
-        time.sleep(0.01)
+        time.sleep(0.02)
 
     def zero(self):
         self.wait_for_pos()
@@ -105,7 +114,8 @@ class DispenseUnit():
 
     def wait_for_pos(self):
         while self.motor_parameters.get(8) == 0:
-            time.sleep(0.05)
+            time.sleep(0.005)
+        time.sleep(0.01)
 
     def set_param_init(self):
         self.wait_for_pos()
@@ -147,7 +157,7 @@ class DispenseUnit():
             self.motor_parameters.set(6, 200)
             self.motor_parameters.set(5, 7629278)
             self.motor_parameters.set(17, 7629278)
-            self.motor_parameters.set(4, 200000)
+            self.motor_parameters.set(4, 150000)
 
     def initialise_position(self):
 

@@ -297,7 +297,7 @@ def stirring_Callback(directCommand):
     #Turns on and off digital Ouputs
     value = directCommand.stirringButton_value.get()
     if value:
-        directCommand.parent.hardware.arduinoControl.startShaking(280)
+        directCommand.parent.hardware.arduinoControl.startShaking(900)
     else:
         directCommand.parent.hardware.arduinoControl.stopShaking()
 

@@ -18,7 +18,8 @@ __all__ = ['libirimagerException', 'evo_irimager_terminate', 'evo_irimager_get_t
            'evo_irimager_get_thermal_image_size', 'evo_irimager_get_thermal_palette_image',
            'evo_irimager_set_palette_scale', 'evo_irimager_set_radiation_parameters',
            'evo_irimager_set_shutter_mode', 'evo_irimager_set_temperature_range',
-           'evo_irimager_trigger_shutter_flag', 'evo_irimager_usb_init', 'raw_to_C']
+           'evo_irimager_trigger_shutter_flag', 'evo_irimager_usb_init', 'raw_to_C',
+           'evo_irimager_set_focusmotor_pos']
 
 basepath = pathlib.Path(__file__).absolute().parent
 

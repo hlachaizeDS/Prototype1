@@ -3,11 +3,11 @@ import time
 from hardware import STIRRING_VELOCITY
 import math
 
-X_A1=131469
-Y_A1=37995
+X_A1=150069
+Y_A1=24527
 
-X_step=9300
-Y_step=9217
+X_step=9200
+Y_step=9150
 
 def initialiseMotorList(hardware,motor_list):
 
@@ -41,7 +41,7 @@ def goToWell(hardware,element,well,quadrant):
     'We make sure the needles are up'
     #needlesGoUp(hardware)
 
-    'Positions of A1 with the up left Lee vann'
+    'Positions of A1 with the M nozzle'
     #X_1 = 88822
     #Y_1 = 10518
     X_1 = X_A1
@@ -60,58 +60,38 @@ def goToWell(hardware,element,well,quadrant):
         X_1 = X_1 + int(X_step/4)
         Y_1 = Y_1 + int(Y_step/4)
 
-    if element=='A':
-        X_1=X_1
-        Y_1=Y_1
+    positions_dict= {
+        "M": [0, 0],
+        "N": [1, 0],
+        "O": [2, 0],
+        "P": [3, 0],
+        "Q": [4, 0],
+        "A": [2, 1],
+        "C": [3, 1],
+        "G": [4, 1],
+        "T": [5, 1],
+        "DB": [6, -1],
+        "BB": [6, 0],
+        "Buff1": [6, 1],
+        "Buff2": [6, 2],
+    }
 
-    if element=='M':
-        X_1=X_1+2*X_step
-        Y_1=Y_1
+    if element in positions_dict.keys():
+        X_1=X_A1 - positions_dict[element][0]*X_step
+        Y_1=Y_A1 - positions_dict[element][1]*Y_step
 
-    if element=='N':
-        X_1=X_1+X_step
-        Y_1=Y_1
-
-    if element=='DB':
-        'Positions of A1 for DB'
-        X_1= X_1 - 37195
-        Y_1= Y_1 - 9642
-
-    if element=='BB':
-        'Positions of A1 for wash'
-        X_1 = X_1 - 37195
-        Y_1 = Y_1 + 68
-
-    if element=='Buff1':
-        'Positions of A1 for Buff1'
-        X_1= X_1 - 35895
-        Y_1= Y_1 + 8805
-
-    if element=='Buff2':
-        'Positions of A1 for Buff2'
-        X_1 = X_1 - 46207
-        Y_1 = Y_1 + 19350
-
-    if element=='PosPressure':
-        'Positions of A1 for PosPressure'
-        #X_A1 = 131757
-        #Y_A1 = 33916
-        #X_1 = X_1 - 142800
-        #Y_1 = Y_1 + 14981
-        X_1=-11043
-        Y_1=52976
 
     if element=='safe':
         X_1 = 0
-        Y_1 = 129895
+        Y_1 = 115852
 
     if element=='thermo':
         X_1=0
-        Y_1=127693
+        Y_1=115852
 
     if element == "thermalCamera":
         X_1 = 0
-        Y_1 = 129895
+        Y_1 = 115852
 
     if element == "washPrime":
         #X_1 = 167686
@@ -122,30 +102,8 @@ def goToWell(hardware,element,well,quadrant):
         X_1 = 0
         Y_1 = 0
 
-    'premixPrime'
-    plateWell=realWellToPlateWell(well)
-
-    # if element=="A":
-    #     equivalent_well=plateWell
-    # if element=="DB":
-    #     equivalent_well=plateWell
-    # if element=="BB":
-    #     equivalent_well=plateWell
-    # if element=="needles":
-    #     equivalent_well=plateWell
-    # if element=="thermo":
-    #     equivalent_well=plateWell
-    # if element=="thermalCamera":
-    #     equivalent_well=plateWell
-    # if element=='safe':
-    #     equivalent_well=realWellToPlateWell(1)
-    equivalent_well=plateWell
-
-    plateX1=X_1-(3*X_step)
-    plateY1=Y_1
-
-    X = plateX1 + ((equivalent_well - 1) % 14) * X_step
-    Y = plateY1 + ((equivalent_well - 1) // 14) * Y_step
+    X = X_1 + ((well - 1) % 8) * X_step
+    Y = Y_1 + ((well - 1) // 8) * Y_step
     hardware.xMotor.move_absolute(X)
     hardware.yMotor.move_absolute(Y)
     sleep(0.4)
@@ -154,8 +112,9 @@ def goToWell(hardware,element,well,quadrant):
         hardware.parent.update()
         sleep(0.2)
 
-def goToRealWell(hardware,realWell,quadrant):
-    #Works only for the upper left corner vann
+def goToFakeWell(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant):
+
+    #Works only for the upper left nozzle
 
     if hardware.parent.directCommand.stopButton_value.get()==1:
         return
@@ -164,8 +123,8 @@ def goToRealWell(hardware,realWell,quadrant):
     #'needlesGoUp(hardware)
 
     'Positions of A1 with the up left Lee vann'
-    X_1 = X_A1 -(3*X_step)
-    Y_1 = Y_A1
+    X_1 = X_A1 - ((dispHead_dims[0] - 1)*X_step)
+    Y_1 = Y_A1 - ((dispHead_dims[1] - 1)*Y_step)
 
     if quadrant == 1:
         X_1 = X_1 - int(X_step / 4)
@@ -180,44 +139,8 @@ def goToRealWell(hardware,realWell,quadrant):
         X_1 = X_1 + int(X_step / 4)
         Y_1 = Y_1 + int(Y_step / 4)
 
-    X = X_1 + ((realWell - 1) % 14) * X_step
-    Y = Y_1 + ((realWell - 1) // 14) * Y_step
-    hardware.xMotor.move_absolute(X)
-    hardware.yMotor.move_absolute(Y)
-    sleep(0.2)
-
-    while hardware.xMotorParametersInterface.get(8) == 0 or hardware.yMotorParametersInterface.get(8) == 0:
-        hardware.parent.update()
-        sleep(0.2)
-
-def goToRealWell6Nozzles(hardware,realWell,quadrant):
-    #Works only for the upper left corner vann
-
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
-
-    'We make sure the needles are up'
-    #'needlesGoUp(hardware)
-
-    'Positions of A1 with the up left Lee vann'
-    X_1 = X_A1 -(3*X_step)
-    Y_1 = Y_A1
-
-    if quadrant == 1:
-        X_1 = X_1 - int(X_step / 4)
-        Y_1 = Y_1 - int(Y_step / 4)
-    if quadrant == 2:
-        X_1 = X_1 + int(X_step / 4)
-        Y_1 = Y_1 - int(Y_step / 4)
-    if quadrant == 3:
-        X_1 = X_1 - int(X_step / 4)
-        Y_1 = Y_1 + int(Y_step / 4)
-    if quadrant == 4:
-        X_1 = X_1 + int(X_step / 4)
-        Y_1 = Y_1 + int(Y_step / 4)
-
-    X = X_1 + ((realWell - 1) % 18) * X_step
-    Y = Y_1 + ((realWell - 1) // 18) * Y_step
+    X = X_1 + ((fake_well - 1) % fake_plate_dims[0]) * X_step
+    Y = Y_1 + ((fake_well - 1) // fake_plate_dims[0]) * Y_step
     hardware.xMotor.move_absolute(X)
     hardware.yMotor.move_absolute(Y)
     sleep(0.2)
@@ -265,6 +188,25 @@ def plateWellToRealWell6Nozzles(plateWell):
 
     return realWell
 
+def fake_plate_well_to_real_well(fake_plate_well, fake_plate_dims, dispHead_dims):
+
+    column=(fake_plate_well-1)//fake_plate_dims[0] + 1
+    row=(fake_plate_well-1)%fake_plate_dims[0] + 1
+
+    middle_row=fake_plate_dims[0]/2
+    real_rows=[middle_row-3,middle_row-2,middle_row-1,middle_row,middle_row+1,middle_row+2,middle_row+3,middle_row+4]
+
+    middle_col=fake_plate_dims[1]/2
+    real_cols= [middle_col-5,middle_col-4,middle_col-3,middle_col-2,middle_col-1,middle_col,
+                middle_col+1,middle_col+2,middle_col+3,middle_col+4,middle_col+5,middle_col+6]
+
+    if row not in real_rows or column not in real_cols: #When the plate well is outside the range of realwells
+        return 0
+
+    realWell=(column - (dispHead_dims[1]-1) - 1 )*8 + row - (dispHead_dims[0]-1)
+
+    return realWell
+
 def wait(hardware,timeToWait):
 
     timeToGoTo=time.time()+timeToWait
@@ -285,7 +227,7 @@ def waitAndStir(hardware,timeToWait):
 
     goToWell(hardware, 'thermalCamera', 1,0)
 
-    hardware.arduinoControl.startShaking(280)
+    hardware.arduinoControl.startShaking(900)
     #hardware.arduinoControl.startShaking(330) #RNA
     wait(hardware,timeToWait)
     hardware.arduinoControl.stopShaking()
@@ -310,20 +252,6 @@ def stirrerStop(hardware):
         sleep(0.05)
         hardware.parent.update()
     hardware.set_output2(5, 0)
-
-'''
-Old Manifold
-def waitAndStir(hardware,timeToWait):
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
-
-    goToWell(hardware, 'safe', 1)
-
-    hardware.stirrerMotor.rotate_left(STIRRING_VELOCITY)
-    wait(hardware,timeToWait)
-    hardware.stirrerMotor.stop_wait(hardware)
-    initialiseMotorList(hardware,[hardware.stirrerMotor])
-'''
 
 def magnetGoUp(hardware):
     if hardware.parent.directCommand.stopButton_value.get()==1:
@@ -356,99 +284,51 @@ def aspirate(hardware,time):
     hardware.set_output(output, 0)
 
 
-def dispense(hardware,solution, time):
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
-    # dispense for a given amount of time the right solution
-    if solution=="A":
-        card=1
-        output=2
-    if solution=="C":
-        card = 1
-        output=3
-    if solution=="G":
-        card = 1
-        output=4
-    if solution=="T":
-        card = 1
-        output=5
-    if solution=="M":
-        card = 1
-        output=0
-    if solution=="N":
-        card = 1
-        output=1
-    if solution=="DB":
-        card = 1
-        output=0
-    if solution=="BB":
-        card=1
-        output=1
-    if solution=="Buff1":
-        card=2
-        output=2
-    if solution=="Buff2":
-        card=2
-        output=6
-
-    if card==1 :
-        hardware.set_output(output, 1)
-        sleep(time)
-        hardware.set_output(output, 0)
-
-    if card==2:
-        hardware.set_output2(output, 1)
-        sleep(time)
-        hardware.set_output2(output, 0)
 
 def multiDispensePumps(hardware,volumes):
 
-    pullback=3  #uls
 
     volumes=volumes.copy()
-    while volumes!=[0,0,0,0,0,0,0,0,0]:
+    if len(volumes)!=12:
+        volumes.extend([0]*(12-len(volumes)))
 
-        dus=[]
-        for i in range(3):
-            if volumes[i]!=0:
-                du=hardware.dispense_units_1[i]
-                dus.append(du)
-                if volumes[i]<=du.max_disp:
-                    vol_to_disp=volumes[i]
+    dus = []
+    for pump_id in range(3):
+        du = hardware.dispense_units_1[pump_id]
+        dus.append(du)
+    for pump_id in range(3):
+        du = hardware.dispense_units_2[pump_id]
+        dus.append(du)
+    for pump_id in range(3):
+        du = hardware.dispense_units_3[pump_id]
+        dus.append(du)
+    for pump_id in range(3):
+        du = hardware.dispense_units_4[pump_id]
+        dus.append(du)
+
+    while volumes!=[0,0,0,0,0,0,0,0,0,0,0,0]:
+
+        used_dus=[]
+        for pump in range(len(dus)):
+            if volumes[pump]!=0:
+                used_dus.append(dus[pump])
+
+        for du in used_dus:
+            du.push_in_reservoir(du.conditioning)
+
+        for pump in range(len(dus)):
+            if volumes[pump]!=0:
+                if volumes[pump]<=dus[pump].max_disp:
+                    vol_to_disp=volumes[pump]
                 else:
-                    vol_to_disp=du.max_disp
+                    vol_to_disp=dus[pump].max_disp
 
-                du.push(vol_to_disp)
-                volumes[i]-=vol_to_disp
+                dus[pump].push(vol_to_disp)
+                volumes[pump]-=vol_to_disp
 
-        for j in range(3):
-            if volumes[j+3] != 0:
-                du = hardware.dispense_units_2[j]
-                dus.append(du)
-                if volumes[j+3] <= du.max_disp:
-                    vol_to_disp = volumes[j+3]
-                else:
-                    vol_to_disp = du.max_disp
-
-                du.push(vol_to_disp)
-                volumes[j+3] -= vol_to_disp
-
-        for k in range(3):
-            if volumes[k+6] != 0:
-                du = hardware.dispense_units_3[k]
-                dus.append(du)
-                if volumes[k+6] <= du.max_disp:
-                    vol_to_disp = volumes[k+6]
-                else:
-                    vol_to_disp = du.max_disp
-
-                du.push(vol_to_disp)
-                volumes[k+6] -= vol_to_disp
-
-        for du in dus:
+        for du in used_dus:
             du.pull(du.pullback)
-
-        for du in dus:
+        for du in used_dus:
             du.zero()
 
 
@@ -566,3 +446,7 @@ def dispenseInPlate(hardware):
         goToWell(hardware,'A',well)
         dispense(hardware,'A',0.02*((well%8) +1))
 
+if __name__ == "__main__":
+    for well in range(1,50):
+        print('well='+str(well))
+        print(fake_plate_well_to_real_well(well,[18,14],[6,2]))

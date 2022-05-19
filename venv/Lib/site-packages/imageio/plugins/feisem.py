@@ -1,29 +1,34 @@
 # -*- coding: utf-8 -*-
 # imageio is distributed under the terms of the (new) BSD License.
 
-from __future__ import absolute_import, unicode_literals
+"""Read TIFF from FEI SEM microscopes.
+
+Backend Library: internal
+
+This format is based on :mod:`TIFF <imageio.plugins.tifffile>`, and supports the
+same parameters. FEI microscopes append metadata as ASCII text at the end of the
+file, which this reader correctly extracts.
+
+Parameters
+----------
+discard_watermark : bool
+    If True (default), discard the bottom rows of the image, which
+    contain no image data, only a watermark with metadata.
+watermark_height : int
+    The height in pixels of the FEI watermark. The default is 70.
+
+See Also
+--------
+    :mod:`imageio.plugins.tifffile`
+
+"""
+
 
 from .tifffile import TiffFormat
 
-from .. import formats
-
 
 class FEISEMFormat(TiffFormat):
-    """Provide read support for TIFFs produced by an FEI SEM microscope.
-
-    This format is based on TIFF, and supports the same parameters.
-
-    FEI microscopes append metadata as ASCII text at the end of the file,
-    which this reader correctly extracts.
-
-    Parameters for get_data
-    -----------------------
-    discard_watermark : bool
-        If True (default), discard the bottom rows of the image, which
-        contain no image data, only a watermark with metadata.
-    watermark_height : int
-        The height in pixels of the FEI watermark. The default is 70.
-    """
+    """See :mod:`imageio.plugins.feisem`"""
 
     def _can_write(self, request):
         return False  # FEI-SEM only supports reading
@@ -54,24 +59,27 @@ class FEISEMFormat(TiffFormat):
             metadata : dict
                 Dictionary of metadata.
             """
+            if hasattr(self, "_fei_meta"):
+                return self._fei_meta
+
             md = {"root": {}}
             current_tag = "root"
             reading_metadata = False
             filename = self.request.get_local_filename()
-            with open(filename, "rb") as fin:
+            with open(filename, encoding="utf8", errors="ignore") as fin:
                 for line in fin:
                     if not reading_metadata:
-                        if not line.startswith(b"Date="):
+                        if not line.startswith("Date="):
                             continue
                         else:
                             reading_metadata = True
-                    line = line.rstrip().decode()
+                    line = line.rstrip()
                     if line.startswith("["):
                         current_tag = line.lstrip("[").rstrip("]")
                         md[current_tag] = {}
                     else:
-                        if line and line != "\x00":  # ignore blank lines
-                            key, val = line.split("=")
+                        if "=" in line:  # ignore empty and irrelevant lines
+                            key, val = line.split("=", maxsplit=1)
                             for tag_type in (int, float):
                                 try:
                                     val = tag_type(val)
@@ -82,12 +90,6 @@ class FEISEMFormat(TiffFormat):
                             md[current_tag][key] = val
             if not md["root"] and len(md) == 1:
                 raise ValueError("Input file %s contains no FEI metadata." % filename)
-            self._meta.update(md)
+
+            self._fei_meta = md
             return md
-
-
-# Register plugin
-format = FEISEMFormat(
-    "fei", "FEI-SEM TIFF format", extensions=[".tif", ".tiff"], modes="iv"
-)
-formats.add_format(format)
