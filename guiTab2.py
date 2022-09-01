@@ -42,14 +42,16 @@ class MiddleFrame(Frame):
 
         # Priming Washes
         self.primingWashesButton = Button(self, text="Buffers 5mL",
-                                          command=lambda: multiDispensePumps(hardware,[0,0,0,0,0,0,5000,5000,0]))
+                                          command=lambda: multiDispensePumps(hardware,[0,0,0,0,0,0,5000,5000,5000]))
         self.primingWashesButton.grid(row=3, column=1, padx=30, pady=5)
 
-        # Priming Buff1
-        self.primingWashesButton = Button(self, text="Buff1 5mL",
+
+
+        # Priming all buffs
+        self.primingAllWashesButton = Button(self, text="Rinse All Buffers 40mL",
                                           command=lambda: multiDispensePumps(hardware,
-                                                                             [0, 0, 0, 0, 0, 0, 0, 0, 5000]))
-        self.primingWashesButton.grid(row=4, column=1, padx=30, pady=5)
+                                                                             [0, 0, 0, 0, 0, 0, 40000, 40000, 40000]))
+        self.primingAllWashesButton.grid(row=5, column=1, padx=30, pady=5)
 
 
         ##Vent 7s
@@ -59,7 +61,12 @@ class MiddleFrame(Frame):
 
         ## Stir 3min
         self.stirButton = Button(self, text="Stir 3min",
-                                 command=lambda: waitAndStir(hardware, 3*60))
+                                 command=lambda: waitAndStir(hardware, 3 * 60))
+        self.stirButton.grid(row=2, column=2, padx=30, pady=5)
+
+        ## Stir 1min
+        self.stirButton = Button(self, text="Stir 1min",
+                                 command=lambda: waitAndStir(hardware, 60))
         self.stirButton.grid(row=3, column=2, padx=30, pady=5)
 
         ## Stir 30s
@@ -190,7 +197,7 @@ class MiddleFrame(Frame):
         self.is384_value = StringVar()
         self.is384 = Entry(self, textvariable=self.is384_value)
         self.is384.grid(row=7, column=8)
-        self.is384_value.set('1')
+        self.is384_value.set('0')
         self.is384flag = Label(self, text="1=384 0=96", justify="center")
         self.is384flag.grid(row=7, column=9)
 
@@ -201,7 +208,7 @@ class MiddleFrame(Frame):
                                                                    command=lambda buffer=fill: fillPlate(hardware,buffer,float(self.fillVol_value.get()),float(self.is384_value.get())))
             self.fillButtons[fillList.index(fill)].grid(row=8 + fillList.index(fill), column=8, padx=5,
                                                                pady=5)
-        self.PSPWashesButton = Button(self, text="PSP Washes",command=lambda : PSPWashes(hardware, float(self.is384_value.get())))
+        self.PSPWashesButton = Button(self, text="PSP Washes",command=lambda : PSPWashes_Screen(hardware, float(self.is384_value.get())))
         self.PSPWashesButton.grid(row=13,column=8,padx=5,pady=5)
 
 '''CALLBACK FUNCTIONS'''

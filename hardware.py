@@ -277,9 +277,11 @@ class HardWare(Frame):
         self.bus_stirrer.send(MODULE_ADDRESS, TMCL.commands.Command.SIO, output, 2, value)
 
     def vacValveOpen(self):
+        #open vac
         self.set_output(2,1)
 
     def vacValveClose(self):
+        #cut vac
         self.set_output(2, 0)
 
     def pressureOpen(self):

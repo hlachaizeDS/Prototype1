@@ -186,6 +186,24 @@ def getParameters(synthesis_sheet):
 
 '''
 
+def inter(listOfListsOfWell):
+
+    final_list=listOfListsOfWell[0]
+    for wellList in listOfListsOfWell:
+        final_list=[well for well in final_list if well in wellList]
+
+    return final_list
+
+def union(listOfListsOfWell):
+
+    final_list=[]
+    for wellList in listOfListsOfWell:
+        for well in wellList:
+            if well not in final_list:
+                final_list.append(well)
+
+    return final_list
+
 if __name__ == "__main__":
 
     synthesis_sheet=getExcelSheet(path)
@@ -193,6 +211,8 @@ if __name__ == "__main__":
     print(sequences)
 
     print(getEndedWellsPlusX(sequences,1))
+    print(inter([[1,2,3,4,5,6],[0,1,2,3],[1000]]))
+    print(union([[1,2,3,4,5,6],[0,1,2,3],[1000]]))
     #params=getParameters(synthesis_sheet)
     #print(getUsedWells(sequences))
     #print(getActiveWells(sequences,4))

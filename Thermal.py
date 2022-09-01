@@ -263,14 +263,14 @@ class ThermalImageThread:
 
     def videoLoop(self):
         while not self.stopEvent.is_set():
-            #try:
-            self.in_video_loop()
-            #except:
-            #    print('Couldnt update frame')
+            try:
+                self.in_video_loop()
+            except:
+                print('Couldnt update frame')
                 #self.rightFrame.after(50, self.videoLoop)
 
     def snapshot_in_cycle(self,thermalImages,folder_path,cycle,step):
-        #try:
+        try:
 
             #if thermalImages are not active, we return
             if thermalImages==0 or self.rightFrame.parent.hardware.thermalCam==0:
@@ -305,8 +305,8 @@ class ThermalImageThread:
             self.generate_temperature_table(final_path)
             np.savetxt(final_path + ".csv", self.thermalFrame, delimiter=';', fmt='%.2f')
 
-        #except:
-            #print('Couldnt take snapshot')
+        except:
+            print('Couldnt take snapshot')
 
     def generate_temperature_table(self, final_path):
         """
