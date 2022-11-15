@@ -323,11 +323,12 @@ class HardWare(Frame):
     def vacValveClose(self):
         self.set_output(2, 0)
 
-    def pressureOpen(self):
+    def DBSwitchOpen(self):
         self.set_output(1,1)
 
-    def pressureClose(self):
+    def DBSwitchClose(self):
         self.set_output(1, 0)
+
 
     def init_du(self,du_index):
         #du_index from 0 to 5

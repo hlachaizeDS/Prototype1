@@ -6,7 +6,7 @@ import openpyxl
 #from cycles import dispTime25_nuc,dispTime25_enzyme,dispDBTime,dispBBTime
 
 def readExpID():
-    path="C:\\Users\\Proto\\PycharmProjects\\Prototype5\\ExpID.txt"
+    path="ExpID.txt"
     file=open(path,"r")
     number=file.readline()
     file.close()
@@ -21,11 +21,11 @@ def saveQuartetControlFile(title):
     now=datetime.datetime.now()
 
     #original Quartet file
-    original_path=r'C:\Users\Proto\Desktop\Prototype\Quartet_Control.xlsm'
+    original_path=r'C:\Users\SynthesisDNASCRIPT\Desktop\Proto5\Quartet_Control.xlsm'
     expID=readExpID()
 
     #new folder path
-    general_path = "C:\\Users\\Proto\\DNA Script\\Thomas YBERT - SYNTHESIS OPERATIONS\\S.6 - P5\\Quartets"
+    general_path = "C:\\Users\\SynthesisDNASCRIPT\\DNA Script\\Thomas YBERT - SYNTHESIS OPERATIONS\\S.6 - P5\\Quartets"
     folder_path=str(now.year)[2:]+ force2digits(now.month)
 
     # new file path

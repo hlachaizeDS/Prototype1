@@ -4,7 +4,7 @@ from hardware import STIRRING_VELOCITY
 import math
 
 X_A1=150069
-Y_A1=24527
+Y_A1=24327
 
 X_step=9200
 Y_step=9150
@@ -77,8 +77,8 @@ def goToWell(hardware,element,well,quadrant):
     }
 
     if element in positions_dict.keys():
-        X_1=X_A1 - positions_dict[element][0]*X_step
-        Y_1=Y_A1 - positions_dict[element][1]*Y_step
+        X_1=X_1 - positions_dict[element][0]*X_step
+        Y_1=Y_1 - positions_dict[element][1]*Y_step
 
 
     if element=='safe':

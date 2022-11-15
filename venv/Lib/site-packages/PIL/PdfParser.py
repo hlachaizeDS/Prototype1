@@ -425,7 +425,7 @@ class PdfParser:
         self.f.write(b"%PDF-1.4\n")
 
     def write_comment(self, s):
-        self.f.write(f"% {s}\n".encode())
+        self.f.write(f"% {s}\n".encode("utf-8"))
 
     def write_catalog(self):
         self.del_root()
@@ -582,8 +582,7 @@ class PdfParser:
     whitespace_or_hex = br"[\000\011\012\014\015\0400-9a-fA-F]"
     whitespace_optional = whitespace + b"*"
     whitespace_mandatory = whitespace + b"+"
-    # No "\012" aka "\n" or "\015" aka "\r":
-    whitespace_optional_no_nl = br"[\000\011\014\040]*"
+    whitespace_optional_no_nl = br"[\000\011\014\015\040]*"  # no "\012" aka "\n"
     newline_only = br"[\r\n]+"
     newline = whitespace_optional_no_nl + newline_only + whitespace_optional_no_nl
     re_trailer_end = re.compile(
@@ -863,7 +862,7 @@ class PdfParser:
         if m:
             # filter out whitespace
             hex_string = bytearray(
-                b for b in m.group(1) if b in b"0123456789abcdefABCDEF"
+                [b for b in m.group(1) if b in b"0123456789abcdefABCDEF"]
             )
             if len(hex_string) % 2 == 1:
                 # append a 0 if the length is not even - yes, at the end

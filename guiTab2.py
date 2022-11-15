@@ -114,18 +114,24 @@ class MiddleFrame(Frame):
                                             command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(6)]+[0,0,0,0,0,0]))
         self.multidispMNACGTButton.grid(row=2, column=5, padx=5, pady=5)
 
+        self.multidispMNACGTButton = Button(self, text="MNACGTOP",
+                                            command=lambda: multiDispensePumps(hardware,
+                                                                               [float(self.volumeToDisp_value.get()) for
+                                                                                i in range(8)] + [ 0, 0, 0, 0]))
+        self.multidispMNACGTButton.grid(row=3, column=5, padx=5, pady=5)
+
         self.multidispButton = Button(self, text="ACGT", command=lambda : multiDispensePumps(hardware, [0,0]+[float(self.volumeToDisp_value.get()) for i in range(4)]+[0,0,0,0,0,0]))
-        self.multidispButton.grid(row=3, column=5, padx=5, pady=5)
+        self.multidispButton.grid(row=4, column=5, padx=5, pady=5)
 
         self.multidispMNButton = Button(self, text="MN",
                                             command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(2)]+[0,0,0,0,0,0,0,0,0,0]))
-        self.multidispMNButton.grid(row=4, column=5, padx=5, pady=5)
+        self.multidispMNButton.grid(row=5, column=5, padx=5, pady=5)
 
         simpleChannelList=['M', 'N', 'A', 'C','G','T', 'O', 'P', ]
         self.bufferButton = [None] * len(simpleChannelList)
         for buffer in simpleChannelList:
             self.bufferButton[simpleChannelList.index(buffer)] = Button(self, text=buffer, command=lambda buffer=buffer: multiDispensePumps(hardware,disp_pattern(simpleChannelList.index(buffer),float(self.volumeToDisp_value.get())*1) ))
-            self.bufferButton[simpleChannelList.index(buffer)].grid(row=5 + simpleChannelList.index(buffer),column=5,padx=5, pady=5)
+            self.bufferButton[simpleChannelList.index(buffer)].grid(row=6 + simpleChannelList.index(buffer),column=5,padx=5, pady=5)
 
         quadChannelList = ['DB', 'BB', 'Buff1', 'Buff2']
         self.quadBufferButton = [None] * len(quadChannelList)

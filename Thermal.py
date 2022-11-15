@@ -181,11 +181,13 @@ class ThermalImageThread:
         self.zoom=1.2
         self.width=382
         self.height=288
-        self.letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-        self.nb_numbers = 12
-        self.nb_letters = 8
 
-        protoTF = 5
+        if self.thermal_is384:
+            protoTF = 305
+            self.letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
+        else:
+            protoTF = 5
+            self.letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
         db_template = pickle.load(open('db_template_proto' + str(protoTF) + '.p', "rb"))
 
@@ -194,6 +196,9 @@ class ThermalImageThread:
         self.line_coordinates = db_template['line_coordinates']
         self.column_coordinates = db_template['column_coordinates']
         self.detection_limit = db_template['detection_limit']
+
+        self.nb_numbers = len(self.line_coordinates)
+        self.nb_letters = len(self.column_coordinates)
 
         # start a thread that constantly pools the video sensor for
         # the most recently read frame
@@ -242,7 +247,7 @@ class ThermalImageThread:
                 #self.rightFrame.after(50, self.videoLoop)
 
     def snapshot_in_cycle(self,thermalImages,folder_path,cycle,step):
-        #try:
+        try:
 
             #if thermalImages are not active, we return
             if thermalImages==0 or self.rightFrame.parent.hardware.thermalCam==0:
@@ -258,7 +263,7 @@ class ThermalImageThread:
             sleep(0.3)
             self.in_video_loop()
 
-            root_path = "C:\\Users\\Proto\\Desktop\\Prototype\\Thermal_Camera"
+            root_path = "C:\\Users\\SynthesisDNASCRIPT\\Desktop\\Proto5\\Thermal_Camera"
 
             now = datetime.datetime.now()
 
@@ -277,8 +282,8 @@ class ThermalImageThread:
             self.generate_temperature_table(final_path)
             np.savetxt(final_path + ".csv", self.thermalFrame, delimiter=';', fmt='%.2f')
 
-        #except:
-            #print('Couldnt take snapshot')
+        except:
+            print('Couldnt take snapshot')
 
     def generate_temperature_table(self, final_path):
         wells_dict = {'Temperatures': self.letters}
@@ -357,11 +362,13 @@ class ThermalImageThread:
         column_coordinates_shifted = self.column_coordinates + top_left[0] - offset_column
         xl_p, xl_q = self.thermalFrame.shape
         fp, fq = img_p / xl_p, img_q / xl_q
+        # Comment the next line to avoid displaying the green rectangle around the handle
         cv.rectangle(self.img_to_display, top_left, bottom_right, (0, 255, 0), 2)
         for n in range(self.nb_numbers):
             for m in range(self.nb_letters):
                 x = int(column_coordinates_shifted[m, n])
                 y = int(line_coordinates_shifted[n, m])
+                # Comment the next line to avoid displaying the green circles on the wells
                 self.img_to_display = cv.circle(self.img_to_display, (x, y), radius=2, color=(0, 255, 0), thickness=-1)
                 try:
                     temperatures.append(self.thermalFrame[int(y / fp), int(x/fq)])

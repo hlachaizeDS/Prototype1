@@ -124,7 +124,8 @@ class GifImageFile(ImageFile.ImageFile):
         if not self._seek_check(frame):
             return
         if frame < self.__frame:
-            self.im = None
+            if frame != 0:
+                self.im = None
             self._seek(0)
 
         last_frame = self.__frame
@@ -164,21 +165,12 @@ class GifImageFile(ImageFile.ImageFile):
                 pass
             self.__offset = 0
 
-        if self.__frame == 1:
-            self.pyaccess = None
-            if "transparency" in self.info:
-                self.mode = "RGBA"
-                self.im.putpalettealpha(self.info["transparency"], 0)
-                self.im = self.im.convert("RGBA", Image.FLOYDSTEINBERG)
-
-                del self.info["transparency"]
-            else:
-                self.mode = "RGB"
-                self.im = self.im.convert("RGB", Image.FLOYDSTEINBERG)
         if self.dispose:
             self.im.paste(self.dispose, self.dispose_extent)
 
-        palette = None
+        from copy import copy
+
+        self.palette = copy(self.global_palette)
 
         info = {}
         frame_transparency = None
@@ -254,7 +246,7 @@ class GifImageFile(ImageFile.ImageFile):
 
                 if flags & 128:
                     bits = (flags & 7) + 1
-                    palette = ImagePalette.raw("RGB", self.fp.read(3 << bits))
+                    self.palette = ImagePalette.raw("RGB", self.fp.read(3 << bits))
 
                 # image data
                 bits = self.fp.read(1)[0]
@@ -264,15 +256,6 @@ class GifImageFile(ImageFile.ImageFile):
             else:
                 pass
                 # raise OSError, "illegal GIF tag `%x`" % s[0]
-
-        frame_palette = palette or self.global_palette
-
-        def _rgb(color):
-            if frame_palette:
-                color = tuple(frame_palette.palette[color * 3 : color * 3 + 3])
-            else:
-                color = (color, color, color)
-            return color
 
         try:
             if self.disposal_method < 2:
@@ -289,13 +272,9 @@ class GifImageFile(ImageFile.ImageFile):
 
                 # by convention, attempt to use transparency first
                 color = self.info.get("transparency", frame_transparency)
-                if color is not None:
-                    dispose_mode = "RGBA"
-                    color = _rgb(color) + (0,)
-                else:
-                    dispose_mode = "RGB"
-                    color = _rgb(self.info.get("background", 0))
-                self.dispose = Image.core.fill(dispose_mode, dispose_size, color)
+                if color is None:
+                    color = self.info.get("background", 0)
+                self.dispose = Image.core.fill("P", dispose_size, color)
             else:
                 # replace with previous contents
                 if self.im:
@@ -307,20 +286,24 @@ class GifImageFile(ImageFile.ImageFile):
 
                     Image._decompression_bomb_check(dispose_size)
                     self.dispose = Image.core.fill(
-                        "RGBA", dispose_size, _rgb(frame_transparency) + (0,)
+                        "P", dispose_size, frame_transparency
                     )
         except AttributeError:
             pass
 
         if interlace is not None:
-            if frame == 0 and frame_transparency is not None:
-                self.info["transparency"] = frame_transparency
+            transparency = -1
+            if frame_transparency is not None:
+                if frame == 0:
+                    self.info["transparency"] = frame_transparency
+                else:
+                    transparency = frame_transparency
             self.tile = [
                 (
                     "gif",
                     (x0, y0, x1, y1),
                     self.__offset,
-                    (bits, interlace),
+                    (bits, interlace, transparency),
                 )
             ]
         else:
@@ -333,53 +316,15 @@ class GifImageFile(ImageFile.ImageFile):
             elif k in self.info:
                 del self.info[k]
 
-        if frame == 0:
-            self.mode = "P" if frame_palette else "L"
-
-            if self.mode == "P" and not palette:
-                from copy import copy
-
-                palette = copy(self.global_palette)
-            self.palette = palette
-        else:
-            self._frame_palette = frame_palette
-            self._frame_transparency = frame_transparency
+        self.mode = "L"
+        if self.palette:
+            self.mode = "P"
 
     def load_prepare(self):
-        if self.__frame == 0:
-            if "transparency" in self.info:
-                self.im = Image.core.fill(
-                    self.mode, self.size, self.info["transparency"]
-                )
-        else:
-            self._prev_im = self.im
-            if self._frame_palette:
-                self.mode = "P"
-                self.im = Image.core.fill("P", self.size, self._frame_transparency or 0)
-                self.im.putpalette(*self._frame_palette.getdata())
-                self._frame_palette = None
-            else:
-                self.mode = "L"
-                self.im = None
+        if not self.im and "transparency" in self.info:
+            self.im = Image.core.fill(self.mode, self.size, self.info["transparency"])
 
-        super().load_prepare()
-
-    def load_end(self):
-        if self.__frame == 0:
-            return
-        if self._frame_transparency is not None:
-            self.im.putpalettealpha(self._frame_transparency, 0)
-            frame_im = self.im.convert("RGBA")
-        else:
-            frame_im = self.im.convert("RGB")
-        frame_im = self._crop(frame_im, self.dispose_extent)
-
-        self.im = self._prev_im
-        self.mode = self.im.mode
-        if frame_im.mode == "RGBA":
-            self.im.paste(frame_im, self.dispose_extent, frame_im)
-        else:
-            self.im.paste(frame_im, self.dispose_extent)
+        super(GifImageFile, self).load_prepare()
 
     def tell(self):
         return self.__frame
@@ -425,13 +370,7 @@ def _normalize_mode(im, initial_call=False):
             palette_size = 256
             if im.palette:
                 palette_size = len(im.palette.getdata()[1]) // 3
-            im = im.convert("P", palette=Image.ADAPTIVE, colors=palette_size)
-            if im.palette.mode == "RGBA":
-                for rgba in im.palette.colors.keys():
-                    if rgba[3] == 0:
-                        im.info["transparency"] = im.palette.colors[rgba]
-                        break
-            return im
+            return im.convert("P", palette=Image.ADAPTIVE, colors=palette_size)
         else:
             return im.convert("P")
     return im.convert("L")

@@ -329,7 +329,7 @@ def dispenseDoubleWashes_Buff1(hardware,volume,solution,array,is384):
     if solution=="DB":
         disp_pattern=[0,0,0,0,0,0,0,0,volume*4,0,0,0]
     if solution=="Buff1":
-        disp_pattern=[0,0,0,0,0,0,0,0,0,volume*4,volume*4,0]
+        disp_pattern=[0,0,0,0,0,0,0,0,0,0,volume*4,volume*4]
     if solution=="Buff2":
         disp_pattern=[0,0,0,0,0,0,0,0,0,0,0,volume*4]
 
@@ -432,6 +432,19 @@ def fillPlate(hardware, buffer, vol, is384):
                       nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],[],[], is384)
     else:
         dispenseWashes(hardware,vol,buffer,activeWells,is384)
+
+def DBRinseRoutine(hardware):
+
+    return
+    rinse_vol=10000 #uL
+
+    goToWell(hardware, 'thermalCamera', 1,0)
+    updateCycleLabel(hardware, 0, "Rinsing DB line")
+    hardware.DBSwitchOpen()
+    multiDispensePumps(hardware,[0,0,0,0,0,0,0,0,rinse_vol])
+    hardware.DBSwitchClose()
+    updateCycleLabel(hardware, 0, "Synthesis End")
+
 
 def updateCycleLabel(hardware,cycle,step):
     print("Cycle " + str(cycle) + " " + step)
