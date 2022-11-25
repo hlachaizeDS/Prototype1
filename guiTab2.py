@@ -209,7 +209,7 @@ class MiddleFrame(Frame):
         self.is384_value = StringVar()
         self.is384 = Entry(self, textvariable=self.is384_value)
         self.is384.grid(row=7, column=8)
-        self.is384_value.set('1')
+        self.is384_value.set('0')
         self.is384flag = Label(self, text="1=384 0=96", justify="center")
         self.is384flag.grid(row=7, column=9)
 

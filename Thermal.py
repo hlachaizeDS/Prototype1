@@ -263,7 +263,7 @@ class ThermalImageThread:
             sleep(0.3)
             self.in_video_loop()
 
-            root_path = "C:\\Users\\SynthesisDNASCRIPT\\Desktop\\Proto5\\Thermal_Camera"
+            root_path = "C:\\Users\\SynthesisDNASCRIPT\\Desktop\\Proto6\\Thermal_Camera"
 
             now = datetime.datetime.now()
 
@@ -363,13 +363,13 @@ class ThermalImageThread:
         xl_p, xl_q = self.thermalFrame.shape
         fp, fq = img_p / xl_p, img_q / xl_q
         # Comment the next line to avoid displaying the green rectangle around the handle
-        cv.rectangle(self.img_to_display, top_left, bottom_right, (0, 255, 0), 2)
+        #cv.rectangle(self.img_to_display, top_left, bottom_right, (0, 255, 0), 2)
         for n in range(self.nb_numbers):
             for m in range(self.nb_letters):
                 x = int(column_coordinates_shifted[m, n])
                 y = int(line_coordinates_shifted[n, m])
                 # Comment the next line to avoid displaying the green circles on the wells
-                self.img_to_display = cv.circle(self.img_to_display, (x, y), radius=2, color=(0, 255, 0), thickness=-1)
+                #self.img_to_display = cv.circle(self.img_to_display, (x, y), radius=2, color=(0, 255, 0), thickness=-1)
                 try:
                     temperatures.append(self.thermalFrame[int(y / fp), int(x/fq)])
                 except:

@@ -1,6 +1,6 @@
 @echo off
 
-set "VIRTUAL_ENV=C:\Users\SynthesisDNASCRIPT\PycharmProjects\Prototype5\venv"
+set "VIRTUAL_ENV=C:\Users\SynthesisDNASCRIPT\PycharmProjects\Prototype6\venv"
 
 if defined _OLD_VIRTUAL_PROMPT (
     set "PROMPT=%_OLD_VIRTUAL_PROMPT%"

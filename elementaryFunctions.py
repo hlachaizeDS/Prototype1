@@ -1,10 +1,9 @@
 from time import sleep
 import time
-from hardware import STIRRING_VELOCITY
 import math
 
-X_A1=150069
-Y_A1=24327
+X_A1=149601
+Y_A1=37733
 
 X_step=9200
 Y_step=9150
@@ -83,19 +82,19 @@ def goToWell(hardware,element,well,quadrant):
 
     if element=='safe':
         X_1 = 0
-        Y_1 = 115852
+        Y_1 = 131379
 
     if element=='thermo':
         X_1=0
-        Y_1=115852
+        Y_1=131379
 
     if element == "thermalCamera":
         X_1 = 0
-        Y_1 = 115852
+        Y_1 = 131379
 
     if element == "washPrime":
         #X_1 = 167686
-        X_1=185300
+        X_1=224963
         Y_1 = 0
 
     if element == "premixPrime":
@@ -292,45 +291,12 @@ def multiDispensePumps(hardware,volumes):
     if len(volumes)!=12:
         volumes.extend([0]*(12-len(volumes)))
 
-    dus = []
-    for pump_id in range(3):
-        du = hardware.dispense_units_1[pump_id]
-        dus.append(du)
-    for pump_id in range(3):
-        du = hardware.dispense_units_2[pump_id]
-        dus.append(du)
-    for pump_id in range(3):
-        du = hardware.dispense_units_3[pump_id]
-        dus.append(du)
-    for pump_id in range(3):
-        du = hardware.dispense_units_4[pump_id]
-        dus.append(du)
+    for pump_id in range(12):
+        hardware.dus[pump_id].dispense(volumes[pump_id])
 
-    while volumes!=[0,0,0,0,0,0,0,0,0,0,0,0]:
-
-        used_dus=[]
-        for pump in range(len(dus)):
-            if volumes[pump]!=0:
-                used_dus.append(dus[pump])
-
-        for du in used_dus:
-            du.push_in_reservoir(du.conditioning)
-
-        for pump in range(len(dus)):
-            if volumes[pump]!=0:
-                if volumes[pump]<=dus[pump].max_disp:
-                    vol_to_disp=volumes[pump]
-                else:
-                    vol_to_disp=dus[pump].max_disp
-
-                dus[pump].push(vol_to_disp)
-                volumes[pump]-=vol_to_disp
-
-        for du in used_dus:
-            du.pull(du.pullback)
-        for du in used_dus:
-            du.zero()
-
+    #wait for being able to move
+    for pump_id in range(12):
+        hardware.dus[pump_id].wait_for_canMove()
 
 
 def multiDispense(hardware,nucleoArray,time):

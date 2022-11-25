@@ -16,9 +16,9 @@ def actionButton_Callback(directCommand):
     #ElongationTwoEnz_10minSomeCycles(hardware, 0)
     #ElongationOneEnz_10minSomeCycles(hardware, 0)
 
-    ElongationCycleSeparatedFourEnz_B4(hardware, 0)
+    #ElongationCycleSeparatedFourEnz_B4(hardware, 0)
 
-    #ElongationCycle_TwoEnz_W1(hardware, 0)
+    ElongationCycle_TwoEnz_W1(hardware, 0)
     #ElongationCycle_TwoEnz_W1_NoDBFinished(hardware, 0)
     #ElongationCycle_TwoEnz_W1_10minsomeCycles(hardware, 0)
     #ElongationCycle_OneEnz_W1(hardware, 0)
