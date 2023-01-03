@@ -4,7 +4,7 @@ import usbErrorHandling
 from serial import *
 from time import sleep
 
-COMPORT='COM28'
+COMPORT='COM17'
 
 class ArduinoControl():
     def __init__(self, parent,*args, **kwargs):

@@ -5,6 +5,7 @@ from hardware import *
 from action import actionButton_Callback
 import TMCL
 from cycles_steps import *
+from PSPs import *
 
 
 
@@ -220,7 +221,7 @@ class MiddleFrame(Frame):
                                                                    command=lambda buffer=fill: fillPlate(hardware,buffer,float(self.fillVol_value.get()),float(self.is384_value.get())))
             self.fillButtons[fillList.index(fill)].grid(row=8 + fillList.index(fill), column=8, padx=5,
                                                                pady=5)
-        self.PSPWashesButton = Button(self, text="PSP Washes",command=lambda : PSPWashes(hardware, float(self.is384_value.get())))
+        self.PSPWashesButton = Button(self, text="PSP Washes",command=lambda : PSPWashes_96OP_onlynucs(hardware, float(self.is384_value.get())))
         self.PSPWashesButton.grid(row=13,column=8,padx=5,pady=5)
 
 '''CALLBACK FUNCTIONS'''

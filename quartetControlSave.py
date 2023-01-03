@@ -29,8 +29,8 @@ def saveQuartetControlFile(title):
     folder_path=str(now.year)[2:]+ force2digits(now.month)
 
     # new file path
-    personal_folder_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_P5_' + title + '_' + expID
-    file_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + "_P5_" + title + "_" + expID
+    personal_folder_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_P6_' + title + '_' + expID
+    file_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + "_P6_" + title + "_" + expID
 
     #the quartet control will be copied both in its own folder AND in all folder
     os.makedirs(general_path + '\\' + folder_path, exist_ok=True)

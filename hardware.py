@@ -1,6 +1,6 @@
 MODULE_ADDRESS = 1
-PORT_MOTORX = "COM27"
-PORT_MOTORY = "COM29"
+PORT_MOTORX = "COM15"
+PORT_MOTORY = "COM16"
 
 from DispenseUnit_Arduino import *
 from tkinter import *
@@ -89,7 +89,7 @@ class HardWare(Frame):
 
         if self.pumps:
 
-            COM_PORTS_PUMPS=[6,4,3,5,7,8,9,10,11,12,13,14]
+            COM_PORTS_PUMPS=[7,3,6,4,5,9,8,10,11,12,13,14]
 
             self.dus=[]
             for port in COM_PORTS_PUMPS:
