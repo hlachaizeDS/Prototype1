@@ -99,7 +99,7 @@ def dispensePremixesAndEnzymeSep(hardware,time_nuc,time_enz_M,time_enz_N,M_array
     goToWell(hardware, "thermalCamera", 1, 0)
 
 
-def dispensePumps(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_array,O_array,P_array,is384):
+def dispensePumps(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_array,O_array,P_array,is384,max_vol=None):
 
     pump_nb=8
 
@@ -127,10 +127,10 @@ def dispensePumps(hardware,volumes,M_array,N_array,A_array,C_array,G_array,T_arr
                 if is384:
                     for i in range(1,5):
                         goToFakeWell(hardware, m_well, fake_plate_dims, dispHead_dims, i)
-                        multiDispensePumps(hardware,disp)
+                        multiDispensePumps(hardware,disp,max_vol)
                 else:
                     goToFakeWell(hardware, m_well, fake_plate_dims, dispHead_dims, 0)
-                    multiDispensePumps(hardware,disp)
+                    multiDispensePumps(hardware,disp,max_vol)
             hardware.parent.update()
 
     goToWell(hardware, "thermalCamera", 1, 0)
@@ -416,7 +416,7 @@ def removeSupernatantPosPressure(hardware, wells, time, plate, vacuum):
         wait(hardware,3)
         hardware.vacValveClose()
 
-def fillPlate(hardware, buffer, vol, is384):
+def fillPlate(hardware, buffer, vol, is384, max_vol=None):
 
     # We read the excel and get the parameters back
     synthesis_sheet = getExcelSheet(path)
@@ -429,7 +429,7 @@ def fillPlate(hardware, buffer, vol, is384):
     if buffer=="nucs":
         dispensePumps(hardware, [vol]*8,
                       nucleo_arrays[5], nucleo_arrays[6],
-                      nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],[],[], is384)
+                      nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],[],[], is384, max_vol)
     else:
         dispenseWashes(hardware,vol,buffer,activeWells,is384)
 

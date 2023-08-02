@@ -2,8 +2,8 @@ from time import sleep
 import time
 import math
 
-X_A1=155441
-Y_A1=27718
+X_A1=155791
+Y_A1=27018
 
 X_step=9200
 Y_step=9150
@@ -275,9 +275,24 @@ def aspirate(hardware,time):
 
 
 
-def multiDispensePumps(hardware,volumes):
+def multiDispensePumps(hardware,volumes,max_vol=None):
 
-    hardware.dispenseBlock.multi_dispense(volumes)
+    #introduced max_vol to dispense a large amount in several strokes for 384, avoiding overflow
+    if max_vol!=None:
+        volumes_copy=volumes.copy()
+        while any(volumes_copy)>0 :
+            to_disp=[]
+            for i in range(len(volumes_copy)):
+                if volumes_copy[i]>max_vol:
+                    to_disp.append(max_vol)
+                    volumes_copy[i]=volumes_copy[i]-max_vol
+                else:
+                    to_disp.append(volumes_copy[i])
+                    volumes_copy[i] = 0
+
+            hardware.dispenseBlock.multi_dispense(to_disp)
+    else:
+        hardware.dispenseBlock.multi_dispense(volumes)
 
 
 def multiDispense(hardware,nucleoArray,time):
