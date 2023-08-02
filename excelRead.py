@@ -1,27 +1,21 @@
 import xlrd
 
-path = r'C:\Users\SynthesisDNASCRIPT\Desktop\Proto6\Quartet_Control.xlsm'
+path = r'C:\Users\SynthesisDNASCRIPT\Desktop\Proto7\Quartet_Control.xlsm'
 
 #Parameters
 
-stirVel=0
-firstRemoval=0
-atTheEnd=0
-PremixVolume=0
-NucsVolume=0
-EBVolume=0
-DBVolume1=0
-DBVolume2=0
-WashVolume=0
-BBVolume1=0
-BBVolume2=0
-VolumesSheet=0
-Elong_time=0
-VacuumTime=0
-BBTime=0
-DBTime=0
-WashTime=0
-params=[stirVel,firstRemoval,atTheEnd,PremixVolume,DBVolume1,DBVolume2,WashVolume,BBVolume1,BBVolume2,VolumesSheet,Elong_time,VacuumTime,BBTime,DBTime,WashTime]
+NucsVolume = 0
+EBVolume = 0
+BBVolume1 = 0
+DBVolume1 = 0
+DBVolume2 = 0
+BBVolume2 = 0
+Elong_time = 0
+WB1Time = 0
+WB2Time = 0
+DB1Time = 0
+DB2Time = 0
+VacuumTime = 0
 
 def getExcelSheet(path):
     wb = xlrd.open_workbook(path)

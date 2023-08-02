@@ -3,9 +3,8 @@ import threading
 from tkinter import *
 from hardware import *
 from action import actionButton_Callback
-import TMCL
 from  Optris import *
-from Thermal import ThermalImageThread,ThermalImage,ThermalImageParams
+from Thermal import ThermalImageThread
 from PIL import Image, ImageTk
 from matplotlib import pyplot as plt
 
@@ -106,6 +105,8 @@ class DirectCommand(Frame):
         self.PositionsButton = Button(self, text="Positions",
                                            command=lambda: positionsButton_CallBack(self))
         self.PositionsButton.grid(row=1,column=2, columnspan=2, padx=5, pady=5)
+
+        '''
         #UP
         self.needlesLabel = Label(self, text="Positive Pressure")
         self.needlesLabel.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
@@ -142,6 +143,8 @@ class DirectCommand(Frame):
         # self.goDownMagnetButton = Checkbutton(self, text="DOWN", command=lambda: goButton_CallBack(self, "goDownMagnet"),
         #                                 indicatoron=0, variable=self.goDownMagnetButton_value)
         # self.goDownMagnetButton.grid(row=4, column=2, columnspan=2, padx=5, pady=5)
+        '''
+
         #RIGHT
         self.goRightButton_value=IntVar()
         self.goRightButton = Checkbutton(self, text="RIGHT", command=lambda: goButton_CallBack(self,"goRight"), indicatoron=0,variable=self.goRightButton_value)
@@ -174,15 +177,18 @@ class DirectCommand(Frame):
                                        indicatoron=0, variable=self.stirringButton_value)
         self.stirringButton.grid(row=9, column=3, padx=5, pady=5)
 
+        '''
         #STOP
         self.stopButton_value = IntVar()
         self.stopButton = Checkbutton(self, text="STOP",fg='red', command=lambda: stopButton_Callback(self),indicatoron=0,variable=self.stopButton_value)
         self.stopButton.grid(row=0, column=5, padx=30, pady=5)
+        '''
 
         # ACTION
         self.actionButton = Button(self, text="ACTION", command=lambda: actionButton_Callback(self))
         self.actionButton.grid(row=1, column=5, padx=30, pady=5)
 
+        '''
         #Digital Ouputs 1
         digitalOutputsNb=8
         self.digitalOutputButton_value = [None] * digitalOutputsNb
@@ -192,7 +198,7 @@ class DirectCommand(Frame):
             self.digitalOutputButton_value[i]=IntVar()
             self.digitalOutputButton[i]=Checkbutton(self, text="Dig Out " + str(i) , command=lambda i=i: digitalOutput_Callback(self, i), indicatoron=0, variable=self.digitalOutputButton_value[i])
             self.digitalOutputButton[i].grid(row=i+2,column=5,padx=30 ,pady=5)
-
+        
         # Digital Ouputs 2
         digitalOutputsNb2 = 8
         self.digitalOutputButton2_value = [None] * digitalOutputsNb2
@@ -204,6 +210,7 @@ class DirectCommand(Frame):
                                                       command=lambda i=i: digitalOutput2_Callback(self, i),
                                                       indicatoron=0, variable=self.digitalOutputButton2_value[i])
             self.digitalOutputButton2[i].grid(row=i + 2, column=6, padx=30, pady=5)
+        '''
 
         #Arduino Heating
         self.arduinoHeating_value = IntVar()
@@ -221,28 +228,28 @@ def goButton_CallBack(directCommand,button):
 
     if button=="goRight":
         value = directCommand.goRightButton_value.get()
-        motor = directCommand.parent.hardware.xMotor
+        motor = directCommand.parent.hardware.positioning_motors.xMotor
         velocity = VELOCITY
         sens="left"
         oppositeButtonValue=directCommand.goLeftButton_value
 
     elif button=="goLeft":
         value = directCommand.goLeftButton_value.get()
-        motor = directCommand.parent.hardware.xMotor
+        motor = directCommand.parent.hardware.positioning_motors.xMotor
         velocity=VELOCITY
         sens = "right"
         oppositeButtonValue = directCommand.goRightButton_value
 
     elif button == "goIn":
         value = directCommand.goInButton_value.get()
-        motor = directCommand.parent.hardware.yMotor
+        motor = directCommand.parent.hardware.positioning_motors.yMotor
         velocity = VELOCITY
         sens = "right"
         oppositeButtonValue = directCommand.goOutButton_value
 
     elif button == "goOut":
         value = directCommand.goOutButton_value.get()
-        motor = directCommand.parent.hardware.yMotor
+        motor = directCommand.parent.hardware.positioning_motors.yMotor
         velocity = VELOCITY
         sens = "left"
         oppositeButtonValue = directCommand.goInButton_value

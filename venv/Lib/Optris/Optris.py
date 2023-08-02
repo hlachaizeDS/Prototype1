@@ -18,7 +18,7 @@ class Optris:
         Initialize USB, etc.
         """
         evo_irimager_usb_init()
-        evo_irimager_set_focusmotor_pos(56.1)
+        #evo_irimager_set_focusmotor_pos(56.1)
         self.size = evo_irimager_get_thermal_image_size()
         self._inittime = time.time()
         return

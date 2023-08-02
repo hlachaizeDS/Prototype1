@@ -3,9 +3,7 @@ import threading
 from tkinter import *
 from hardware import *
 from action import actionButton_Callback
-import TMCL
 from cycles_steps import *
-from PSPs import *
 
 
 

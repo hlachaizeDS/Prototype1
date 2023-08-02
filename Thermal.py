@@ -14,175 +14,76 @@ from PIL import Image, ImageTk
 import datetime
 import os
 from time import *
-from elementaryFunctions import goToWell
 import cv2 as cv
 import pandas as pd
 import pickle
 from MTM import matchTemplates
-
-
-#from action import thermal_is384
-__all__ = ['ThermalImage', 'ThermalImageParams', 'default_TheramlImageParams']
-thermal_is384 = 0
-class ThermalImageParams:
-    def __init__(self):
-        self.origin: np.ndarray = None    # [x, y] coordinates of A, 1 origin
-        self.gridsize: np.ndarray = None  # [xs, ys] Number of wells in x, y
-        self.wellsize: int = None         # [px] Number of pixels around centers to average for a well (square)
-        self.p1: np.ndarray = None
-        self.p2: np.ndarray = None
-
-# When calibrating, edit these parameters and they will be updated in the matplotlib gui
-# Then transfer them to the appropriate BB config.
-default_TheramlImageParams = ThermalImageParams()
-# default_TheramlImageParams.p1 = np.array([18, 32.5, 1.0])
-# default_TheramlImageParams.p2 = np.array([147, 31.5, 1.0])
-default_TheramlImageParams.p1 = np.array([13, 8, 1.0])
-default_TheramlImageParams.p2 = np.array([139.5, 9, 1.0])
-
-default_TheramlImageParams.gridsize = np.array((12, 8))
-default_TheramlImageParams.wellsize = 1
-
-class ThermalImage:
-    """
-    Represent and translate an optris thermal image
-    """
-    def __init__(self, img: np.ndarray, params: ThermalImageParams):
-        """
-        :param img: Input image
-        :param params: Interpertation paramters
-        """
-        self.params = params
-        self.img = img
-        #self.img=np.rot90(self.img)
-        #self.img=np.rot90(self.img)
-        # Compute spacing
-        hypot = self.params.p2-self.params.p1
-        self.spacing = np.hypot(hypot[0], hypot[1])/11.0
-        logging.info("Spacing: %.2f", self.spacing)
-        self.theta = -np.arctan2(hypot[1], hypot[0])
-        logging.info("Theta: %.3f", self.theta)
-
-        # Affine transform of grid array
-        self.t = np.array([[np.cos(self.theta),-np.sin(self.theta), params.p1[1]],
-                           [np.sin(self.theta),  np.cos(self.theta), params.p1[0]],
-                           [0.0,                 0.0,                1.0]])
-        # for i in range(self.t.shape[0]):
-        #     for j in range(self.t.shape[1]):
-        #         self.t[i, j]=round(self.t[i,j])
-        self.fig = None
-        return
-
-    def center(self, c: int, r: int) -> np.ndarray:
-        """
-        Given well c, r return image x, y center
-        """
-        params = self.params
-        if not 0 <= c <= params.gridsize[0] or not 0 <= r <= params.gridsize[1]:
-            raise ValueError
-        p = params.p1.copy()
-        p += [c * self.spacing, r * self.spacing, 0.0]
-        y, x, _ = np.dot(p, self.t)
-        return np.array((x, y))
-
-    def as_array(self) -> np.ndarray:
-        """
-        Return the means of the whole plate as an np array
-        :return:
-        """
-        data = np.zeros(self.params.gridsize)
-
-        for c in range(self.params.gridsize[0]):
-            for r in range(self.params.gridsize[1]):
-                data[c, r] = self.well_mean(c, r)
-        return data
-
-    def as_list(self) -> np.ndarray:
-        data = []
-
-        for c in range(self.params.gridsize[0]):
-            for r in range(self.params.gridsize[1]):
-                data.append('{0:.2f}'.format(self.well_mean(c, r)))
-        return data
-
-
-
-    def well_as_array(self, c: int, r: int) -> np.ndarray:
-        """
-        Given a well c, r return just the well pixels
-        """
-        s = self.params.wellsize
-        x, y = self.center(c, r)
-        x = int(x)
-        y = int(y)
-        ret = self.img[x-s:x+s+1, y-s:y+s+1]
-        return ret
-
-    def well_mean(self, c: int, r: int) -> float:
-        """
-        Given a well c, r return the mean of the well pixels
-        """
-        return self.well_as_array(c, r).mean()
-
-    def well_std(self, c: int, r: int) -> float:
-        """
-        Given a well c, r return the stddev of the well pixels
-        """
-        return self.well_as_array(c, r).std()
-
-    def plotimage(self):
-        """
-        Draw the image
-        """
-
-        plt.imshow(self.img)
-        plt.show()
-        #self.to_csv("Practice") #name file here will save to DNAS-BB-Software/DNASBB folder
-
-    def to_csv(self, fname: Union[Path, str]):
-        """
-        Save the whole plate as a csv file
-        :param fname:
-        :return:
-        """
-
-        timestr=time.strftime("%Y%d%m_%H%M%S") #saves yeardaymonth-time
-        fname=r'C:\Users\BREADBOARD1\Desktop\Thermal_CAM\ ' + fname+"_" +timestr+'.csv'
-
-        np.savetxt(fname, self.as_array().transpose(), delimiter=',', fmt='%.2f')
-        return
-
-
-    def to_png(self,fname: Union[Path, str]):
-        timestr = time.strftime("%Y%d%m_%H%M%S")  # saves yeardaymonth-time
-        fname = r'C:\Users\BREADBOARD1\Desktop\Thermal_CAM\ ' + fname + "_" + timestr + '.png'
-        plt.imsave(fname,self.img)
+#from socket_server import *
+import json
 
 
 class ThermalImageThread:
 
-    def __init__(self, rightFrame):
-        self.thermal_is384 = thermal_is384
-        # store the video stream object and output path, then initialize
-        # the most recently read frame, thread for reading frames, and
-        # the thread stop event
+    def __init__(self, mainFrame):
 
+        """Parameters"""
+        self.is_384 = 0                     #format of the plate
+        self.OS = "Proto"                 # Ubuntu(named_pipe), Windows (communication via bat) or Proto
+        self.camera_type = "Xi400"          # so far only Xi400
+        self.automatic_detection = 2        # 0 for no detection, 1 for image processing, 2 for fixed pixels
+        self.flip_vertically = 0            # mirror through vertical axis
+        self.flip_horizontally = 0          # mirror through horizontal axis
+        self.zoom = 1.2                     # Zoom factor, used only for display of UI
+        self.delay = 0.05                   # refresh of thermal images
+        self.cm = plt.get_cmap('seismic')   # Color map
+
+
+
+        """--------------"""
+
+        if self.OS=="Ubuntu":
+            self.root_path = "\\home\\dnascript\\Desktop\\thermal-monitor"
+        elif self.OS=="Windows":
+            self.root_path = "Thermal_Camera"
+        elif self.OS=="Proto":
+            self.root_path = "C:\\Users\\SynthesisDNASCRIPT\\Desktop\\Proto7\\Thermal_Camera"
+
+
+        self.cm = plt.get_cmap('seismic')               #Color map
+
+        if self.camera_type=='Xi400':
+            self.width = 382
+            self.height = 288
+        else:
+            raise Exception("Camera type unknown.")
+
+
+        """Initialize connection with the camera"""
         self.o = Optris()
         self.thermalFrame = None    #Contains temperature data
         self.topng = None    #the frame we'll save as png
         self.frame = None   #the frame we show on the gui
         self.thermalFrame=None
         self.thread = None
-        self.stopEvent = None
-        self.rightFrame=rightFrame
-        #ColorMap
-        self.cm = plt.get_cmap('seismic')
-        #Zoom Factor
-        self.zoom=1.2
-        self.width=382
-        self.height=288
+        self.mainFrame=mainFrame
 
-        if self.thermal_is384:
+
+        """Server to take snapshots"""
+        now = datetime.datetime.now()
+        self.snapshot_folder = str(now.year) + force2digits(now.month) + '\\' + str(now.year) + force2digits(
+            now.month) + force2digits(now.day) + '_' + force2digits(now.hour) + force2digits(now.minute) + force2digits(
+            now.second) + "_"
+
+        if self.OS=="Ubuntu":
+            self.socket_server=Pipe_Syntax("/tmp/thermal-monitor")
+            self.socket_server.start()
+        elif self.OS == "Windows":
+            self.socket_server = Pipe()
+            self.socket_server.start()
+
+
+
+        if self.is_384:
             protoTF = 305
             self.letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
         else:
@@ -202,94 +103,135 @@ class ThermalImageThread:
 
         # start a thread that constantly pools the video sensor for
         # the most recently read frame
-        self.stopEvent = threading.Event()
         self.thread = threading.Thread(target=self.videoLoop, daemon=True)
         self.thread.start()
-        #self.videoLoop()
 
     def in_video_loop(self):
+
         self.thermalFrame = self.o.img()
+        if self.flip_vertically:
+            self.thermalFrame=np.fliplr(self.thermalFrame)
+        if self.flip_horizontally:
+            self.thermalFrame=np.flipud(self.thermalFrame)
 
         frame = self.thermalFrame
-        # frame=frame.clip(frame.max()-10,frame.max())
         frame = (frame - frame.min()) * (60.0 / (frame.max() - frame.min()))
         frame = Optris.C_to_uint8(self.o, frame)
 
-        ti = ThermalImage(self.cm(frame), default_TheramlImageParams)
-        frame = Image.fromarray((ti.img[:, :, :3] * 255).astype(np.uint8)).resize((int(self.width * self.zoom), int(self.height * self.zoom)))
+        frame=self.cm(frame)
+        frame = Image.fromarray((frame[:, :, :3] * 255).astype(np.uint8)).resize((int(self.width * self.zoom), int(self.height * self.zoom)))
         self.topng = frame
-        #self.img_to_display = np.array(self.topng)
-        # self.frame = ImageTk.PhotoImage(frame)
-        self.mean_temperature()
+
+        if self.automatic_detection==1:
+            self.mean_temperature_auto()
+        elif self.automatic_detection==2:
+            self.wells_temp=self.get_wells_temp_fixed_pixels()
+            self.mean_temperature_fixed_pixels()
+        else:
+            self.img_to_display=np.array(self.topng)
         self.frame = ImageTk.PhotoImage(Image.fromarray(self.img_to_display.astype(np.uint8)))
 
-        self.rightFrame.ImageLabel.configure(image=self.frame)
-        self.rightFrame.ImageLabel.Image = self.frame
+        self.mainFrame.ImageLabel.configure(image=self.frame)
+        self.mainFrame.ImageLabel.Image = self.frame
 
-        # moins quelque chose pour le décalage
-        x = (self.rightFrame.ImageLabel.winfo_pointerx() - 11 - self.rightFrame.ImageLabel.winfo_rootx()) / self.zoom
-        y = (self.rightFrame.ImageLabel.winfo_pointery() - 8 - self.rightFrame.ImageLabel.winfo_rooty()) / self.zoom
+        # get coordinates of pointer
+
+        label_size=[self.mainFrame.ImageLabel.winfo_width(),self.mainFrame.ImageLabel.winfo_height()]
+        image_size=[self.frame.width(),self.frame.height()]
+        x = (self.mainFrame.ImageLabel.winfo_pointerx() - int((1/2)*(label_size[0]-image_size[0])) - self.mainFrame.ImageLabel.winfo_rootx()) / self.zoom
+        y = (self.mainFrame.ImageLabel.winfo_pointery() - int((1/2)*(label_size[1]-image_size[1])) - self.mainFrame.ImageLabel.winfo_rooty()) / self.zoom
 
         if x < self.width and x > -1:
             if y < self.height and y > -1:
-                self.rightFrame.tempLabel.configure(
-                    text=str(self.rightFrame.thermalThread.thermalFrame[int(y)][int(x)]) + "°C")
+                self.mainFrame.tempLabel.configure(
+                    text=str("%.1f" % self.mainFrame.thermalThread.thermalFrame[int(y)][int(x)]) + "°C")
 
-        self.rightFrame.update()
-        sleep(0.05)
+        self.mainFrame.update()
+
+        if self.OS in ['Ubuntu','Windows']:
+            if self.socket_server.data!=[]:
+                [to_snap,exp,cycle,step]=self.socket_server.data
+                self.socket_server.received=b""
+                self.socket_server.data=[]
+
+            if int(to_snap)==1:
+                self.snapshot_in_cycle(1,self.snapshot_folder + exp.replace("\"",""),int(cycle),step.replace("\"",""))
+
+        sleep(self.delay)
 
     def videoLoop(self):
-        while not self.stopEvent.is_set():
-            #try:
-            self.in_video_loop()
-            #except:
-            #    print('Couldnt update frame')
-                #self.rightFrame.after(50, self.videoLoop)
+        while(1):
+            try:
+                self.in_video_loop()
+            except Exception as e:
+                print('Couldnt update frame')
+                print(e)
 
     def snapshot_in_cycle(self,thermalImages,folder_path,cycle,step):
-        try:
 
             #if thermalImages are not active, we return
-            if thermalImages==0 or self.rightFrame.parent.hardware.thermalCam==0:
+            if thermalImages==0 :
                 return
 
             # If it's just a test we dont take pictures
-            if (folder_path[len(folder_path) - 4:] == "test"):
-                return
-
-            #We go to thermal cam pos
-            goToWell(self.rightFrame.parent.hardware,'thermalCamera',1,0)
+            #if (folder_path[len(folder_path) - 4:] == "test"):
+            #    return
 
             sleep(0.3)
             self.in_video_loop()
 
-            root_path = "C:\\Users\\SynthesisDNASCRIPT\\Desktop\\Proto6\\Thermal_Camera"
-
             now = datetime.datetime.now()
 
-            final_path = root_path + "\\" + folder_path + "\\" + str(cycle) + "\\" + str(now.year) + force2digits(
+            final_path = self.root_path + "\\" + folder_path + "\\" + str(cycle) + "\\" + str(now.year) + force2digits(
                 now.month) + force2digits(now.day) + '_' + force2digits(now.hour) + force2digits(now.minute) + force2digits(
                 now.second) + '_C' + str(cycle) + '_' + step
-            os.makedirs(root_path + "\\" + folder_path + "\\" + str(cycle), exist_ok=True)
 
-
-
-            imageio.imwrite(final_path + ".png", self.img_to_display)
+            if self.OS=="Ubuntu":
+                final_path=final_path.replace("\\","/")
+                os.makedirs((self.root_path + "\\" + folder_path + "\\" + str(cycle)).replace("\\","/"), exist_ok=True)
+                imageio.imwrite((final_path + ".png"), self.img_to_display)
+            else:
+                os.makedirs(self.root_path + "\\" + folder_path + "\\" + str(cycle), exist_ok=True)
+                imageio.imwrite((final_path + ".png"), self.img_to_display)
+            np.savetxt(final_path + ".csv", self.thermalFrame, delimiter=';', fmt='%.2f')
             #imageio.imwrite(final_path + "_detection.png", self.img_to_display)
             #imageio.imwrite(final_path+"_Temp.png", self.thermalFrame.astype(np.uint8))
 
+            if self.automatic_detection==1:
+                self.generate_temperature_table(final_path)
+            elif self.automatic_detection==2:
+                self.generate_temperature_table_fixed_pixel(final_path)
 
-            self.generate_temperature_table(final_path)
-            np.savetxt(final_path + ".csv", self.thermalFrame, delimiter=';', fmt='%.2f')
+    def get_wells_temp_fixed_pixels(self):
+        # Coordinates on image(with zoom), [x,y]
 
-        except:
-            print('Couldnt take snapshot')
+        # import config of the coordinates of the extremities, saved in a file
+        if self.is_384:
+            with open("fixed_thermal_config-384.json", 'r') as f:
+                config = json.load(f)
+        else:
+            with open("fixed_thermal_config.json", 'r') as f:
+                config = json.load(f)
+
+        top_left = [config["top_left"]["X"], config["top_left"]["Y"]]
+        bottom_left = [config["bottom_left"]["X"], config["bottom_left"]["Y"]]
+        top_right = [config["top_right"]["X"], config["top_right"]["Y"]]
+        bottom_right = [config["bottom_right"]["X"], config["bottom_right"]["Y"]]
+
+        self.wells = return_coordinates([top_left, bottom_left, top_right, bottom_right], self.is_384) #wells are in a dictionnary, value is [coordx,coordy]
+        wells_temp = {}
+        for well,coord in self.wells.items():
+            wells_temp[well]=self.thermalFrame[int(coord[1]/self.zoom)][int(coord[0]/self.zoom)]
+
+        return wells_temp
+
+
 
     def generate_temperature_table(self, final_path):
+
         wells_dict = {'Temperatures': self.letters}
 
         input_img = np.array(self.topng)
-        img_c = input_img
         input_img = cv.cvtColor(input_img, cv.COLOR_BGR2GRAY)
         img_p, img_q = input_img.shape[0], input_img.shape[1]
         img_for_matching = input_img[self.detection_limit[0]:self.detection_limit[1], :]
@@ -333,7 +275,28 @@ class ThermalImageThread:
         df = pd.DataFrame(wells_dict)
         df.to_excel(final_path + '_wells.xlsx', sheet_name='temp_table', index=False)
 
-    def mean_temperature(self):
+    def generate_temperature_table_fixed_pixel(self, final_path):
+
+        temp_list=[]
+        if self.is_384==0:
+            nb_columns=12
+            nb_rows=8
+        else:
+            nb_columns = 24
+            nb_rows = 16
+
+        for row in range(nb_rows+1):
+            if row==0:
+                temp_list.append( [""]+[col+1 for col in range(nb_columns)])
+            else:
+                row_list=[chr(ord("A")+row-1)]
+                for col in range(1,nb_columns+1):
+                    row_list.append(self.wells_temp[chr(ord("A")+row-1)+ str(col)])
+                temp_list.append(row_list)
+
+        np.savetxt(final_path + "_wells.csv", np.array(temp_list), delimiter=';', fmt="%s")
+
+    def mean_temperature_auto(self):
         temperatures = []
         self.img_to_display = np.array(self.topng)
         img_p, img_q = self.img_to_display.shape[0], self.img_to_display.shape[1]
@@ -374,7 +337,25 @@ class ThermalImageThread:
                     temperatures.append(self.thermalFrame[int(y / fp), int(x/fq)])
                 except:
                     pass
-        self.rightFrame.tempmeanLabel.configure(text="Mean temperature " + str(round(np.mean(temperatures), 2)) + "°C")
+        self.mainFrame.tempmeanLabel.configure(text="Mean temperature " + "%.1f" % round(np.mean(temperatures), 2) + "°C")
+
+    def pause(self,time_to_pause_for):
+
+        time_to_go_to = time.time() + time_to_pause_for
+        while (time.time() < time_to_go_to):
+            self.mainFrame.parent.update()
+            sleep(0.02)
+
+    def mean_temperature_fixed_pixels(self):
+
+        temperatures=[]
+
+        self.img_to_display = np.array(self.topng)
+        for well,temp in self.wells_temp.items():
+            self.img_to_display = cv.circle(self.img_to_display, (self.wells[well][0], self.wells[well][1]), radius=1, color=(0, 255, 0), thickness=-1)
+            temperatures.append(temp)
+
+        self.mainFrame.tempmeanLabel.configure(text="Mean temperature " + "%.1f" % round(np.mean(temperatures), 2) + "°C")
 
 class FakeThermalImageThread:
 
@@ -387,46 +368,47 @@ class FakeThermalImageThread:
     def snapshot_in_cycle(self, thermalImages, folder_path, cycle, step):
         variable='snap'
 
-def frameFormatting(frame):
-    for pixel in frame:
-        if pixel<30 :
-            pixel=30
-
 def force2digits(number):
     if number<10:
         return '0'+str(number)
     else:
         return str(number)
 
+def return_coordinates(extremities,is384):
+
+    wells={}
+    [top_left,bottom_left,top_right,bottom_right]=extremities
+    if is384:
+        col_nb=24
+        row_nb=16
+    else:
+        col_nb=12
+        row_nb=8
+
+    for col in range(col_nb):
+        for row in range(row_nb):
+            well_name=chr(ord("A")+row)+ str(col+1)
+
+            well_x = top_left[0] + (col / (col_nb - 1)) * (top_right[0] - top_left[0]) + (col / (col_nb - 1)) * (
+                        row / (row_nb - 1)) * (bottom_right[0] - bottom_left[0] - top_right[0] + top_left[0]) + (
+                        row / (row_nb - 1))*(bottom_left[0]-top_left[0])
+
+            well_y = top_left[1] + (col / (col_nb - 1)) * (top_right[1] - top_left[1]) + (col / (col_nb - 1)) * (
+                        row / (row_nb - 1)) * (bottom_right[1] - bottom_left[1] - top_right[1] + top_left[1]) + (
+                        row / (row_nb - 1)) * (bottom_left[1]-top_left[1])
+
+            wells[well_name]=[int(well_x),int(well_y)]
+
+    return wells
 
 if __name__ == '__main__':
-    import logging
-    logging.disable()
-    # img = imageio.imread('cam2.png')
-    o = Optris()
-    img = o.img()
-    params = default_TheramlImageParams
+    top_left = [5, 5]
+    bottom_left = [5, 100]
+    top_right = [100, 5]
+    bottom_right = [100, 100]
+    wells=return_coordinates([top_left,bottom_left,top_right,bottom_right],0)
+    for well in wells.items():
+        print(wells[well][0])
 
-    ti = ThermalImage(img, params)
 
-    # for c in range(params.gridsize[0]):
-    #     for r in range(params.gridsize[1]):
-    #         x, y = ti.center(c, r)
-    #         x = int(x)
-    #         y = int(y)
-    #         # print("Well at: %d, %d:\n%s\nMean: %.2f Std: %.2f\n" %
-    #         #       (x, y, ti.well_as_array(c, r), ti.well_mean(c, r), ti.well_std(c, r)))
-    #         try:
-    #             oc = ti.img[x,y]
-    #             s = params.wellsize
-    #             ti.img[x-s:x+s+1, y-s:y+s+1] = 0
-    #             ti.img[x,y] = oc
-    #         except IndexError:
-    #             logging.error("Point off image")
-    #             pass
-    #
-    #     # ti.img[5, 5] = 255
 
-    ti.plotimage()
-    # ti.plotimage()
-    # ti.to_csv('cam2')

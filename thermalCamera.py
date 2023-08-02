@@ -26,7 +26,7 @@ class ThermalCamera():
         typebar.select("TIFF (*.tiff)")
 
         window = app.window(title_re="Enregistrer sous")
-        root_path="C:\\Users\\Prototype\\Desktop\\Prototype\\Thermal_Camera"
+        root_path="C:\\Users\\Prototype\\Desktop\\Proto7\\Thermal_Camera"
         final_path=root_path + "\\" + folder_path + "\\" + file_path
         os.makedirs(root_path + "\\" + folder_path, exist_ok=True)
 
@@ -53,7 +53,7 @@ class ThermalCamera():
             typebar.select("TIFF (*.tiff)")
             window = app.window(title_re="Enregistrer sous")
 
-            root_path = "C:\\Users\\Prototype\\Desktop\\Prototype\\Thermal_Camera"
+            root_path = "C:\\Users\\Prototype\\Desktop\\Proto7\\Thermal_Camera"
 
             now = datetime.datetime.now()
 

@@ -2,8 +2,8 @@ from time import sleep
 import time
 import math
 
-X_A1=149601
-Y_A1=37733
+X_A1=155441
+Y_A1=27718
 
 X_step=9200
 Y_step=9150
@@ -33,8 +33,7 @@ def initialiseMotorList(hardware,motor_list):
 
 
 def goToWell(hardware,element,well,quadrant):
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
+
     '''Put Lee vann or needles 'element' at the well 'well' '''
 
     'We make sure the needles are up'
@@ -82,15 +81,15 @@ def goToWell(hardware,element,well,quadrant):
 
     if element=='safe':
         X_1 = 0
-        Y_1 = 131379
+        Y_1 = 128344
 
     if element=='thermo':
         X_1=0
-        Y_1=131379
+        Y_1=128344
 
     if element == "thermalCamera":
         X_1 = 0
-        Y_1 = 131379
+        Y_1 = 128344
 
     if element == "washPrime":
         #X_1 = 167686
@@ -103,20 +102,21 @@ def goToWell(hardware,element,well,quadrant):
 
     X = X_1 + ((well - 1) % 8) * X_step
     Y = Y_1 + ((well - 1) // 8) * Y_step
-    hardware.xMotor.move_absolute(X)
-    hardware.yMotor.move_absolute(Y)
-    sleep(0.4)
 
-    while hardware.xMotorParametersInterface.get(8) == 0 or hardware.yMotorParametersInterface.get(8) == 0:
+    xMotor=hardware.positioning_motors.xMotor
+    yMotor=hardware.positioning_motors.yMotor
+    xMotor.move_absolute(X)
+    yMotor.move_absolute(Y)
+    sleep(0.1)
+
+    while xMotor.axis.target_position_reached == 0 or yMotor.axis.target_position_reached == 0:
         hardware.parent.update()
-        sleep(0.2)
+        sleep(0.1)
 
 def goToFakeWell(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant):
 
     #Works only for the upper left nozzle
 
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
 
     'We make sure the needles are up'
     #'needlesGoUp(hardware)
@@ -140,13 +140,16 @@ def goToFakeWell(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant):
 
     X = X_1 + ((fake_well - 1) % fake_plate_dims[0]) * X_step
     Y = Y_1 + ((fake_well - 1) // fake_plate_dims[0]) * Y_step
-    hardware.xMotor.move_absolute(X)
-    hardware.yMotor.move_absolute(Y)
-    sleep(0.2)
 
-    while hardware.xMotorParametersInterface.get(8) == 0 or hardware.yMotorParametersInterface.get(8) == 0:
+    xMotor = hardware.positioning_motors.xMotor
+    yMotor = hardware.positioning_motors.yMotor
+    xMotor.move_absolute(X)
+    yMotor.move_absolute(Y)
+    sleep(0.1)
+
+    while xMotor.axis.target_position_reached == 0 or yMotor.axis.target_position_reached == 0:
         hardware.parent.update()
-        sleep(0.2)
+        sleep(0.1)
 
 
 def realWellToPlateWell(realWell):
@@ -221,8 +224,6 @@ def wait(hardware,timeToWait):
     hardware.parent.leftFrame.skipButton_value.set(0)
 
 def waitAndStir(hardware,timeToWait):
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
 
     goToWell(hardware, 'thermalCamera', 1,0)
 
@@ -253,29 +254,19 @@ def stirrerStop(hardware):
     hardware.set_output2(5, 0)
 
 def magnetGoUp(hardware):
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
 
     hardware.magnetMotor.move_absolute_wait(hardware, -1706249)
 
 def magnetGoDown(hardware):
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
     hardware.magnetMotor.move_absolute_wait(hardware, -642511)
 
 def pressureGoDown(hardware):
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
     hardware.posPressure.goDown('dessalt')
 
 def pressureGoUp(hardware):
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
     hardware.posPressure.goUp()
 
 def aspirate(hardware,time):
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
 
     output=7 #output for vacuum
     hardware.set_output(output, 1)
@@ -286,23 +277,11 @@ def aspirate(hardware,time):
 
 def multiDispensePumps(hardware,volumes):
 
-
-    volumes=volumes.copy()
-    if len(volumes)!=12:
-        volumes.extend([0]*(12-len(volumes)))
-
-    for pump_id in range(12):
-        hardware.dus[pump_id].dispense(volumes[pump_id])
-
-    #wait for being able to move
-    for pump_id in range(12):
-        hardware.dus[pump_id].wait_for_canMove()
+    hardware.dispenseBlock.multi_dispense(volumes)
 
 
 def multiDispense(hardware,nucleoArray,time):
 
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
 
     for i in range(4):
         if nucleoArray[i] == 1:
@@ -313,8 +292,6 @@ def multiDispense(hardware,nucleoArray,time):
 
 def multiDispenseWithEnzyme(hardware,nucleoArray,time_nuc,time_enz):
 
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
     for i in range(4):
         if nucleoArray[i+2] == 1:
             hardware.set_output(i+2, 1)
@@ -333,8 +310,6 @@ def multiDispenseWithEnzyme(hardware,nucleoArray,time_nuc,time_enz):
 
 def multiDispenseWithEnzymeSep(hardware,nucleoArray,time_nuc,time_enz_M,time_enz_N):
 
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
     for i in range(4):
         if nucleoArray[i+2] == 1:
             hardware.set_output(i+2, 1)
@@ -355,8 +330,6 @@ def multiDispenseWithEnzymeSep(hardware,nucleoArray,time_nuc,time_enz_M,time_enz
 
 def multiDispenseAether(hardware,nucleoArray,time_enz,time_A,time_C,time_G,time_T):
 
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
     times=[time_enz,time_enz,time_A,time_C,time_G,time_T]
     for i in range(4):
         j=5-i
@@ -375,8 +348,6 @@ def multiDispenseAether(hardware,nucleoArray,time_enz,time_A,time_C,time_G,time_
 
 def multiDispenseNACGTWithEnzyme(hardware,nucleoArray,time_nuc,time_enz):
 
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
     for i in range(5):
         if nucleoArray[i+1] == 1:
             hardware.set_output(i+1, 1)
@@ -395,8 +366,6 @@ def multiDispenseNACGTWithEnzyme(hardware,nucleoArray,time_nuc,time_enz):
 
 def multiDispenseMNACGT(hardware,nucleoArray,time):
 
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
     for i in range(6):
         if nucleoArray[i] == 1:
             hardware.set_output(i, 1)
