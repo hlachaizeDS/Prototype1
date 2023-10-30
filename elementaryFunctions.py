@@ -2,11 +2,14 @@ from time import sleep
 import time
 import math
 
-X_A1=155791
-Y_A1=27018
+#X_A1=155891
+#Y_A1=27818
+
+X_A1=146491
+Y_A1=37018
 
 X_step=9200
-Y_step=9150
+Y_step=9200
 
 def initialiseMotorList(hardware,motor_list):
 
@@ -121,6 +124,46 @@ def goToFakeWell(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant):
     'We make sure the needles are up'
     #'needlesGoUp(hardware)
 
+    'Positions of A1 with the up left Lee vann'
+    X_1 = X_A1 - ((dispHead_dims[0] - 1)*X_step)
+    Y_1 = Y_A1 - ((dispHead_dims[1] - 1)*Y_step)
+
+    if quadrant == 1:
+        X_1 = X_1 - int(X_step / 4)
+        Y_1 = Y_1 - int(Y_step / 4)
+    if quadrant == 2:
+        X_1 = X_1 + int(X_step / 4)
+        Y_1 = Y_1 - int(Y_step / 4)
+    if quadrant == 3:
+        X_1 = X_1 - int(X_step / 4)
+        Y_1 = Y_1 + int(Y_step / 4)
+    if quadrant == 4:
+        X_1 = X_1 + int(X_step / 4)
+        Y_1 = Y_1 + int(Y_step / 4)
+
+    X = X_1 + ((fake_well - 1) % fake_plate_dims[0]) * X_step
+    Y = Y_1 + ((fake_well - 1) // fake_plate_dims[0]) * Y_step
+
+    xMotor = hardware.positioning_motors.xMotor
+    yMotor = hardware.positioning_motors.yMotor
+    xMotor.move_absolute(X)
+    yMotor.move_absolute(Y)
+    sleep(0.1)
+
+    while xMotor.axis.target_position_reached == 0 or yMotor.axis.target_position_reached == 0:
+        hardware.parent.update()
+        sleep(0.1)
+
+
+def goToFakeWell_384(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant):
+
+    #Works only for the upper left nozzle
+
+
+    'We make sure the needles are up'
+    #'needlesGoUp(hardware)
+    X_step=int(X_step/2)
+    Y_step=int(Y_step/2)
     'Positions of A1 with the up left Lee vann'
     X_1 = X_A1 - ((dispHead_dims[0] - 1)*X_step)
     Y_1 = Y_A1 - ((dispHead_dims[1] - 1)*Y_step)

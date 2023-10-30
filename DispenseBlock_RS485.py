@@ -31,6 +31,7 @@ class DispenseBlock_RS485:
             if volumes[index] != 0:
                 self.dus[index].wait_for_canmove()
 
+
     def wait_for_move(self):
 
         # Status is

@@ -4,6 +4,7 @@ from tkinter import *
 from hardware import *
 from action import actionButton_Callback
 from cycles_steps import *
+from PSPs import *
 
 
 
@@ -54,6 +55,13 @@ class MiddleFrame(Frame):
                                           command=lambda: multiDispensePumps(hardware,
                                                                              [0,0,0,0,0,0,0,0,5000,5000,5000,5000]))
         self.primingWashesButton.grid(row=5, column=1, padx=5, pady=5)
+
+        # Rinsing all multi lines
+        self.rinsingWashesButton = Button(self, text="Rinse DB BB Buff1 Buff2 20mL",
+                                          command=lambda: multiDispensePumps(hardware,
+                                                                             [0, 0, 0, 0, 0, 0, 0, 0, 20000, 20000, 20000,
+                                                                              20000]))
+        self.rinsingWashesButton.grid(row=7, column=1, padx=5, pady=5)
 
 
         ##Vent 7s
@@ -212,14 +220,14 @@ class MiddleFrame(Frame):
         self.is384flag = Label(self, text="1=384 0=96", justify="center")
         self.is384flag.grid(row=7, column=9)
 
-        fillList = ['nucs', 'DB', 'BB', 'Buff1']
+        fillList = ['nucs', 'DB', 'BB', 'Buff1', 'Buff2']
         self.fillButtons = [None] * len(fillList)
         for fill in fillList:
             self.fillButtons[fillList.index(fill)] = Button(self, text=fill,
                                                                    command=lambda buffer=fill: fillPlate(hardware,buffer,float(self.fillVol_value.get()),float(self.is384_value.get())))
             self.fillButtons[fillList.index(fill)].grid(row=8 + fillList.index(fill), column=8, padx=5,
                                                                pady=5)
-        self.PSPWashesButton = Button(self, text="PSP Washes",command=lambda : PSPWashes_96OP_onlynucs(hardware, float(self.is384_value.get())))
+        self.PSPWashesButton = Button(self, text="PSP Washes",command=lambda : PSPWashes_384(hardware, 1))
         self.PSPWashesButton.grid(row=13,column=8,padx=5,pady=5)
 
 '''CALLBACK FUNCTIONS'''

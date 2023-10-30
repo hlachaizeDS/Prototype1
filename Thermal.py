@@ -27,7 +27,7 @@ class ThermalImageThread:
     def __init__(self, mainFrame):
 
         """Parameters"""
-        self.is_384 = 0                     #format of the plate
+        self.is_384 = 0                    #format of the plate
         self.OS = "Proto"                 # Ubuntu(named_pipe), Windows (communication via bat) or Proto
         self.camera_type = "Xi400"          # so far only Xi400
         self.automatic_detection = 2        # 0 for no detection, 1 for image processing, 2 for fixed pixels
@@ -168,14 +168,14 @@ class ThermalImageThread:
                 print(e)
 
     def snapshot_in_cycle(self,thermalImages,folder_path,cycle,step):
-
+        try:
             #if thermalImages are not active, we return
             if thermalImages==0 :
                 return
 
             # If it's just a test we dont take pictures
-            #if (folder_path[len(folder_path) - 4:] == "test"):
-            #    return
+            if (folder_path[len(folder_path) - 4:] == "test"):
+                return
 
             sleep(0.3)
             self.in_video_loop()
@@ -201,6 +201,8 @@ class ThermalImageThread:
                 self.generate_temperature_table(final_path)
             elif self.automatic_detection==2:
                 self.generate_temperature_table_fixed_pixel(final_path)
+        except:
+            print('Couldnt take snapshot')
 
     def get_wells_temp_fixed_pixels(self):
         # Coordinates on image(with zoom), [x,y]

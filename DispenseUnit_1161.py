@@ -29,6 +29,7 @@ class DispenseUnit_1161:
 
     def ul_to_usteps(self,volume_ul):
         steps_nb = int(volume_ul * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
+        #print(steps_nb)
         return steps_nb
 
     def run_firmware_from_line(self,line):
@@ -49,14 +50,14 @@ class DispenseUnit_1161:
 
 
         while 1:
-            time.sleep(0.01) # has to be before in case we just asked for movement
+            time.sleep(0.005) # has to be before in case we just asked for movement
             status=self.get_status()
             if status == 0 or status == 2:
                 break
 
     def wait_for_idle(self):
         while 1:
-            time.sleep(0.01)  # has to be before in case we just asked for movement
+            time.sleep(0.005)  # has to be before in case we just asked for movement
             status=self.get_status()
             if status == 0:
                 break
@@ -83,24 +84,26 @@ class DispenseUnit_1161:
         self.set_global_parameter(1,full_strokes)
         self.set_global_parameter(0,additional_volume_usteps)
 
-        if full_strokes==0 :
-            if additional_volume <= 5:
-                self.run_firmware_from_line(4)
-            else:
-                self.run_firmware_from_line(1)
-        else:
-            if additional_volume <= 5:
-                self.run_firmware_from_line(5)
-            else:
-                self.run_firmware_from_line(3)
+        self.run_firmware_from_line(1)
+
+        # if full_strokes==0 :
+        #     if additional_volume <= 5:
+        #         self.run_firmware_from_line(4)
+        #     else:
+        #         self.run_firmware_from_line(1)
+        # else:
+        #     if additional_volume <= 5:
+        #         self.run_firmware_from_line(5)
+        #     else:
+        #         self.run_firmware_from_line(3)
 
 if __name__ == "__main__":
 
-    serial_port = Serial('COM3', 9600)
+    serial_port = Serial('COM7', 115200)
     bus = pyTMCL.connect(serial_port)
 
     pump_1=DispenseUnit_1161("fakeparent",bus,1,0)
 
-    #pump_1.init()
-    pump_1.dispense(100)
+    pump_1.init()
+    #pump_1.dispense(100)
     serial_port.close()

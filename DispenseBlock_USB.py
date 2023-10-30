@@ -32,6 +32,8 @@ class DispenseBlock_USB:
             if volumes[index] != 0:
                 self.dus[index].wait_for_canmove()
 
+        #time.sleep(0.2)
+
     def wait_for_move(self):
 
         # Status is
@@ -50,7 +52,7 @@ class DispenseBlock_USB:
                     pump_status=self.dus[index].get_status()
                     if pump_status==0 or pump_status==2:
                         is_ok_to_move[index]=1
-            #time.sleep(0.01)
+            time.sleep(0.005)
 
     def wait_for_idle(self):
 
@@ -66,7 +68,7 @@ class DispenseBlock_USB:
                     pump_status=self.dus[index].get_status()
                     if pump_status==0:
                         is_idle[index]=1
-            #time.sleep(0.01)
+            time.sleep(0.005)
 
     def init(self):
 
@@ -79,7 +81,15 @@ class DispenseBlock_USB:
 
 if __name__ == "__main__":
 
-    disp_block = DispenseBlock("FP")
-
+    disp_block = DispenseBlock_USB("FP")
+    #disp_block.dus[6].dispense(0)
+    #disp_block.dus[1].init()
+    start=time.time()
+    for i in range(int(10000 / 25)):
+        print((i + 1) * 25)
+        #disp_block.multi_dispense([0,0,25,0,0,0,0])
+        disp_block.multi_dispense([25, 0, 0, 0, 0, 25, 0,25])
+    end=time.time()
+    print(start-end)
     #disp_block.init()
-    disp_block.multi_dispense([200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200])
+    #disp_block.multi_dispense([200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200])

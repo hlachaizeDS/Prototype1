@@ -22,12 +22,29 @@ def getExcelSheet(path):
     synthesis_sheet = wb.sheet_by_name("Syntheses")
     return synthesis_sheet
 
+def getExcelSheet_384(path):
+    wb = xlrd.open_workbook(path)
+    synthesis_sheet = wb.sheet_by_name("Syntheses 384")
+    return synthesis_sheet
 def getSequences(synthesis_sheet):
 
     sequences=[]
     well=1
     for col in range(12):
         for row in range(8):
+            value=synthesis_sheet.cell_value(7+row,1+col)
+            if value!='':
+                sequences.append((well,value))
+            well+=1
+
+    return sequences
+
+def getSequences_384(synthesis_sheet):
+
+    sequences=[]
+    well=1
+    for col in range(24):
+        for row in range(16):
             value=synthesis_sheet.cell_value(7+row,1+col)
             if value!='':
                 sequences.append((well,value))

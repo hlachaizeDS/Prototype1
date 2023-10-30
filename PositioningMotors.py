@@ -11,11 +11,11 @@ class PositioningMotors:
 
         self.parent = parent
 
-        self.xserial_port = Serial("COM4", 115200, timeout=5)
+        self.xserial_port = Serial("COM19", 115200, timeout=5)
         self.xbus = pyTMCL.connect(self.xserial_port)
         self.xMotor = self.xbus.get_motor(1, 0)
 
-        self.yserial_port = Serial("COM5", 115200, timeout=5)
+        self.yserial_port = Serial("COM4", 115200, timeout=5)
         self.ybus = pyTMCL.connect(self.yserial_port)
         self.yMotor = self.ybus.get_motor(1, 0)
 
