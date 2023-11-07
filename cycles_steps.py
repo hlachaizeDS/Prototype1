@@ -405,14 +405,18 @@ def dispenseWashesColDiffVols(hardware,volumesPerCol,solution,array,is384):
 
 def removeSupernatant(hardware,vacuumTime):
 
+
     goToWell(hardware, 'thermalCamera', 1,0)
 
-
+    if (hardware.extraVentilation):
+        hardware.set_output(1,1)
     hardware.vacValveOpen()
 
     wait(hardware, vacuumTime)
     hardware.vacValveClose()
 
+    if (hardware.extraVentilation):
+        hardware.set_output(1,0)
 
     wait(hardware, 3)
 
@@ -463,6 +467,11 @@ def fillPlate(hardware, buffer, vol, is384):
         dispensePumps(hardware, [vol, vol, vol, vol, vol, vol],
                       nucleo_arrays[5], nucleo_arrays[6],
                       nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4], is384)
+
+    elif buffer=="GT": #used for OnePot elution
+        dispensePumps(hardware, [0, 0, 0, 0, vol, vol],
+                      [], [], [], [], [well for well in usedWells if well%2==1], [well for well in usedWells if well%2==0], is384)
+
     else:
         dispenseWashes(hardware,vol,buffer,activeWells,is384)
 

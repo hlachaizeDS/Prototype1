@@ -86,12 +86,12 @@ def goToWell(hardware,element,well,quadrant):
 
     if element=='Buff1':
         'Positions of A1 for Buff1'
-        X_1= X_1 - 35895
+        X_1= X_1 - 37195
         Y_1= Y_1 + 8805
 
     if element=='Buff2':
         'Positions of A1 for Buff2'
-        X_1 = X_1 - 46207
+        X_1 = X_1 - 37195
         Y_1 = Y_1 + 19350
 
     if element=='PosPressure':
@@ -281,13 +281,13 @@ def wait(hardware,timeToWait):
     hardware.parent.leftFrame.statusLabelString.set('StatusBar')
     hardware.parent.leftFrame.skipButton_value.set(0)
 
-def waitAndStir(hardware,timeToWait):
+def waitAndStir(hardware,timeToWait,velocity=280):
     if hardware.parent.directCommand.stopButton_value.get()==1:
         return
 
     goToWell(hardware, 'thermalCamera', 1,0)
 
-    hardware.arduinoControl.startShaking(280)
+    hardware.arduinoControl.startShaking(velocity)
     #hardware.arduinoControl.startShaking(330) #RNA
     wait(hardware,timeToWait)
     hardware.arduinoControl.stopShaking()
@@ -405,7 +405,6 @@ def dispense(hardware,solution, time):
 
 def multiDispensePumps(hardware,volumes):
 
-    pullback=3  #uls
 
     volumes=volumes.copy()
     while volumes!=[0,0,0,0,0,0,0,0,0]:

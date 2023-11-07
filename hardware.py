@@ -30,6 +30,7 @@ class HardWare(Frame):
         self.firstCard=1
         self.secondCard=0
         self.vacuumController=0
+        self.extraVentilation=0
         self.arduino=1
         self.positive_pressure=0
         self.thermalCam=1   #Will impact rightFrame in guitab1
@@ -240,9 +241,9 @@ class HardWare(Frame):
 
             self.dispense_units_3=[]
 
-            self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[0],self.motors_parameters_pump_3[0],self.bus_pump_3,0,"chineseMotor"))
+            self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[0],self.motors_parameters_pump_3[0],self.bus_pump_3,0,"nanotech"))
             self.dispense_units_3.append(DispenseUnit(self,self.motors_pump_3[1],self.motors_parameters_pump_3[1],self.bus_pump_3,1,"chineseMotor"))
-            self.dispense_units_3.append(DispenseUnit(self, self.motors_pump_3[2], self.motors_parameters_pump_3[2], self.bus_pump_3, 2, "chineseMotor"))
+            self.dispense_units_3.append(DispenseUnit(self, self.motors_pump_3[2], self.motors_parameters_pump_3[2], self.bus_pump_3, 2, "nanotech"))
 
 
     def initialisation(self):

@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from guiTab1 import MainFrameTab1
 from guiTab2 import MainFrameTab2
+from guiTab3 import MainFrameTab3
 from TkinterRefresher import TkinterRefresher
 from guiThermalCamera import guiThermalCamera
 import threading
@@ -17,6 +18,9 @@ tab1=MainFrameTab1(tabControl)
 tabControl.add(tab1, text='Main')
 tab2=MainFrameTab2(tabControl)
 tabControl.add(tab2, text='Priming')
+tabControl.pack(expand=1, fill="both")
+tab3=MainFrameTab3(tabControl)
+tabControl.add(tab3, text='PSP')
 tabControl.pack(expand=1, fill="both")
 #mainFrame=MainFrame(root)
 #mainFrame.grid()
