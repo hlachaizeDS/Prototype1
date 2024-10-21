@@ -6,11 +6,9 @@ from serial import *
 from time import sleep
 from Vacuum import *
 from cycles import *
-from cycles_384 import *
 #from thermalCamera import *
 from arduinoControl import *
 from DispenseBlock_USB import *
-from PosPressure import*
 from PositioningMotors import *
 
 
@@ -37,9 +35,6 @@ class HardWare(Frame):
             self.arduinoControl=ArduinoControl(self)
             self.arduinoControl.close_vac()
             self.arduinoControl.stopShaking()
-
-        if self.positive_pressure:
-            self.posPressure=PosPressure(self,self.zMotor,1)
 
 
     def initialisation(self):
