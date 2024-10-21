@@ -27,7 +27,7 @@ class ThermalImageThread:
     def __init__(self, mainFrame):
 
         """Parameters"""
-        self.is_384 = 0                    #format of the plate
+        self.is_384 = 0                   #format of the plate
         self.OS = "Proto"                 # Ubuntu(named_pipe), Windows (communication via bat) or Proto
         self.camera_type = "Xi400"          # so far only Xi400
         self.automatic_detection = 2        # 0 for no detection, 1 for image processing, 2 for fixed pixels
@@ -46,7 +46,7 @@ class ThermalImageThread:
         elif self.OS=="Windows":
             self.root_path = "Thermal_Camera"
         elif self.OS=="Proto":
-            self.root_path = "C:\\Users\\SynthesisDNASCRIPT\\Desktop\\Proto7\\Thermal_Camera"
+            self.root_path = "D:\\Proto7\\Thermal_Camera"
 
 
         self.cm = plt.get_cmap('seismic')               #Color map
@@ -160,6 +160,7 @@ class ThermalImageThread:
         sleep(self.delay)
 
     def videoLoop(self):
+        #There used to be a while(1) here, but when the camera didn't function it would loop forever
         while(1):
             try:
                 self.in_video_loop()

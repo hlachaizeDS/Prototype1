@@ -1,5 +1,5 @@
 from serial import rs485
-
+import COM_port
 from DispenseUnit_1161 import *
 
 class DispenseBlock_USB:
@@ -14,10 +14,15 @@ class DispenseBlock_USB:
         #self.bus = pyTMCL.connect(self.serial_port)
 
         self.dus=[]
-        for COM_PORT in [6,7,8,9,10,11,12,13,14,15,17,16]:
-            bus=pyTMCL.connect(Serial('COM'+str(COM_PORT),115200,timeout=5))
+        comport_dictionnaries = COM_port.list_1161_coms_by_adress()
 
-            self.dus.append(DispenseUnit_1161(self,bus,1,0))
+        for adress in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]:
+            bus = pyTMCL.connect(Serial(comport_dictionnaries[adress], 115200, timeout=5))
+
+            if adress in [9, 10]:
+                self.dus.append(DispenseUnit_1161(self, bus, 1, 0, pump_type="idex 5000"))
+            else:
+                self.dus.append(DispenseUnit_1161(self, bus, 1, 0))
 
     def multi_dispense(self,volumes):
         #if list of volumes not at the same length as dus, we add 0s

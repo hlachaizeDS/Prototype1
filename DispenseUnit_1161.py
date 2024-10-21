@@ -10,7 +10,7 @@ class DispenseUnit_1161:
     To use for pumps with TMCM-1161 card
     '''
 
-    def __init__(self,parent,bus,address,motor_id=0):
+    def __init__(self,parent,bus,address,motor_id=0,pump_type="regular"):
 
         self.parent=parent
 
@@ -23,9 +23,16 @@ class DispenseUnit_1161:
 
         #hardware parameters
         self.microsteps = 2 ** 4
-        self.dist_per_full_step = 0.0254  # mm
-        self.radius = 4.6 / 2 #mm
-        self.max_disp = 200  # ul
+        if pump_type == "regular":
+            self.dist_per_full_step = 0.0254  # mm
+            self.radius = 4.6 / 2 #mm
+            self.max_disp = 200  # ul
+
+        elif pump_type=="idex 5000":
+            self.dist_per_full_step = 0.00635 # mm
+            self.radius = 22.388/2  # mm
+            self.max_disp = 200  # ul
+            self.cylinder_volume = 5000  # ul
 
     def ul_to_usteps(self,volume_ul):
         steps_nb = int(volume_ul * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
@@ -43,7 +50,13 @@ class DispenseUnit_1161:
         # 0 for idle
         # 1 for busy
         # 2 for can_move
-        reply = self.bus.send(self.address, pyTMCL.Command.GGP, 5, 2 , 0)
+        while(1):
+            try:
+                reply = self.bus.send(self.address, pyTMCL.Command.GGP, 5, 2 , 0)
+                break
+            except:
+                print('Could not read status of the pump')
+
         return reply.value
 
     def wait_for_canmove(self):
@@ -86,16 +99,21 @@ class DispenseUnit_1161:
 
         self.run_firmware_from_line(1)
 
-        # if full_strokes==0 :
-        #     if additional_volume <= 5:
-        #         self.run_firmware_from_line(4)
-        #     else:
-        #         self.run_firmware_from_line(1)
-        # else:
-        #     if additional_volume <= 5:
-        #         self.run_firmware_from_line(5)
-        #     else:
-        #         self.run_firmware_from_line(3)
+    def dispense_only_additional(self, volume_ul):
+
+        self.wait_for_idle()
+
+        full_strokes=0
+        additional_volume_usteps=self.ul_to_usteps(volume_ul)
+
+        #print(full_strokes)
+        #print(additional_volume)
+        #print(additional_volume_usteps)
+        self.set_global_parameter(1,full_strokes)
+        self.set_global_parameter(0,additional_volume_usteps)
+
+        self.run_firmware_from_line(1)
+
 
 if __name__ == "__main__":
 

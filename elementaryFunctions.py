@@ -5,8 +5,8 @@ import math
 #X_A1=155891
 #Y_A1=27818
 
-X_A1=146491
-Y_A1=37018
+X_A1=145400
+Y_A1=38018
 
 X_step=9200
 Y_step=9200
@@ -34,19 +34,33 @@ def initialiseMotorList(hardware,motor_list):
     for motor in motor_list:
         motor.axis.set(1, 0) #We set the actual position to 0 for each motor
 
+def primeDB_Idex(hardware,volume_ul):
+    du = hardware.dispenseBlock.dus[8]
+    max_disp_temp = du.max_disp
+    du.max_disp = du.cylinder_volume
+
+    full_strokes = volume_ul // du.max_disp
+    additional_volume = volume_ul % du.max_disp
+
+    for i in range(full_strokes):
+        du.dispense_only_additional(du.max_disp)
+        du.wait_for_idle()
+    du.dispense_only_additional(additional_volume)
+
+    du.max_disp = max_disp_temp
+    du.init()
 
 def goToWell(hardware,element,well,quadrant):
 
     '''Put Lee vann or needles 'element' at the well 'well' '''
-
-    'We make sure the needles are up'
-    #needlesGoUp(hardware)
 
     'Positions of A1 with the M nozzle'
     #X_1 = 88822
     #Y_1 = 10518
     X_1 = X_A1
     Y_1 = Y_A1
+
+    true384=0
 
     if quadrant==1:
         X_1=X_1-int(X_step/4)
@@ -60,6 +74,11 @@ def goToWell(hardware,element,well,quadrant):
     if quadrant==4:
         X_1 = X_1 + int(X_step/4)
         Y_1 = Y_1 + int(Y_step/4)
+
+    if quadrant==5: #quadrant 5 for true 384
+        X_1 = X_1 - int(X_step/4)
+        Y_1 = Y_1 - int(Y_step/4)
+        true384=1
 
     positions_dict= {
         "M": [0, 0],
@@ -78,8 +97,12 @@ def goToWell(hardware,element,well,quadrant):
     }
 
     if element in positions_dict.keys():
-        X_1=X_1 - positions_dict[element][0]*X_step
-        Y_1=Y_1 - positions_dict[element][1]*Y_step
+        if true384:
+            X_1=X_1 - (positions_dict[element][0]*2)*(X_step/2)
+            Y_1=Y_1 - (positions_dict[element][1]*2)*(Y_step/2)
+        else:
+            X_1=X_1 - positions_dict[element][0] * X_step
+            Y_1=Y_1 - positions_dict[element][1] * Y_step
 
 
     if element=='safe':
@@ -103,8 +126,12 @@ def goToWell(hardware,element,well,quadrant):
         X_1 = 0
         Y_1 = 0
 
-    X = X_1 + ((well - 1) % 8) * X_step
-    Y = Y_1 + ((well - 1) // 8) * Y_step
+    if true384:
+        X = X_1 + ((well - 1) % 16) * (X_step/2)
+        Y = Y_1 + ((well - 1) // 16) * (Y_step/2)
+    else:
+        X = X_1 + ((well - 1) % 8) * X_step
+        Y = Y_1 + ((well - 1) // 8) * Y_step
 
     xMotor=hardware.positioning_motors.xMotor
     yMotor=hardware.positioning_motors.yMotor
@@ -116,13 +143,10 @@ def goToWell(hardware,element,well,quadrant):
         hardware.parent.update()
         sleep(0.1)
 
-def goToFakeWell(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant):
+def goToFakeWell(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant,X_step=X_step,Y_step=Y_step):
 
     #Works only for the upper left nozzle
 
-
-    'We make sure the needles are up'
-    #'needlesGoUp(hardware)
 
     'Positions of A1 with the up left Lee vann'
     X_1 = X_A1 - ((dispHead_dims[0] - 1)*X_step)
@@ -140,46 +164,10 @@ def goToFakeWell(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant):
     if quadrant == 4:
         X_1 = X_1 + int(X_step / 4)
         Y_1 = Y_1 + int(Y_step / 4)
+    if quadrant == 5: #5th quadrant for the true 384
+        X_1 = X_1 - int(X_step / 2)
+        Y_1 = Y_1 - int(Y_step / 2)
 
-    X = X_1 + ((fake_well - 1) % fake_plate_dims[0]) * X_step
-    Y = Y_1 + ((fake_well - 1) // fake_plate_dims[0]) * Y_step
-
-    xMotor = hardware.positioning_motors.xMotor
-    yMotor = hardware.positioning_motors.yMotor
-    xMotor.move_absolute(X)
-    yMotor.move_absolute(Y)
-    sleep(0.1)
-
-    while xMotor.axis.target_position_reached == 0 or yMotor.axis.target_position_reached == 0:
-        hardware.parent.update()
-        sleep(0.1)
-
-
-def goToFakeWell_384(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant):
-
-    #Works only for the upper left nozzle
-
-
-    'We make sure the needles are up'
-    #'needlesGoUp(hardware)
-    X_step=int(X_step/2)
-    Y_step=int(Y_step/2)
-    'Positions of A1 with the up left Lee vann'
-    X_1 = X_A1 - ((dispHead_dims[0] - 1)*X_step)
-    Y_1 = Y_A1 - ((dispHead_dims[1] - 1)*Y_step)
-
-    if quadrant == 1:
-        X_1 = X_1 - int(X_step / 4)
-        Y_1 = Y_1 - int(Y_step / 4)
-    if quadrant == 2:
-        X_1 = X_1 + int(X_step / 4)
-        Y_1 = Y_1 - int(Y_step / 4)
-    if quadrant == 3:
-        X_1 = X_1 - int(X_step / 4)
-        Y_1 = Y_1 + int(Y_step / 4)
-    if quadrant == 4:
-        X_1 = X_1 + int(X_step / 4)
-        Y_1 = Y_1 + int(Y_step / 4)
 
     X = X_1 + ((fake_well - 1) % fake_plate_dims[0]) * X_step
     Y = Y_1 + ((fake_well - 1) // fake_plate_dims[0]) * Y_step
@@ -233,22 +221,19 @@ def plateWellToRealWell6Nozzles(plateWell):
 
     return realWell
 
-def fake_plate_well_to_real_well(fake_plate_well, fake_plate_dims, dispHead_dims):
+def fake_plate_well_to_real_well(fake_plate_well, real_plate_dims, fake_plate_dims, dispHead_dims):
 
     column=(fake_plate_well-1)//fake_plate_dims[0] + 1
     row=(fake_plate_well-1)%fake_plate_dims[0] + 1
 
-    middle_row=fake_plate_dims[0]/2
-    real_rows=[middle_row-3,middle_row-2,middle_row-1,middle_row,middle_row+1,middle_row+2,middle_row+3,middle_row+4]
+    real_rows=list(range(dispHead_dims[0],dispHead_dims[0]+real_plate_dims[0]))
 
-    middle_col=fake_plate_dims[1]/2
-    real_cols= [middle_col-5,middle_col-4,middle_col-3,middle_col-2,middle_col-1,middle_col,
-                middle_col+1,middle_col+2,middle_col+3,middle_col+4,middle_col+5,middle_col+6]
+    real_cols =list(range(dispHead_dims[1], dispHead_dims[1] + real_plate_dims[1]))
 
     if row not in real_rows or column not in real_cols: #When the plate well is outside the range of realwells
         return 0
 
-    realWell=(column - (dispHead_dims[1]-1) - 1 )*8 + row - (dispHead_dims[0]-1)
+    realWell=(column - (dispHead_dims[1]-1) - 1 )*real_plate_dims[0] + row - (dispHead_dims[0]-1)
 
     return realWell
 
@@ -266,11 +251,11 @@ def wait(hardware,timeToWait):
     hardware.parent.leftFrame.statusLabelString.set('StatusBar')
     hardware.parent.leftFrame.skipButton_value.set(0)
 
-def waitAndStir(hardware,timeToWait):
+def waitAndStir(hardware,timeToWait, velocity=900):
 
     goToWell(hardware, 'thermalCamera', 1,0)
 
-    hardware.arduinoControl.startShaking(900)
+    hardware.arduinoControl.startShaking(velocity)
     #hardware.arduinoControl.startShaking(330) #RNA
     wait(hardware,timeToWait)
     hardware.arduinoControl.stopShaking()
@@ -317,6 +302,38 @@ def aspirate(hardware,time):
     hardware.set_output(output, 0)
 
 
+def multi_dispense(hardware, volume_per_line, max_vol=None):
+    '''
+
+    :param hardware: link to the prototype hardware
+    :param volume_per_line: dictionnaries of volumes to dispense, eg {"DB":50,"BB":15}
+    :param max_vol: maximum volume to dispense in a single dispense, in particular to avoid overflows
+    :return:
+    '''
+
+    pumps_index = {"M": 0, "N": 1, "A": 2, "C": 3, "G": 4, "T": 5, "O": 6, "P": 7,
+                   "DB": 8, "BB": 9, "Buff1": 10, "Buff2": 11, "Q" : 12}
+
+    full_disp_list = [0] * len(pumps_index)
+
+    for line in volume_per_line.keys():
+        full_disp_list[pumps_index[line]] = volume_per_line[line]
+
+    if max_vol != None:
+        while any(full_disp_list) > 0:
+            disp_list = []
+            for i in range(len(full_disp_list)):
+                if full_disp_list[i] > max_vol:
+                    disp_list.append(max_vol)
+                    full_disp_list[i] -= max_vol
+                else:
+                    disp_list.append(full_disp_list[i])
+                    full_disp_list[i] = 0
+
+            hardware.dispenseBlock.multi_dispense(disp_list)
+
+    else:
+        hardware.dispenseBlock.multi_dispense(full_disp_list)
 
 def multiDispensePumps(hardware,volumes,max_vol=None):
 

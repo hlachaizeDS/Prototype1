@@ -1,6 +1,6 @@
 import xlrd
 
-path = r'C:\Users\SynthesisDNASCRIPT\Desktop\Proto7\Quartet_Control.xlsm'
+path = r'D:\Proto7\Quartet_Control.xlsm'
 
 #Parameters
 
@@ -64,11 +64,12 @@ def splitSequences(sequences,cycle):
     O_wells=[]
     P_wells=[]
     X_wells=[]
+    Q_wells=[]
 
-    nucleos=['A','C','G','T','M','N','O','P','X']
-    nucleo_arrays=[ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells,O_wells,P_wells,X_wells]
+    nucleos=['A','C','G','T','M','N','O','P','X','Q']
+    nucleo_arrays=[ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells,O_wells,P_wells,X_wells,Q_wells]
 
-    for nucleo in range(1,9+1):
+    for nucleo in range(1,len(nucleos)+1):
         for sample in range(len(sequences)):
             if (cycle<=len(sequences[sample][1]) and sequences[sample][1][cycle-1]==nucleos[nucleo-1]):
                 nucleo_arrays[nucleo].append(sequences[sample][0])

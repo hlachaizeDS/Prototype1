@@ -16,12 +16,12 @@ def readExpID():
     return number
 
 
-def saveQuartetControlFile(title):
+def saveQuartetControlFile(title,code=""):
 
     now=datetime.datetime.now()
 
     #original Quartet file
-    original_path=r'C:\Users\SynthesisDNASCRIPT\Desktop\Proto7\Quartet_Control.xlsm'
+    original_path=r'D:\Proto7\Quartet_Control.xlsm'
     expID=readExpID()
 
     #new folder path
@@ -44,17 +44,12 @@ def saveQuartetControlFile(title):
     shutil.copy(original_path, final_personal_path)
     shutil.copy(original_path, final_all_path)
 
-    #We don't insert timings anymore,nor date
-    # for path in [final_personal_path,final_all_path]:
-    #      workbook = openpyxl.open(path,keep_vba=True)
-    #      generalSheet = workbook.get_sheet_by_name('General')
-    #      date = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day)
-    #      generalSheet.cell(row=3, column=2).value = date
-    #     generalSheet.cell(row=59, column=2).value = dispTime25_nuc
-    #     generalSheet.cell(row=60, column=2).value = dispTime25_enzyme
-    #     generalSheet.cell(row=61, column=2).value = dispDBTime
-    #     generalSheet.cell(row=62, column=2).value = dispBBTime
-    #      workbook.save(path)
+    # Eventually copy source code
+    final_personal_code_path = general_path + '\\' + folder_path + '\\' + personal_folder_path + "\\" + file_path + "_code.txt"
+    if code != "":
+        code_file = open(final_personal_code_path, "w")
+        code_file.write(code)
+        code_file.close()
 
 def force2digits(number):
     if number<10:

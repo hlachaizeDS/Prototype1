@@ -35,9 +35,11 @@ class ArduinoControl():
     def stopShaking(self):
         while True:
             try:
-                self.ser = serial.Serial(COMPORT, 115200)
+                self.ser = serial.Serial(COMPORT, 115200, timeout=10)
                 self.ser.write(b'1\r\n')
-                self.ser.read()
+                r=self.ser.read()
+                if r==b'':
+                    print('Shaker didnt answer for >10s')
                 self.ser.close()
                 break
             except SerialException:

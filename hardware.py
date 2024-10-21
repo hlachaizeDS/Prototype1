@@ -6,6 +6,7 @@ from serial import *
 from time import sleep
 from Vacuum import *
 from cycles import *
+from cycles_384 import *
 #from thermalCamera import *
 from arduinoControl import *
 from DispenseBlock_USB import *

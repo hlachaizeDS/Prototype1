@@ -1,5 +1,6 @@
 from serial import *
 import pyTMCL
+import COM_port
 
 
 class PositioningMotors:
@@ -11,11 +12,15 @@ class PositioningMotors:
 
         self.parent = parent
 
-        self.xserial_port = Serial("COM19", 115200, timeout=5)
+        comport_dictionnaries = COM_port.list_1161_coms_by_adress()
+        x_port = comport_dictionnaries[21]
+        y_port = comport_dictionnaries[22]
+
+        self.xserial_port = Serial(x_port, 115200, timeout=5)
         self.xbus = pyTMCL.connect(self.xserial_port)
         self.xMotor = self.xbus.get_motor(1, 0)
 
-        self.yserial_port = Serial("COM4", 115200, timeout=5)
+        self.yserial_port = Serial(y_port, 115200, timeout=5)
         self.ybus = pyTMCL.connect(self.yserial_port)
         self.yMotor = self.ybus.get_motor(1, 0)
 
