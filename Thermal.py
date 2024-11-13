@@ -1,7 +1,7 @@
 """
 This module handles extracting well temperatures from Optris images
 """
-from .venv.Lib.Optris import *
+from hardware.common.Optris import *
 import numpy as np
 #import imageio
 from pathlib import Path
