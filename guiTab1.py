@@ -3,7 +3,7 @@ import threading
 from tkinter import *
 from hardware.dnascript.proto_hardware import *
 from action import actionButton_Callback
-from hardware.common.Optris import *
+# from hardware.common.Optris import *
 from Thermal import ThermalImageThread
 from PIL import Image, ImageTk
 from matplotlib import pyplot as plt

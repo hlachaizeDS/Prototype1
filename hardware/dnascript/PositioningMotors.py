@@ -1,6 +1,6 @@
 from serial import *
 import pyTMCL
-import COM_port
+import hardware.dnascript.COM_port as COM_port
 
 
 class PositioningMotors:
