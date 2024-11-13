@@ -7,6 +7,9 @@ from TkinterRefresher import TkinterRefresher
 from guiThermalCamera import guiThermalCamera
 import threading
 from elementaryFunctions import *
+import sys
+
+sys.dont_write_bytecode = True
 
 
 #Create GUI
