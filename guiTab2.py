@@ -1,7 +1,7 @@
 # On importe Tkinter
 import threading
 from tkinter import *
-from hardware import *
+from hardware.dnascript.proto_hardware import *
 from action import actionButton_Callback
 from cycles_steps import *
 from PSPs import *

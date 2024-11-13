@@ -1,6 +1,6 @@
 from serial import rs485
-import COM_port
-from DispenseUnit_1161 import *
+# import COM_port
+from .DispenseUnit_1161 import *
 
 class DispenseBlock_USB:
     '''

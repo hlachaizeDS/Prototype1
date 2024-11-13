@@ -3,7 +3,7 @@ import threading
 from tkinter import *
 from tkinter import font
 
-from hardware import *
+from hardware.dnascript.proto_hardware import *
 from action import actionButton_Callback
 from cycles_steps import *
 from PSPs import *

@@ -1,19 +1,19 @@
 MODULE_ADDRESS = 1
 
-from DispenseUnit_Arduino import *
 from tkinter import *
 from serial import *
 from time import sleep
-from Vacuum import *
+from hardware.common.Vacuum import *
 from cycles import *
 #from thermalCamera import *
-from arduinoControl import *
-from DispenseBlock_USB import *
-from PositioningMotors import *
+from .DispenseUnit_Arduino import *
+from hardware.common.arduinoControl import *
+from .DispenseBlock_USB import *
+from hardware.dnascript.PositioningMotors import *
 
 
 
-class HardWare(Frame):
+class ProtoHardware(Frame):
     def __init__(self, parent, *args, **kwargs):
         self.parent = parent
 

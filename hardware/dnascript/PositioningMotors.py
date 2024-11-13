@@ -1,6 +1,6 @@
 from serial import *
 import pyTMCL
-import COM_port
+# import COM_port
 
 
 class PositioningMotors:

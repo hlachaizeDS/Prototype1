@@ -1,0 +1,3 @@
+[submodule "mga_testbench_interface"]
+	path = mga_testbench_interface
+	url = git@github.com:mouaadhk-dnas/sw-fw-grpc.git
