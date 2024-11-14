@@ -109,20 +109,20 @@ def multi_dispense_in_wells(hardware,lines_volumes_wells_dict,is384=0,max_vol=No
 
             if dispense_dict!={}:
                 if is384:
-                    goToFakeWell(hardware, first_well, fake_plate_dims, dispHead_dims, 5, X_step=X_step/2, Y_step=Y_step/2)
+                    hardware.goToFakeWell(first_well, fake_plate_dims, dispHead_dims, 5, X_step=X_step/2, Y_step=Y_step/2)
                 else:
-                    goToFakeWell(hardware, first_well, fake_plate_dims, dispHead_dims, 0)
-                multi_dispense(hardware, dispense_dict, max_vol)
+                    hardware.goToFakeWell(first_well, fake_plate_dims, dispHead_dims, 0)
+                hardware.multi_dispense(dispense_dict, max_vol)
 
             hardware.parent.update()
 
-    goToWell(hardware, "thermalCamera", 1, 0)
+    hardware.goToWell("thermalCamera", 1, 0)
 
 
 
 def removeSupernatant(hardware,vacuumTime):
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
 
     hardware.vacValveOpen()
 

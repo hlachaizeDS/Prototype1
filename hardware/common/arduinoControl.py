@@ -7,8 +7,8 @@ from time import sleep
 COMPORT='COM3'
 
 class ArduinoControl():
-    def __init__(self, parent,*args, **kwargs):
-        self.parent = parent
+    def __init__(self, *args, **kwargs):
+        pass
 
     def startHeating(self):
         self.ser = serial.Serial(COMPORT, 115200)
@@ -54,6 +54,29 @@ class ArduinoControl():
         self.ser = serial.Serial(COMPORT, 115200)
         self.ser.write(b'3000\r\n')
         self.ser.close()
+
+
+class MockArduinoControl():
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def startHeating(self):
+        print('MockArduinoControl startHeating')
+
+    def stopHeating(self):
+        print('MockArduinoControl stopHeating')
+
+    def startShaking(self,velocity):
+        print('MockArduinoControl startShaking')
+
+    def stopShaking(self):
+        print('MockArduinoControl stopShaking')
+
+    def open_vac(self):
+        print('MockArduinoControl open_vac')
+
+    def close_vac(self):
+        print('MockArduinoControl close_vac')
 
 if __name__ == "__main__":
     # On crée la racine de notre interface

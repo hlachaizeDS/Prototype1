@@ -1,6 +1,6 @@
 import xlrd
 
-path = r'D:\Proto7\Quartet_Control.xlsm'
+path = r'/home/mouaadh/Downloads/240920_P6_USNavy.xlsm'
 
 #Parameters
 

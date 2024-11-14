@@ -1,7 +1,7 @@
 from cycles_steps import *
 import datetime
 import easygui
-from Thermal import FakeThermalImageThread
+from hardware.common.Thermal import FakeThermalImageThread
 from quartetControlSave import saveQuartetControlFile,force2digits
 import inspect
 
@@ -14,7 +14,7 @@ def Synthesis_TwoEnz(hardware,is384):
     if saveQuartet:
         saveQuartetControlFile(title,inspect.getsource(inspect.currentframe()))
 
-    thermalImages = 1
+    thermalImages = 0
     if thermalImages:
         TT = hardware.parent.rightFrame.thermalThread
     else:
@@ -144,7 +144,7 @@ def Synthesis_TwoEnz(hardware,is384):
 
     multi_dispense_in_wells(hardware, {Wash2: [BBVolume2, usedWells]}, is384)
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
     DBRinseRoutine(hardware)
@@ -293,7 +293,7 @@ def Synthesis_TwoEnz_X(hardware,is384):
     multi_dispense_in_wells(hardware, {"O": [BBVolume2, [well for well in X_wells if well % 2 == 1]],
                                         "P": [BBVolume2, [well for well in X_wells if well % 2 == 0]]}, is384)
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
     DBRinseRoutine(hardware)
@@ -453,7 +453,7 @@ def Synthesis_OneEnz_FourWB1_ExtraPkWash_X(hardware,is384):
     removeSupernatant(hardware, VacuumTime)
     multi_dispense_in_wells(hardware, {"Buff2": [BBVolume2, X_wells]}, is384)
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
     DBRinseRoutine(hardware)
@@ -598,7 +598,7 @@ def Synthesis_TwoEnz_Xp(hardware,is384):
     removeSupernatant(hardware, VacuumTime)
     multi_dispense_in_wells(hardware, {"P": [BBVolume2, X_wells]}, is384)
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
     DBRinseRoutine(hardware)
@@ -677,7 +677,7 @@ def Synthesis_TwoEnz_Xp_AVPrimingO(hardware,is384):
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'BefPremix')
 
         if (cycle==10):
-            multi_dispense(hardware,{"O": 1000})
+            hardware.multi_dispense({"O": 1000})
 
         multi_dispense_in_wells(hardware, {"M": [EBVolume, [well for well in activeWellsButX if well % 2 == 1]],
                                            "N": [EBVolume, [well for well in activeWellsButX if well % 2 == 0]],
@@ -747,7 +747,7 @@ def Synthesis_TwoEnz_Xp_AVPrimingO(hardware,is384):
     removeSupernatant(hardware, VacuumTime)
     multi_dispense_in_wells(hardware, {"P": [BBVolume2, usedWells]}, is384)
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
     DBRinseRoutine(hardware)
@@ -907,7 +907,7 @@ def Synthesis_TwoEnz_TwoWB1_ExtraWB1_X(hardware,is384):
     removeSupernatant(hardware, VacuumTime)
     multi_dispense_in_wells(hardware, {"Q": [BBVolume2, X_wells]}, is384)
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
     DBRinseRoutine(hardware)
@@ -1058,7 +1058,7 @@ def Synthesis_TwoEnz_TwoDB_X(hardware,is384):
     multi_dispense_in_wells(hardware, {"O": [BBVolume2, [well for well in X_wells if well % 2 == 1]],
                                         "P": [BBVolume2, [well for well in X_wells if well % 2 == 0]]}, is384)
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
     DBRinseRoutine(hardware)
@@ -1209,7 +1209,7 @@ def PDR_Synthesis_TwoEnz_TwoDB_X(hardware,is384):
     multi_dispense_in_wells(hardware, {"O": [BBVolume2, [well for well in X_wells if well % 2 == 1]],
                                         "P": [BBVolume2, [well for well in X_wells if well % 2 == 0]]}, is384)
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
     DBRinseRoutine(hardware)
@@ -1373,7 +1373,7 @@ def Synthesis_TwoEnz_TwoDB_TwoWB2x2_LastWB2_X(hardware,is384):
                                         "P": [BBVolume2, [well for well in wellListFromColumns([2,6])]],
                                         "Q": [BBVolume2, [well for well in wellListFromColumns([3,7])]]}, is384)
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
     DBRinseRoutine(hardware)
@@ -1534,7 +1534,7 @@ def Synthesis_TwoEnz_FourIncWB1_X(hardware,is384):
     removeSupernatant(hardware, VacuumTime)
     multi_dispense_in_wells(hardware, {"Q": [BBVolume2, X_wells]}, is384)
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
     DBRinseRoutine(hardware)
@@ -1684,7 +1684,7 @@ def Synthesis_FourEnz_TwoDB_X(hardware,is384):
     removeSupernatant(hardware, VacuumTime)
     multi_dispense_in_wells(hardware, {"Q": [BBVolume2, usedWells]}, is384)
 
-    goToWell(hardware, 'thermalCamera', 1,0)
+    hardware.goToWell('thermalCamera', 1,0)
     updateCycleLabel(hardware, cycle, "Synthesis End")
     hardware.arduinoControl.stopHeating()
     DBRinseRoutine(hardware)

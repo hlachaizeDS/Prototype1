@@ -43,7 +43,7 @@ class DispenseBlock_USB:
 
         # time.sleep(0.2)
 
-    def wait_for_move(self):
+    def __wait_for_move(self):
         # Status is
         # 0 for idle
         # 1 for busy
@@ -62,7 +62,7 @@ class DispenseBlock_USB:
                         is_ok_to_move[index] = 1
             time.sleep(0.005)
 
-    def wait_for_idle(self):
+    def __wait_for_idle(self):
         # self.serial_port.flushInput()
         pumps_nb = len(self.dus)
         is_idle = [0] * pumps_nb
@@ -78,13 +78,20 @@ class DispenseBlock_USB:
             time.sleep(0.005)
 
     def init(self):
-        self.wait_for_idle()
+        self.__wait_for_idle()
 
         for index in range(len(self.dus)):
             self.dus[index].init()
 
-        # self.wait_for_move()
+        # self.__wait_for_move()
 
+
+class MockDispenseBlock:
+    def __init__(self, parent) -> None:
+        self.parent = parent
+
+    def multi_dispense(self, volumes):
+        pass
 
 if __name__ == "__main__":
     disp_block = DispenseBlock_USB("FP")

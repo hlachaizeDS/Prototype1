@@ -113,7 +113,7 @@ class MiddleFrame(Frame):
         '''Go To Positions'''
         ##Go To Safe position
         self.safeButton = Button(self, text="Safe Pos",
-                                 command=lambda: goToWell(hardware, 'safe', 1, 0))
+                                 command=lambda: hardware.goToWell('safe', 1, 0))
         self.safeButton.grid(row=5, column=0, padx=30, pady=5)
 
         '''Process buttons'''
@@ -179,7 +179,7 @@ def bufferButton_Callback(directCommand, i):
 
 def goToColumn_Callback(MiddleFrame, hardware, buffer):
     colToGo = int(MiddleFrame.colToGo_value.get())
-    goToWell(hardware, buffer, (colToGo - 1) * 4 + 1, 0)
+    hardware.goToWell(buffer, (colToGo - 1) * 4 + 1, 0)
     MiddleFrame.colToGo_value.set(colToGo + 1)
 
 

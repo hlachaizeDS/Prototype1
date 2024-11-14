@@ -59,7 +59,7 @@ class ThermalImageThread:
 
 
         """Initialize connection with the camera"""
-        self.o = Optris()
+        # self.o = Optris()
         self.thermalFrame = None    #Contains temperature data
         self.topng = None    #the frame we'll save as png
         self.frame = None   #the frame we show on the gui
@@ -361,15 +361,11 @@ class ThermalImageThread:
         self.mainFrame.tempmeanLabel.configure(text="Mean temperature " + "%.1f" % round(np.mean(temperatures), 2) + "°C")
 
 class FakeThermalImageThread:
-
     def __init__(self):
-        # store the video stream object and output path, then initialize
-        # the most recently read frame, thread for reading frames, and
-        # the thread stop event
-        variable='just to have a variable'
+        pass
 
     def snapshot_in_cycle(self, thermalImages, folder_path, cycle, step):
-        variable='snap'
+        pass
 
 def force2digits(number):
     if number<10:

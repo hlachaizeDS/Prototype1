@@ -55,7 +55,7 @@ class MiddleFrame(Frame):
 
         # Priming Idex Pump
         #self.primingWashesButton = Button(self, text="Prime DB Idex 15mL",
-        #                                  command=lambda: primeDB_Idex(hardware, 15000))
+        #                                  command=lambda: hardare.primeDB_Idex(15000))
         #self.primingWashesButton.grid(row=5, column=1, padx=5, pady=5)
 
 
@@ -99,7 +99,7 @@ class MiddleFrame(Frame):
         '''Go To Positions'''
         ##Go To Safe position
         self.safeButton = Button(self, text="Safe Pos",
-                                        command=lambda: goToWell(hardware, 'safe', 1, 0))
+                                        command=lambda: hardware.goToWell('safe', 1, 0))
         self.safeButton.grid(row=9, column=1, padx=5, pady=5)
 
         ##Go To Priming position
@@ -109,7 +109,7 @@ class MiddleFrame(Frame):
 
         ##Go To Priming position
         self.primePremixButton = Button(self, text="Premix Prime Pos",
-                                        command=lambda: goToWell(hardware, 'premixPrime', 1, 0))
+                                        command=lambda: hardware.goToWell('premixPrime', 1, 0))
         self.primePremixButton.grid(row=9, column=2, padx=30, pady=5)
 
         '''Variable volume Block'''
@@ -140,13 +140,13 @@ class MiddleFrame(Frame):
         simpleChannelList=['M', 'N', 'A', 'C','G','T', 'O', 'P', 'Q']
         self.bufferButton = [None] * len(simpleChannelList)
         for buffer in simpleChannelList:
-            self.bufferButton[simpleChannelList.index(buffer)] = Button(self, text=buffer, command=lambda buffer=buffer: multi_dispense(hardware,{buffer : float(self.volumeToDisp_value.get())}))
+            self.bufferButton[simpleChannelList.index(buffer)] = Button(self, text=buffer, command=lambda buffer=buffer: hardware.multi_dispense({buffer : float(self.volumeToDisp_value.get())}))
             self.bufferButton[simpleChannelList.index(buffer)].grid(row=6 + simpleChannelList.index(buffer),column=5,padx=5, pady=5)
 
         quadChannelList = ['DB', 'BB', 'Buff1', 'Buff2']
         self.quadBufferButton = [None] * len(quadChannelList)
         for buffer in quadChannelList:
-            self.quadBufferButton[quadChannelList.index(buffer)] = Button(self, text=buffer, command=lambda buffer=buffer: multi_dispense(hardware,{buffer : float(self.volumeToDisp_value.get())*4}))
+            self.quadBufferButton[quadChannelList.index(buffer)] = Button(self, text=buffer, command=lambda buffer=buffer: hardware.multi_dispense({buffer : float(self.volumeToDisp_value.get())*4}))
             self.quadBufferButton[quadChannelList.index(buffer)].grid(row=5 + quadChannelList.index(buffer), column=6,
                                                                     padx=5, pady=5)
 

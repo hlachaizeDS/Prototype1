@@ -4,9 +4,10 @@ from tkinter import *
 from hardware.dnascript.proto_hardware import *
 from action import actionButton_Callback
 # from hardware.common.Optris import *
-from Thermal import ThermalImageThread
+from hardware.common.Thermal import ThermalImageThread
 from PIL import Image, ImageTk
 from matplotlib import pyplot as plt
+import numpy as np
 
 
 class MainFrameTab1(Frame):
@@ -48,7 +49,7 @@ class RightFrame(Frame):
         self.ImageLabel.pack()
         self.ImageLabel.Image = img
 
-        self.thermalThread = ThermalImageThread(self)
+        # self.thermalThread = ThermalImageThread(self)
 
         self.tempLabel = Label(self, text="", width=40)
         self.tempLabel.pack(side="bottom", fill="x")
@@ -380,7 +381,7 @@ def initialisationButton_CallBack(directCommand):
 
 
 def positionsButton_CallBack(directCommand):
-    directCommand.parent.hardware.give_positions()
+    directCommand.parent.hardware.print_positions()
 
 
 def stopButton_Callback(directCommand):

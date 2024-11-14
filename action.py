@@ -10,7 +10,7 @@ thermal_is384 = 0
 def actionButton_Callback(directCommand):
     hardware = directCommand.parent.hardware
 
-    #Synthesis_TwoEnz(hardware, 0)
+    Synthesis_TwoEnz(hardware, 0)
     #Synthesis_TwoEnz_X(hardware, 0)
     #Synthesis_TwoEnz_Xp(hardware, 0)
     #Synthesis_TwoEnz_Xp_AVPrimingO(hardware, 0)

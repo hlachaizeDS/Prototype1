@@ -4,12 +4,11 @@ import hardware.dnascript.COM_port as COM_port
 
 
 class PositioningMotors:
-    '''
+    """
     Represents an X and Y motors
-    '''
+    """
 
-    def __init__(self,parent):
-
+    def __init__(self, parent):
         self.parent = parent
 
         comport_dictionnaries = COM_port.list_1161_coms_by_adress()
@@ -24,12 +23,11 @@ class PositioningMotors:
         self.ybus = pyTMCL.connect(self.yserial_port)
         self.yMotor = self.ybus.get_motor(1, 0)
 
-        self.apply_std_parameters([self.xMotor,self.yMotor])
+        self.__apply_std_parameters([self.xMotor, self.yMotor])
 
-    def apply_std_parameters(self, motor_list):
-
+    def __apply_std_parameters(self, motor_list):
         reverse_shaft = [1, 0]  # changes the sens of rotation
-        current_max = [150,200]  # 0..255
+        current_max = [150, 200]  # 0..255
         current_standby = [20, 50]  # 0..255
         acceleration_max = [3629278, 3629278]  # 0...7629278
         deceleration_max = acceleration_max  # 0...7629278
@@ -51,15 +49,51 @@ class PositioningMotors:
             motor.set_axis_parameter(17, deceleration_max[motor_list.index(motor)])
             motor.set_axis_parameter(16, velocity_V1)
             motor.set_axis_parameter(14, swap_switches[motor_list.index(motor)])
-            motor.set_axis_parameter(24, right_limit_switch_polarity[motor_list.index(motor)])
-            motor.set_axis_parameter(25, left_limit_switch_polarity[motor_list.index(motor)])
+            motor.set_axis_parameter(
+                24, right_limit_switch_polarity[motor_list.index(motor)]
+            )
+            motor.set_axis_parameter(
+                25, left_limit_switch_polarity[motor_list.index(motor)]
+            )
 
             motor.set_axis_parameter(193, reference_type[motor_list.index(motor)])
-            motor.set_axis_parameter(194, reference_search_velocity[motor_list.index(motor)])
-            motor.set_axis_parameter(195, precise_reference_search_velocity[motor_list.index(motor)])
+            motor.set_axis_parameter(
+                194, reference_search_velocity[motor_list.index(motor)]
+            )
+            motor.set_axis_parameter(
+                195, precise_reference_search_velocity[motor_list.index(motor)]
+            )
             motor.set_axis_parameter(140, microsteps[motor_list.index(motor)])
             motor.set_axis_parameter(251, reverse_shaft[motor_list.index(motor)])
 
-if __name__ == "__main__":
 
-    positioning_motors=PositioningMotors("FP")
+class MockPositioningMotors:
+    class MockMotor:
+        class MockAxis:
+            def __init__(self) -> None:
+                self.target_position_reached = 1
+                self.current_position = 0
+            
+            def get(self, index):
+                return self.target_position_reached
+            
+            def set(self, index, value):
+                self.target_position_reached = 1
+
+        def __init__(self) -> None:
+            self.axis = self.MockAxis()
+
+        def move_absolute(self, position):
+            self.axis.current_position = position
+            
+        def reference_search(self, position):
+            self.axis.target_position_reached = 1
+
+    def __init__(self, parent) -> None:
+        self.parent = parent
+        self.xMotor = self.MockMotor()
+        self.yMotor = self.MockMotor()
+
+
+if __name__ == "__main__":
+    positioning_motors = PositioningMotors("FP")

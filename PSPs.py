@@ -1,7 +1,7 @@
 from cycles_steps import *
 import datetime
 import easygui
-from Thermal import FakeThermalImageThread
+from hardware.common.Thermal import FakeThermalImageThread
 from quartetControlSave import saveQuartetControlFile,force2digits
 
 
