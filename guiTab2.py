@@ -37,19 +37,19 @@ class MiddleFrame(Frame):
 
         # Priming MNACGT
         self.PrimingPremixButton = Button(self, text="Prime MNACGT 3mL",
-                                             command=lambda: multiDispensePumps(hardware,[3000]*6))
+                                             command=lambda: hardware.multiDispensePumps([3000]*6))
         self.PrimingPremixButton.grid(row=2, column=1, padx=5, pady=5)
 
         # Priming All single lines
         self.PrimingPremixButton = Button(self, text="Prime MNACGTOPQ 3mL",
-                                          command=lambda: multiDispensePumps(hardware, [3000] * 8 + [0,0,0,0,3000]))
+                                          command=lambda: hardware.multiDispensePumps( [3000] * 8 + [0,0,0,0,3000]))
         self.PrimingPremixButton.grid(row=3, column=1, padx=5, pady=5)
 
 
 
         # Priming all multi lines
         self.primingWashesButton = Button(self, text="Prime DB BB Buff1 Buff2 7mL",
-                                          command=lambda: multiDispensePumps(hardware,
+                                          command=lambda: hardware.multiDispensePumps(
                                                                              [0,0,0,0,0,0,0,0,7000,7000,7000,7000]))
         self.primingWashesButton.grid(row=4, column=1, padx=5, pady=5)
 
@@ -61,7 +61,7 @@ class MiddleFrame(Frame):
 
         # Rinsing all multi lines
         self.rinsingWashesButton = Button(self, text="Rinse DB BB Buff1 Buff2 20mL",
-                                          command=lambda: multiDispensePumps(hardware,
+                                          command=lambda: hardware.multiDispensePumps(
                                                                              [0, 0, 0, 0, 0, 0, 0, 0, 20000, 20000, 20000,
                                                                               20000]))
         self.rinsingWashesButton.grid(row=7, column=1, padx=5, pady=5)
@@ -121,20 +121,20 @@ class MiddleFrame(Frame):
         self.volumeToDisp_value.set('25')
 
         self.multidispMNACGTButton = Button(self, text="MNACGT",
-                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(6)]+[0,0,0,0,0,0]))
+                                            command=lambda: hardware.multiDispensePumps( [float(self.volumeToDisp_value.get()) for i in range(6)]+[0,0,0,0,0,0]))
         self.multidispMNACGTButton.grid(row=2, column=5, padx=5, pady=5)
 
         self.multidispMNACGTButton = Button(self, text="MNACGTOPQ",
-                                            command=lambda: multiDispensePumps(hardware,
+                                            command=lambda: hardware.multiDispensePumps(
                                                                                [float(self.volumeToDisp_value.get()) for
                                                                                 i in range(8)] + [ 0, 0, 0, 0, float(self.volumeToDisp_value.get())]))
         self.multidispMNACGTButton.grid(row=3, column=5, padx=5, pady=5)
 
-        self.multidispButton = Button(self, text="ACGT", command=lambda : multiDispensePumps(hardware, [0,0]+[float(self.volumeToDisp_value.get()) for i in range(4)]+[0,0,0,0,0,0]))
+        self.multidispButton = Button(self, text="ACGT", command=lambda : hardware.multiDispensePumps( [0,0]+[float(self.volumeToDisp_value.get()) for i in range(4)]+[0,0,0,0,0,0]))
         self.multidispButton.grid(row=4, column=5, padx=5, pady=5)
 
         self.multidispMNButton = Button(self, text="MN",
-                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(2)]+[0,0,0,0,0,0,0,0,0,0]))
+                                            command=lambda: hardware.multiDispensePumps( [float(self.volumeToDisp_value.get()) for i in range(2)]+[0,0,0,0,0,0,0,0,0,0]))
         self.multidispMNButton.grid(row=5, column=5, padx=5, pady=5)
 
         simpleChannelList=['M', 'N', 'A', 'C','G','T', 'O', 'P', 'Q']

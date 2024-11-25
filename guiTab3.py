@@ -43,21 +43,21 @@ class MiddleFrame(Frame):
 
         # Priming all PSP lines
         self.PrimingAllPSPLines = Button(self, text="Prime All PSP Lines (MN 3mL Buffers 7mL)",
-                                          command=lambda: multiDispensePumps(hardware,
+                                          command=lambda: hardware.multiDispensePumps(
                                                                              [3000, 3000, 0, 0, 0, 0, 0, 0, 7000, 7000,
                                                                               7000, 0]), bg='#E1E1E1')
         self.PrimingAllPSPLines.grid(row=2, column=2, padx=30, pady=5)
 
         # Priming M&N lines
         self.PrimingMNLines = Button(self, text="Prime MN (3mL)",
-                                          command=lambda: multiDispensePumps(hardware,
+                                          command=lambda: hardware.multiDispensePumps(
                                                                              [3000, 3000, 0, 0, 0, 0, 0, 0, 0,
                                                                               0, 0, 0]))
         self.PrimingMNLines.grid(row=4, column=2, padx=30, pady=5)
 
         # Priming buffers lines
         self.PrimingBuffersLines = Button(self, text="Prime Buffers (7mL)",
-                                          command=lambda: multiDispensePumps(hardware,
+                                          command=lambda: hardware.multiDispensePumps(
                                                                              [0, 0, 0, 0, 0, 0, 0, 0, 7000,
                                                                               7000, 7000, 0]))
         self.PrimingBuffersLines.grid(row=5, column=2, padx=30, pady=5)
@@ -68,7 +68,7 @@ class MiddleFrame(Frame):
 
         # Rinse all lines after synthesis miliQ
         self.RinseAllLines = Button(self, text="Rinse All Lines After Synthesis (15mL)",
-                                             command=lambda: multiDispensePumps(hardware, [15000, 15000, 15000, 15000,
+                                             command=lambda: hardware.multiDispensePumps( [15000, 15000, 15000, 15000,
                                                                                            15000, 15000, 15000, 15000,
                                                                                            15000, 15000, 15000, 15000, 15000]),
                                     bg='#E1E1E1')
@@ -77,19 +77,19 @@ class MiddleFrame(Frame):
 
         # Rinse all buffs BM
         self.RinseAllPSPLines10 = Button(self, text="Rinse PSP Lines (15mL) -> BM water",
-                                         command=lambda: multiDispensePumps(hardware, [15000, 15000, 0, 0, 0, 0, 0, 0,
+                                         command=lambda: hardware.multiDispensePumps( [15000, 15000, 0, 0, 0, 0, 0, 0,
                                                                                        15000, 15000, 15000, 0]),
                                          bg='#E1E1E1')
         self.RinseAllPSPLines10.grid(row=3, column=1, padx=30, pady=5)
 
         # Rinse MN 10mL
-        self.RinseMN = Button(self, text="Rinse M&N (10mL)", command=lambda: multiDispensePumps(hardware, [10000, 10000,
+        self.RinseMN = Button(self, text="Rinse M&N (10mL)", command=lambda: hardware.multiDispensePumps( [10000, 10000,
                                                                                                            0, 0, 0, 0,
                                                                                                            0, 0, 0, 0,
                                                                                                            0, 0]))
         self.RinseMN.grid(row=5, column=1, padx=30, pady=5)
         # Rinse buffs 10mL
-        self.RinseBuffers = Button(self, text="Rinse Buffers (10mL)", command=lambda: multiDispensePumps(hardware,
+        self.RinseBuffers = Button(self, text="Rinse Buffers (10mL)", command=lambda: hardware.multiDispensePumps(
                                                                                 [0, 0, 0, 0, 0, 0, 0, 0, 10000, 10000,
                                                                                  10000, 0]))
         self.RinseBuffers.grid(row=6, column=1, padx=30, pady=5)

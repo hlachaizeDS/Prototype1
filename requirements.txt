@@ -31,6 +31,7 @@ kiwisolver
 easygui
 Multi-Template-Matching
 pyTMCL
+pytest
 
 # for MGA test bench interface
 -r mga_testbench_interface/requirements.txt
