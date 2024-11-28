@@ -1,6 +1,8 @@
 import mga_testbench_interface.generated.valves_pb2 as valves
 from dataclasses import dataclass
 import numpy as np
+from hardware.mga.configuration import Geometry
+from math import isclose
 
 Row = int  # starts from 0
 Line = int  # starts from 0
@@ -17,22 +19,7 @@ class Well:
 
 
 @dataclass
-class Geometry:
-    reference_position = 0.0  # position at which 1.1 is centered over G1
-    inter_well_spacing = 4.5  # distance between two wells
-    number_of_lines_in_manifold = 6
-    number_of_manifolds = 2
-    inter_line_spacing_wells = 2
-    x_inter_nozzle_spacing_wells_in_line = 1 / 4
-    y_inter_nozzle_spacing_wells_in_line = 2
-    number_of_nozzles_per_line = 4
-    number_of_rows = 16
-    number_of_columns = 24
-
-
-@dataclass
 class LineConfiguration:
-    open_distance: float
     open_offset: float
     close_offset: float
 
@@ -44,7 +31,7 @@ class Alignment:
     row: Row
 
 
-def multi_dispense_map_to_routine(
+def createRoutine(
     volumes: dict[Line, list[Well]],
     alignment: Alignment,
     direction: Direction,
@@ -55,21 +42,6 @@ def multi_dispense_map_to_routine(
 
     max_column = max(well.column for _, wells in volumes.items() for well in wells)
     min_line = min(line for line, _ in volumes.items())
-
-    # row on which line 0 nozzle 0 is aligned
-    manifold_index = alignment.line // geometry.number_of_lines_in_manifold
-    if manifold_index >= geometry.number_of_manifolds:
-        raise ValueError("Manifold index out of bounds")
-
-    base_row = (
-        alignment.row
-        + (
-            alignment.nozzle_index
-            + manifold_index * geometry.number_of_nozzles_per_line
-        )
-        * geometry.y_inter_nozzle_spacing_wells_in_line
-    )
-    # print(f"base_row: {base_row}")
 
     dispensed_wells: dict[Line, list[Well]] = {line: [] for line in volumes.keys()}
 
@@ -84,46 +56,35 @@ def multi_dispense_map_to_routine(
     stop = max_step if direction == Direction.forward else 0
     step_change = (
         (1 if direction == Direction.forward else -1)
-        * 1
-        / geometry.number_of_nozzles_per_line
+        * geometry.x_inter_nozzle_spacing_wells_in_line
+        / 2
     )
 
+    base_row = find_base_row(alignment, geometry)
+
     for step in np.arange(
-        start,
-        stop,
+        start - step_change,
+        stop + step_change,
         step_change,
     ):
         for line, wells in volumes.items():
             valve_identifier: valves.State.ValveIdentifier | None = None
-            manifold_row_offset = (
-                (line // geometry.number_of_lines_in_manifold)
-                * geometry.number_of_nozzles_per_line
-                * geometry.y_inter_nozzle_spacing_wells_in_line
-            )
+
             for nozzle_index in range(0, geometry.number_of_nozzles_per_line):
-                nozzle_row = (
-                    base_row
-                    - manifold_row_offset
-                    - nozzle_index * geometry.y_inter_nozzle_spacing_wells_in_line
+                nozzle_row, nozzle_column = get_nozzle_row_column(
+                    alignment, geometry, base_row, step, nozzle_index, line
                 )
-                nozzle_column: float = (
-                    step
-                    - (line % geometry.number_of_lines_in_manifold) * geometry.inter_line_spacing_wells
-                    - nozzle_index * geometry.x_inter_nozzle_spacing_wells_in_line
-                )
-                if (
-                    nozzle_column < 0
-                    or nozzle_column >= geometry.number_of_columns
-                    or int(nozzle_column) != nozzle_column
-                ):
+                if nozzle_row is None or nozzle_column is None:
                     continue
-                target_well = Well(
-                    row=nozzle_row,
-                    column=int(nozzle_column),
+
+                target_well = get_target_well(
+                    wells, nozzle_row, nozzle_column, direction, geometry
                 )
-                should_dispense = (
-                    target_well in wells and target_well not in dispensed_wells[line]
-                )
+
+                if target_well is None:
+                    continue
+
+                should_dispense = target_well is not None
                 if should_dispense:
                     valve_identifier = valves.State.ValveIdentifier(
                         type=valves.State.ValveIdentifier.Type.dispense,
@@ -131,55 +92,27 @@ def multi_dispense_map_to_routine(
                         id=nozzle_index + 1,
                     )
                     dispensed_wells[line].append(target_well)
+                    break
+
             if valve_identifier is None:
                 continue
-
-            open_position, close_position = get_open_close_positions(
-                direction, geometry, step, line_configurations[line]
+            add_valve_action_to_routine(
+                routine,
+                geometry,
+                direction,
+                step,
+                line_configurations[line],
+                valve_identifier,
             )
 
-            for position in [open_position, close_position]:
-                state = (
-                    valves.State.ValveState.open
-                    if position == open_position
-                    else valves.State.ValveState.closed
-                )
-                itemIndexWithSameThreshold = next(
-                    (
-                        i
-                        for i, item in enumerate(
-                            routine.positionThresholdToStateMapping
-                        )
-                        if item.positionThreshold == position
-                    ),
-                    None,
-                )
-
-                valve = valves.State.Valve(
-                    identifier=valve_identifier,
-                    state=state,
-                )
-
-                if itemIndexWithSameThreshold is not None:
-                    routine.positionThresholdToStateMapping[
-                        itemIndexWithSameThreshold
-                    ].state.valves.append(valve)
-
-                else:
-                    routine.positionThresholdToStateMapping.append(
-                        valves.Routine.Item(
-                            positionThreshold=position,
-                            state=valves.State(
-                                valves=[valve],
-                            ),
-                        )
-                    )
     return complete_routine(routine, geometry)
 
 
 def complete_routine(routine: valves.Routine, geometry: Geometry):
     for item in routine.positionThresholdToStateMapping:
-        for line in range(1, geometry.number_of_lines_in_manifold + 1):
+        for line in range(
+            1, geometry.number_of_lines_in_manifold * geometry.number_of_manifolds + 1
+        ):
 
             def lineValves():
                 return [
@@ -190,7 +123,7 @@ def complete_routine(routine: valves.Routine, geometry: Geometry):
 
             if len(lineValves()) == 0:
                 continue
-            # check exactly one valve is open
+
             valve_open = len(
                 [
                     valve
@@ -238,6 +171,63 @@ def complete_routine(routine: valves.Routine, geometry: Geometry):
     return routine
 
 
+def get_nozzle_row_column(
+    alignment: Alignment,
+    geometry: Geometry,
+    base_row: int,
+    step: float,
+    nozzle_index: NozzleIndex,
+    line: Line,
+):
+    manifold_row_offset = (
+        (line // geometry.number_of_lines_in_manifold)
+        * geometry.number_of_nozzles_per_line
+        * geometry.y_inter_nozzle_spacing_wells_in_line
+    )
+    nozzle_row = (
+        base_row
+        - manifold_row_offset
+        - nozzle_index * geometry.y_inter_nozzle_spacing_wells_in_line
+    )
+    nozzle_column: float = (
+        step
+        - (line % geometry.number_of_lines_in_manifold)
+        * geometry.inter_line_spacing_wells
+        - nozzle_index * geometry.x_inter_nozzle_spacing_wells_in_line
+    )
+    if (
+        nozzle_row < 0
+        or nozzle_row >= geometry.number_of_rows
+        or nozzle_column < -1
+        or nozzle_column > geometry.number_of_columns + 1
+    ):
+        return (None, None)
+    return (nozzle_row, nozzle_column)
+
+
+def get_target_well(
+    wells: list[Well],
+    nozzle_row: int,
+    nozzle_column: float,
+    direction: Direction,
+    geometry: Geometry,
+):
+    sign = 1 if direction == Direction.forward else -1
+    return next(
+        (
+            well
+            for well in wells
+            if well.row == nozzle_row
+            and isclose(
+                -(nozzle_column - well.column) * sign,
+                geometry.x_inter_nozzle_spacing_wells_in_line / 2,
+                abs_tol=0.01,
+            )
+        ),
+        None,
+    )
+
+
 def get_open_close_positions(
     direction: Direction,
     geometry: Geometry,
@@ -247,14 +237,80 @@ def get_open_close_positions(
     sign = 1 if direction == Direction.forward else -1
     open_position = (
         geometry.reference_position
-        + step * geometry.inter_well_spacing
-        - sign * (line_configurations.open_distance / 2)
+        + (step - sign * geometry.x_inter_nozzle_spacing_wells_in_line / 2)
+        * geometry.inter_well_spacing
         - sign * line_configurations.open_offset
     )
     close_position = (
         geometry.reference_position
-        + step * geometry.inter_well_spacing
-        + sign * (line_configurations.open_distance / 2)
+        + (step + sign * geometry.x_inter_nozzle_spacing_wells_in_line / 2)
+        * geometry.inter_well_spacing
         - sign * line_configurations.close_offset
     )
     return (open_position, close_position)
+
+
+# row on which line 0 nozzle 0 is aligned
+def find_base_row(
+    alignment: Alignment,
+    geometry: Geometry,
+):
+    manifold_index = alignment.line // geometry.number_of_lines_in_manifold
+    if manifold_index >= geometry.number_of_manifolds:
+        raise ValueError("Manifold index out of bounds")
+    return (
+        alignment.row
+        + (
+            alignment.nozzle_index
+            + manifold_index * geometry.number_of_nozzles_per_line
+        )
+        * geometry.y_inter_nozzle_spacing_wells_in_line
+    )
+
+
+def add_valve_action_to_routine(
+    routine: valves.Routine,
+    geometry: Geometry,
+    direction: Direction,
+    step: float,
+    lineConfiguration: LineConfiguration,
+    valve_identifier: valves.State.ValveIdentifier,
+):
+    open_position, close_position = get_open_close_positions(
+        direction, geometry, step, lineConfiguration
+    )
+
+    for position in [open_position, close_position]:
+        state = (
+            valves.State.ValveState.open
+            if position == open_position
+            else valves.State.ValveState.closed
+        )
+        itemIndexWithSameThreshold = next(
+            (
+                i
+                for i, item in enumerate(routine.positionThresholdToStateMapping)
+                if isclose(item.positionThreshold, position, abs_tol=0.01)
+            ),
+            None,
+        )
+
+        valve = valves.State.Valve(
+            identifier=valve_identifier,
+            state=state,
+        )
+
+        if itemIndexWithSameThreshold is not None:
+            routine.positionThresholdToStateMapping[
+                itemIndexWithSameThreshold
+            ].state.valves.append(valve)
+
+        else:
+            routine.positionThresholdToStateMapping.append(
+                valves.Routine.Item(
+                    positionThreshold=position,
+                    state=valves.State(
+                        valves=[valve],
+                    ),
+                )
+            )
