@@ -4,7 +4,7 @@ from hardware.mga.dispense import (
     Direction,
     Alignment,
     Routine,
-    Line,
+    LineIndex,
     ValveState,
     LineConfiguration,
 )
@@ -31,30 +31,23 @@ def test_dispense_multi_dispense_map_to_routine_forward():
         print()
     print()
 
-    volumes = {
-        0: wells,
-        1: wells,
-        6: wells,
-    }
+    volumes = {key: wells for key in range(0, 12)}
 
-    geometry = Geometry(
-        # inter_well_spacing=100,
-        # reference_position=0,
-    )
+    geometry = Geometry()
 
     line_configuration = LineConfiguration(open_offset=0, close_offset=0)
-    line_configurations: dict[Line, LineConfiguration] = {}
+    line_configurations: dict[LineIndex, LineConfiguration] = {}
     for line in range(0, 12):
         line_configurations[line] = line_configuration
 
     def run_trips():
         trip = [
-            (Alignment(line=0, nozzle_index=3, row=0), Direction.forward),
-            (Alignment(line=0, nozzle_index=3, row=1), Direction.backward),
-            (Alignment(line=0, nozzle_index=3, row=8), Direction.forward),
-            (Alignment(line=0, nozzle_index=3, row=9), Direction.backward),
-            (Alignment(line=6, nozzle_index=3, row=8), Direction.forward),
-            (Alignment(line=6, nozzle_index=3, row=9), Direction.backward),
+            (Alignment(line_index=0, nozzle_index=3, row=0), Direction.forward),
+            (Alignment(line_index=0, nozzle_index=3, row=1), Direction.backward),
+            (Alignment(line_index=0, nozzle_index=3, row=8), Direction.forward),
+            (Alignment(line_index=0, nozzle_index=3, row=9), Direction.backward),
+            (Alignment(line_index=6, nozzle_index=3, row=8), Direction.forward),
+            (Alignment(line_index=6, nozzle_index=3, row=9), Direction.backward),
         ]
 
         for alignment, direction in trip:
@@ -136,7 +129,7 @@ def print_geogramme(routine: Routine):
     if len(routine.positionThresholdToStateMapping) == 0:
         return
     # get all lines
-    lines: set[Line] = set()
+    lines: set[LineIndex] = set()
     for item in routine.positionThresholdToStateMapping:
         for valve in item.state.valves:
             lines.add(valve.identifier.fluidicLine)

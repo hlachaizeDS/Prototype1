@@ -5,7 +5,7 @@ from hardware.mga.configuration import Geometry
 from math import isclose
 
 Row = int  # starts from 0
-Line = int  # starts from 0
+LineIndex = int  # starts from 0
 NozzleIndex = int  # starts from 0
 Direction = valves.Routine.Direction
 ValveState = valves.State.ValveState
@@ -26,30 +26,35 @@ class LineConfiguration:
 
 @dataclass
 class Alignment:
-    line: Line
+    line_index: LineIndex
     nozzle_index: NozzleIndex
     row: Row
 
 
 def createRoutine(
-    volumes: dict[Line, list[Well]],
+    volumes: dict[LineIndex, list[Well]],
     alignment: Alignment,
     direction: Direction,
     geometry: Geometry,
-    line_configurations: dict[Line, LineConfiguration],
+    line_configurations: dict[LineIndex, LineConfiguration],
 ):
+    if len(volumes) == 0:
+        return valves.Routine()
+
     routine = Routine(direction=direction)
 
     max_column = max(well.column for _, wells in volumes.items() for well in wells)
-    min_line = min(line for line, _ in volumes.items())
+    min_line_index = min(line_index for line_index, _ in volumes.items())
 
-    dispensed_wells: dict[Line, list[Well]] = {line: [] for line in volumes.keys()}
+    dispensed_wells: dict[LineIndex, list[Well]] = {
+        line_index: [] for line_index in volumes.keys()
+    }
 
     max_step = (
         max_column
         + geometry.number_of_lines_in_manifold
         + geometry.inter_line_spacing_wells
-        - min_line
+        - min_line_index
     )
 
     start = 0 if direction == Direction.forward else max_step
@@ -67,12 +72,12 @@ def createRoutine(
         stop + step_change,
         step_change,
     ):
-        for line, wells in volumes.items():
+        for line_index, wells in volumes.items():
             valve_identifier: valves.State.ValveIdentifier | None = None
 
             for nozzle_index in range(0, geometry.number_of_nozzles_per_line):
                 nozzle_row, nozzle_column = get_nozzle_row_column(
-                    alignment, geometry, base_row, step, nozzle_index, line
+                    alignment, geometry, base_row, step, nozzle_index, line_index
                 )
                 if nozzle_row is None or nozzle_column is None:
                     continue
@@ -88,10 +93,10 @@ def createRoutine(
                 if should_dispense:
                     valve_identifier = valves.State.ValveIdentifier(
                         type=valves.State.ValveIdentifier.Type.dispense,
-                        fluidicLine=line + 1,
+                        fluidicLine=line_index + 1,
                         id=nozzle_index + 1,
                     )
-                    dispensed_wells[line].append(target_well)
+                    dispensed_wells[line_index].append(target_well)
                     break
 
             if valve_identifier is None:
@@ -101,7 +106,7 @@ def createRoutine(
                 geometry,
                 direction,
                 step,
-                line_configurations[line],
+                line_configurations[line_index],
                 valve_identifier,
             )
 
@@ -132,7 +137,7 @@ def complete_routine(routine: valves.Routine, geometry: Geometry):
                 ]
             )
             if valve_open > 1:
-                raise ValueError(f"More than one valve open in a line {line}")
+                raise ValueError(f"More than one valve open in line {line}")
 
             if valve_open == 0:
                 item.state.valves.append(
@@ -177,10 +182,10 @@ def get_nozzle_row_column(
     base_row: int,
     step: float,
     nozzle_index: NozzleIndex,
-    line: Line,
+    line_index: LineIndex,
 ):
     manifold_row_offset = (
-        (line // geometry.number_of_lines_in_manifold)
+        (line_index // geometry.number_of_lines_in_manifold)
         * geometry.number_of_nozzles_per_line
         * geometry.y_inter_nozzle_spacing_wells_in_line
     )
@@ -191,7 +196,7 @@ def get_nozzle_row_column(
     )
     nozzle_column: float = (
         step
-        - (line % geometry.number_of_lines_in_manifold)
+        - (line_index % geometry.number_of_lines_in_manifold)
         * geometry.inter_line_spacing_wells
         - nozzle_index * geometry.x_inter_nozzle_spacing_wells_in_line
     )
@@ -255,7 +260,7 @@ def find_base_row(
     alignment: Alignment,
     geometry: Geometry,
 ):
-    manifold_index = alignment.line // geometry.number_of_lines_in_manifold
+    manifold_index = alignment.line_index // geometry.number_of_lines_in_manifold
     if manifold_index >= geometry.number_of_manifolds:
         raise ValueError("Manifold index out of bounds")
     return (
