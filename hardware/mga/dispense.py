@@ -16,6 +16,7 @@ from hardware.mga.types import (
     ReagentVolumeWells,
     LineConfiguration,
 )
+from hardware.mga.movement import find_alignment_coordinates
 
 StandardDispenseTrips = [
     (Alignment(line_index=0, nozzle_index=3, row=0), Direction.forward),
@@ -136,8 +137,9 @@ def create_routine(
                 continue
             __add_valve_action_to_routine(
                 routine,
-                geometry,
+                alignment,
                 direction,
+                geometry,
                 step,
                 line_configurations[line_index],
                 valve_identifier,
@@ -268,19 +270,21 @@ def __get_target_well(
 
 def __get_open_close_positions(
     direction: Direction,
+    alignment: Alignment,
     geometry: Geometry,
     step: float,
     line_configurations: LineConfiguration,
 ):
     sign = 1 if direction == Direction.forward else -1
+    reference = find_alignment_coordinates(geometry, alignment)
     open_position = (
-        geometry.reference.position.x
+        reference.x
         + (step - sign * geometry.x_inter_nozzle_spacing_wells_in_line / 2)
         * geometry.inter_well_spacing_mm
         - sign * line_configurations.open_offset
     )
     close_position = (
-        geometry.reference.position.x
+        reference.x
         + (step + sign * geometry.x_inter_nozzle_spacing_wells_in_line / 2)
         * geometry.inter_well_spacing_mm
         - sign * line_configurations.close_offset
@@ -306,18 +310,17 @@ def __find_base_row(
     )
 
 
-
-
 def __add_valve_action_to_routine(
     routine: valves.Routine,
-    geometry: Geometry,
+    alignment: Alignment,
     direction: Direction,
+    geometry: Geometry,
     step: float,
     lineConfiguration: LineConfiguration,
     valve_identifier: valves.State.ValveIdentifier,
 ):
     open_position, close_position = __get_open_close_positions(
-        direction, geometry, step, lineConfiguration
+        direction, alignment, geometry, step, lineConfiguration
     )
 
     for position in [open_position, close_position]:

@@ -9,7 +9,7 @@ from hardware.mga.types import Well
 
 
 class TestMovement(unittest.TestCase):
-    def test_get_movement_range_coordinates(self):
+    def test_get_movement_range_coordinates_forward(self):
         geometry = StandardGeometry
         geometry.reference.well = Well(row=6, column=0)
         geometry.reference.position = Coordinate(200.0, 100.0)
@@ -20,8 +20,8 @@ class TestMovement(unittest.TestCase):
         routine = Routine(
             direction=Routine.Direction.forward,
             positionThresholdToStateMapping=[
-                Routine.Item(positionThreshold=0, state={}),
-                Routine.Item(positionThreshold=10, state={}),
+                Routine.Item(positionThreshold=200.0, state={}),
+                Routine.Item(positionThreshold=210.0, state={}),
             ],
         )
         coordinates = get_movement_range_coordinates(
@@ -31,6 +31,7 @@ class TestMovement(unittest.TestCase):
         self.assertIsNotNone(coordinates)
         if coordinates is not None:
             self.assertTupleEqual(coordinates, (Coordinate(198.0, 100.0), Coordinate(212.0, 100.0)))
+
 
     def test_find_alignment_coordinates_reference(self):
         geometry = StandardGeometry

@@ -1,6 +1,5 @@
-from hardware.mga.dispense import Routine, Alignment
 from hardware.mga.configuration import Geometry
-from hardware.mga.types import Coordinate
+from hardware.mga.types import Coordinate, Alignment, Routine
 
 
 def get_movement_range_coordinates(
@@ -13,16 +12,14 @@ def get_movement_range_coordinates(
     if routine is None or len(routine.positionThresholdToStateMapping) == 0:
         return None
 
-    start_coordinate = find_alignment_coordinates(geometry, alignment)
-
     sign = 1 if routine.direction == routine.Direction.forward else -1
-    start_x = start_coordinate.x + (
+    start_x = (
         routine.positionThresholdToStateMapping[0].positionThreshold - sign * margin.x
     )
-    end_x = start_coordinate.x + (
+    end_x = (
         routine.positionThresholdToStateMapping[-1].positionThreshold + sign * margin.x
     )
-    y = start_coordinate.y
+    y = find_alignment_coordinates(geometry, alignment).y
 
     return Coordinate(start_x, y), Coordinate(end_x, y)
 
