@@ -3,6 +3,17 @@ from tkinter import Frame
 import grpc
 import mga_testbench_interface.generated.gantry_pb2_grpc as gantry_grpc
 import mga_testbench_interface.generated.gantry_pb2 as gantry
+from hardware.mga.configuration import (
+    Geometry,
+    LineConfigurations,
+    ReagentToFluidicLineIndexMapping,
+)
+from hardware.mga.dispense import (
+    create_dispense_plan,
+    create_routine,
+    ReagentVolumeWells,
+    StandardDispenseTrips,
+)
 
 
 class MGATestbenchHardware(Frame):
@@ -56,8 +67,24 @@ class MGATestbenchHardware(Frame):
         else:
             print("Arduino control not initialized")
 
-    def multi_dispense(self, volume_per_line: dict[str, tuple[float, list[int]]], max_vol=None):
+    def multi_dispense(self, volume_per_line: ReagentVolumeWells, max_vol=None):
         print("Dispensing ", volume_per_line, "uL")
+
+        dispense_plan = create_dispense_plan(
+            volume_per_line, ReagentToFluidicLineIndexMapping
+        )
+
+        for alignment, direction in StandardDispenseTrips:
+            routine = create_routine(
+                dispense_plan=dispense_plan,
+                alignment=alignment,
+                geometry=geometry,
+                direction=direction,
+                line_configurations=LineConfigurations,
+            )
+
+
+
         pass
 
     def multiDispensePumps(self, volumes, max_vol=None):
@@ -68,4 +95,3 @@ class MGATestbenchHardware(Frame):
         print("Going to ", element, well, quadrant)
         self.gantry.moveTo()
         pass
-

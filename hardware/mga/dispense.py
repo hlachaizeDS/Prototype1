@@ -1,60 +1,93 @@
 import mga_testbench_interface.generated.valves_pb2 as valves
-from dataclasses import dataclass
 import numpy as np
-from hardware.mga.configuration import Geometry
+from hardware.mga.configuration import (
+    Geometry,
+    ReagentToLineMapping,
+)
 from math import isclose
+from hardware.mga.types import (
+    Alignment,
+    Direction,
+    LineIndex,
+    NozzleIndex,
+    Routine,
+    Well,
+    DispensePlan,
+    ReagentVolumeWells,
+    LineConfiguration,
+)
 
-Row = int  # starts from 0
-LineIndex = int  # starts from 0
-NozzleIndex = int  # starts from 0
-Direction = valves.Routine.Direction
-ValveState = valves.State.ValveState
-Routine = valves.Routine
-
-
-@dataclass
-class Well:
-    row: int
-    column: int
-
-
-@dataclass
-class LineConfiguration:
-    open_offset: float
-    close_offset: float
-
-
-@dataclass
-class Alignment:
-    line_index: LineIndex
-    nozzle_index: NozzleIndex
-    row: Row
+StandardDispenseTrips = [
+    (Alignment(line_index=0, nozzle_index=3, row=0), Direction.forward),
+    (Alignment(line_index=0, nozzle_index=3, row=1), Direction.backward),
+    (Alignment(line_index=0, nozzle_index=3, row=8), Direction.forward),
+    (Alignment(line_index=0, nozzle_index=3, row=9), Direction.backward),
+    (Alignment(line_index=6, nozzle_index=3, row=8), Direction.forward),
+    (Alignment(line_index=6, nozzle_index=3, row=9), Direction.backward),
+]
 
 
-def createRoutine(
-    volumes: dict[LineIndex, list[Well]],
+def create_dispense_plan(
+    reagent_volume_wells: ReagentVolumeWells,
+    reagentToFluidicLineIndexMapping: ReagentToLineMapping,
+) -> DispensePlan:
+    dispense_plan: DispensePlan = {}
+
+    volumes: set[float] = {
+        volume for volume, _ in reagent_volume_wells.values() if volume != 0
+    }
+    if len(volumes) > 1 or (len(volumes) > 0 and volumes.pop() < 0):
+        raise ValueError("All volumes must be the same and positive")
+
+    for reagent, (_, wellIndexes) in reagent_volume_wells.items():
+        lineIndex = reagentToFluidicLineIndexMapping.get(reagent)
+        if lineIndex is None:
+            raise ValueError(
+                f"Reagent {reagent} not found in reagentToFluidicLineIndexMapping"
+            )
+        if len(wellIndexes) == 0:
+            continue
+
+        wells = [Well(index=wellIndex) for wellIndex in wellIndexes]
+        if isinstance(lineIndex, dict):
+            for direction, index in lineIndex.items():
+                dispense_plan[index] = [
+                    well
+                    for well in wells
+                    if well.row % 2 == (0 if direction == Direction.forward else 1)
+                ]
+        else:
+            dispense_plan[lineIndex] = wells
+
+        # print(dispense_plan)
+    return dispense_plan
+
+
+def create_routine(
+    dispense_plan: DispensePlan,
     alignment: Alignment,
     direction: Direction,
     geometry: Geometry,
     line_configurations: dict[LineIndex, LineConfiguration],
 ):
-    if len(volumes) == 0:
+    if len(dispense_plan) == 0:
         return valves.Routine()
 
     routine = Routine(direction=direction)
 
-    max_column = max(well.column for _, wells in volumes.items() for well in wells)
-    min_line_index = min(line_index for line_index, _ in volumes.items())
+    max_column = max(
+        well.column for _, wells in dispense_plan.items() for well in wells
+    )
+    min_line_index = min(line_index for line_index, _ in dispense_plan.items())
 
     dispensed_wells: dict[LineIndex, list[Well]] = {
-        line_index: [] for line_index in volumes.keys()
+        line_index: [] for line_index in dispense_plan.keys()
     }
 
     max_step = (
         max_column
-        + geometry.number_of_lines_in_manifold
-        + geometry.inter_line_spacing_wells
-        - min_line_index
+        + geometry.number_of_lines_in_manifold * geometry.inter_line_spacing_wells
+        - min_line_index * (1 if direction == Direction.forward else -1)
     )
 
     start = 0 if direction == Direction.forward else max_step
@@ -65,24 +98,24 @@ def createRoutine(
         / 2
     )
 
-    base_row = find_base_row(alignment, geometry)
+    base_row = __find_base_row(alignment, geometry)
 
     for step in np.arange(
         start - step_change,
         stop + step_change,
         step_change,
     ):
-        for line_index, wells in volumes.items():
+        for line_index, wells in dispense_plan.items():
             valve_identifier: valves.State.ValveIdentifier | None = None
 
             for nozzle_index in range(0, geometry.number_of_nozzles_per_line):
-                nozzle_row, nozzle_column = get_nozzle_row_column(
+                nozzle_row, nozzle_column = __get_nozzle_row_column(
                     alignment, geometry, base_row, step, nozzle_index, line_index
                 )
                 if nozzle_row is None or nozzle_column is None:
                     continue
 
-                target_well = get_target_well(
+                target_well = __get_target_well(
                     wells, nozzle_row, nozzle_column, direction, geometry
                 )
 
@@ -101,7 +134,7 @@ def createRoutine(
 
             if valve_identifier is None:
                 continue
-            add_valve_action_to_routine(
+            __add_valve_action_to_routine(
                 routine,
                 geometry,
                 direction,
@@ -110,10 +143,10 @@ def createRoutine(
                 valve_identifier,
             )
 
-    return complete_routine(routine, geometry)
+    return __complete_routine(routine, geometry)
 
 
-def complete_routine(routine: valves.Routine, geometry: Geometry):
+def __complete_routine(routine: valves.Routine, geometry: Geometry):
     for item in routine.positionThresholdToStateMapping:
         for line in range(
             1, geometry.number_of_lines_in_manifold * geometry.number_of_manifolds + 1
@@ -176,7 +209,7 @@ def complete_routine(routine: valves.Routine, geometry: Geometry):
     return routine
 
 
-def get_nozzle_row_column(
+def __get_nozzle_row_column(
     alignment: Alignment,
     geometry: Geometry,
     base_row: int,
@@ -210,7 +243,7 @@ def get_nozzle_row_column(
     return (nozzle_row, nozzle_column)
 
 
-def get_target_well(
+def __get_target_well(
     wells: list[Well],
     nozzle_row: int,
     nozzle_column: float,
@@ -233,7 +266,7 @@ def get_target_well(
     )
 
 
-def get_open_close_positions(
+def __get_open_close_positions(
     direction: Direction,
     geometry: Geometry,
     step: float,
@@ -241,22 +274,22 @@ def get_open_close_positions(
 ):
     sign = 1 if direction == Direction.forward else -1
     open_position = (
-        geometry.reference_position
+        geometry.reference.position.x
         + (step - sign * geometry.x_inter_nozzle_spacing_wells_in_line / 2)
-        * geometry.inter_well_spacing
+        * geometry.inter_well_spacing_mm
         - sign * line_configurations.open_offset
     )
     close_position = (
-        geometry.reference_position
+        geometry.reference.position.x
         + (step + sign * geometry.x_inter_nozzle_spacing_wells_in_line / 2)
-        * geometry.inter_well_spacing
+        * geometry.inter_well_spacing_mm
         - sign * line_configurations.close_offset
     )
     return (open_position, close_position)
 
 
 # row on which line 0 nozzle 0 is aligned
-def find_base_row(
+def __find_base_row(
     alignment: Alignment,
     geometry: Geometry,
 ):
@@ -273,7 +306,9 @@ def find_base_row(
     )
 
 
-def add_valve_action_to_routine(
+
+
+def __add_valve_action_to_routine(
     routine: valves.Routine,
     geometry: Geometry,
     direction: Direction,
@@ -281,7 +316,7 @@ def add_valve_action_to_routine(
     lineConfiguration: LineConfiguration,
     valve_identifier: valves.State.ValveIdentifier,
 ):
-    open_position, close_position = get_open_close_positions(
+    open_position, close_position = __get_open_close_positions(
         direction, geometry, step, lineConfiguration
     )
 
