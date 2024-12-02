@@ -4,7 +4,7 @@ import grpc
 import mga_testbench_interface.generated.gantry_pb2_grpc as gantry_grpc
 import mga_testbench_interface.generated.gantry_pb2 as gantry
 from hardware.mga.configuration import (
-    Geometry,
+    StandardGeometry,
     LineConfigurations,
     ReagentToFluidicLineIndexMapping,
 )
@@ -78,10 +78,12 @@ class MGATestbenchHardware(Frame):
             routine = create_routine(
                 dispense_plan=dispense_plan,
                 alignment=alignment,
-                geometry=geometry,
+                geometry=StandardGeometry,
                 direction=direction,
                 line_configurations=LineConfigurations,
             )
+
+            
 
 
 
