@@ -16,6 +16,7 @@ from hardware.mga.types import (
     LineIndex,
     DispensePlan,
     ValveState,
+    Coordinate,
 )
 
 
@@ -433,6 +434,45 @@ class TestCreateRoutine(unittest.TestCase):
         )
 
         self.assertEqual(geogram, expected_geogram)
+
+    def test_create_routine_start_end_thresholds(self):
+        wells: list[Well] = [
+            Well(row=row, column=column)
+            for row in range(0, 8, 2)
+            for column in range(0, 2)
+        ]
+
+        dispense_plan = {0: wells}
+
+        line_configurations = {0: LineConfiguration(open_offset=0, close_offset=0)}
+
+        alignment = Alignment(line_index=0, nozzle_index=3, row=0)
+        direction = Direction.forward
+
+        geometry = StandardGeometry
+        geometry.reference.position = Coordinate(100, 200)
+        geometry.reference.line_index = 0
+        geometry.reference.nozzle_index = 3
+        geometry.reference.well = Well(row=0, column=0)
+
+        routine = create_routine(
+            dispense_plan=dispense_plan,
+            alignment=alignment,
+            geometry=geometry,
+            direction=direction,
+            line_configurations=line_configurations,
+        )
+
+        thresholds = [
+            item.positionThreshold for item in routine.positionThresholdToStateMapping
+        ]
+        self.assertEqual(thresholds, sorted(thresholds))
+
+        self.assertAlmostEqual(routine.positionThresholdToStateMapping[0].positionThreshold, 99.5, 3)
+        self.assertAlmostEqual(routine.positionThresholdToStateMapping[-1].positionThreshold, 108.0, 3)
+
+
+# utils
 
 
 def print_in_file(file: str, function):

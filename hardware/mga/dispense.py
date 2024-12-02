@@ -272,20 +272,19 @@ def __get_open_close_positions(
     direction: Direction,
     alignment: Alignment,
     geometry: Geometry,
-    step: float,
+    start_step: float,
     line_configurations: LineConfiguration,
 ):
     sign = 1 if direction == Direction.forward else -1
     reference = find_alignment_coordinates(geometry, alignment)
     open_position = (
         reference.x
-        + (step - sign * geometry.x_inter_nozzle_spacing_wells_in_line / 2)
-        * geometry.inter_well_spacing_mm
+        + (start_step) * geometry.inter_well_spacing_mm
         - sign * line_configurations.open_offset
     )
     close_position = (
         reference.x
-        + (step + sign * geometry.x_inter_nozzle_spacing_wells_in_line / 2)
+        + (start_step + sign * geometry.x_inter_nozzle_spacing_wells_in_line)
         * geometry.inter_well_spacing_mm
         - sign * line_configurations.close_offset
     )
