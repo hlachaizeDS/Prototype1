@@ -1,17 +1,19 @@
-from hardware.mga.types import PumpIndex, Routine, LineIndex
+from hardware.mga.types import PumpIndex, Routine, LineIndex, Volume
+
+PumpRanges = dict[PumpIndex, tuple[float, float]]
 
 
 def get_pump_start_stop_positions(
     routine: Routine,
     fluidic_line_to_pump_mapping: dict[LineIndex, PumpIndex],
     pump_start_stop_margin_mm: float,
-) -> dict[PumpIndex, tuple[float, float]]:
+) -> PumpRanges:
     """
     Get the pump usage in routine
     """
     lineIndexes = [lineIndex for lineIndex in fluidic_line_to_pump_mapping.keys()]
 
-    pumpPositions: dict[PumpIndex, tuple[float, float]] = {}
+    pumpRanges: PumpRanges = {}
 
     direction = routine.direction
     first = min if direction == Routine.Direction.forward else max
@@ -28,14 +30,14 @@ def get_pump_start_stop_positions(
             if len(lineValves) == 0:
                 continue
             pumpIndex = fluidic_line_to_pump_mapping[lineIndex]
-            if pumpIndex not in pumpPositions:
-                pumpPositions[pumpIndex] = (
+            if pumpIndex not in pumpRanges:
+                pumpRanges[pumpIndex] = (
                     item.positionThreshold - sign * pump_start_stop_margin_mm,
                     item.positionThreshold + sign * pump_start_stop_margin_mm,
                 )
             else:
-                start, stop = pumpPositions[pumpIndex]
-                pumpPositions[pumpIndex] = (
+                start, stop = pumpRanges[pumpIndex]
+                pumpRanges[pumpIndex] = (
                     first(
                         start, item.positionThreshold - sign * pump_start_stop_margin_mm
                     ),
@@ -43,4 +45,15 @@ def get_pump_start_stop_positions(
                         stop, item.positionThreshold + sign * pump_start_stop_margin_mm
                     ),
                 )
-    return pumpPositions
+    return pumpRanges
+
+
+def estimate_volume_usage(
+    pump_ranges: PumpRanges, pump_speeds: dict[PumpIndex, float], gantry_x_movement_speed
+) -> dict[PumpIndex, Volume]:
+    volumeUsage = dict[PumpIndex, Volume]()
+    for pumpIndex, (start, stop) in pump_ranges.items():
+        volumeUsage[pumpIndex] = Volume(
+            abs(stop - start) / gantry_x_movement_speed * pump_speeds[pumpIndex]
+        )
+    return volumeUsage

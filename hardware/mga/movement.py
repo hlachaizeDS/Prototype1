@@ -63,3 +63,12 @@ def find_alignment_coordinates(
         )
         * geometry.inter_well_spacing_mm,
     )
+
+
+def get_gantry_x_movement_speed(
+    dispense_volume: float, pump_speed: float, inter_nozzle_x_distance: float
+):
+    """
+    Get the gantry x movement speed
+    """
+    return inter_nozzle_x_distance / (dispense_volume / pump_speed)

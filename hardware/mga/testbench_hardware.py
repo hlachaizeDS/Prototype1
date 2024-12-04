@@ -4,15 +4,15 @@ import grpc
 import mga_testbench_interface.generated.gantry_pb2_grpc as gantry_grpc
 import mga_testbench_interface.generated.gantry_pb2 as gantry
 from hardware.mga.configuration import (
-    StandardGeometry,
+    DefaultGeometry,
     LineConfigurations,
     ReagentToFluidicLineIndexMapping,
 )
 from hardware.mga.dispense import (
     create_dispense_plan,
-    create_routine,
+    create_abstract_routine,
     ReagentVolumeWells,
-    StandardDispenseTrips,
+    DefaultDispenseTrips,
 )
 
 
@@ -74,11 +74,11 @@ class MGATestbenchHardware(Frame):
             volume_per_line, ReagentToFluidicLineIndexMapping
         )
 
-        for alignment, direction in StandardDispenseTrips:
-            routine = create_routine(
+        for alignment, direction in DefaultDispenseTrips:
+            routine = create_abstract_routine(
                 dispense_plan=dispense_plan,
                 alignment=alignment,
-                geometry=StandardGeometry,
+                geometry=DefaultGeometry,
                 direction=direction,
                 line_configurations=LineConfigurations,
             )

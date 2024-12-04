@@ -7,6 +7,7 @@ NozzleIndex = int  # starts from 0
 Direction = valves.Routine.Direction
 ValveState = valves.State.ValveState
 Routine = valves.Routine
+Volume = float
 
 
 @dataclass
@@ -45,8 +46,8 @@ class Alignment:
 
 @dataclass
 class LineConfiguration:
-    open_offset: float
-    close_offset: float
+    open_offset: float # % of inter-nozzle spacing
+    close_offset: float # % of inter-nozzle spacing
 
 
 PumpIndex = int

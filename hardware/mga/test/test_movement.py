@@ -2,15 +2,16 @@ import unittest
 from hardware.mga.movement import (
     get_movement_range_coordinates,
     find_alignment_coordinates,
+    get_gantry_x_movement_speed,
 )
-from hardware.mga.configuration import StandardGeometry, Coordinate
+from hardware.mga.configuration import DefaultGeometry, Coordinate
 from hardware.mga.dispense import Routine, Alignment
 from hardware.mga.types import Well
 
 
 class TestMovement(unittest.TestCase):
     def test_get_movement_range_coordinates_forward(self):
-        geometry = StandardGeometry
+        geometry = DefaultGeometry
         geometry.reference.well = Well(row=6, column=0)
         geometry.reference.position = Coordinate(200.0, 100.0)
         geometry.reference.line_index = 0
@@ -30,11 +31,12 @@ class TestMovement(unittest.TestCase):
 
         self.assertIsNotNone(coordinates)
         if coordinates is not None:
-            self.assertTupleEqual(coordinates, (Coordinate(198.0, 100.0), Coordinate(212.0, 100.0)))
-
+            self.assertTupleEqual(
+                coordinates, (Coordinate(198.0, 100.0), Coordinate(212.0, 100.0))
+            )
 
     def test_find_alignment_coordinates_reference(self):
-        geometry = StandardGeometry
+        geometry = DefaultGeometry
         geometry.reference.well = Well(row=6, column=0)
         geometry.reference.position = Coordinate(10.0, 100.0)
         geometry.reference.line_index = 0
@@ -46,7 +48,7 @@ class TestMovement(unittest.TestCase):
         self.assertEqual(coordinate, Coordinate(13.0, 100.0))
 
     def test_find_alignment_coordinates_different_line_to_reference(self):
-        geometry = StandardGeometry
+        geometry = DefaultGeometry
         geometry.reference.well = Well(row=6, column=0)
         geometry.reference.position = Coordinate(300.0, 10.0)
         geometry.reference.line_index = 2
@@ -58,7 +60,7 @@ class TestMovement(unittest.TestCase):
         self.assertEqual(coordinate, Coordinate(327.0, 10.0))
 
     def test_find_alignment_coordinates_different_nozzle_to_reference(self):
-        geometry = StandardGeometry
+        geometry = DefaultGeometry
         geometry.reference.well = Well(row=8, column=0)
         geometry.reference.position = Coordinate(200.0, 100.0)
         geometry.reference.line_index = 2
@@ -70,7 +72,7 @@ class TestMovement(unittest.TestCase):
         self.assertEqual(coordinate, Coordinate(198.0, 82.0))
 
     def test_find_alignment_coordinates_different_row_to_reference(self):
-        geometry = StandardGeometry
+        geometry = DefaultGeometry
         geometry.reference.well = Well(row=4, column=0)
         geometry.reference.position = Coordinate(200.0, 100.0)
         geometry.reference.line_index = 3
@@ -84,7 +86,7 @@ class TestMovement(unittest.TestCase):
     def test_find_alignment_coordinates_different_nozzle_to_reference_different_manifolds(
         self,
     ):
-        geometry = StandardGeometry
+        geometry = DefaultGeometry
         geometry.reference.well = Well(row=6, column=0)
         geometry.reference.position = Coordinate(200.0, 100.0)
         geometry.reference.line_index = 6
@@ -98,7 +100,7 @@ class TestMovement(unittest.TestCase):
     def test_find_alignment_coordinates_different_line_row_nozzle_to_reference_different_manifolds(
         self,
     ):
-        geometry = StandardGeometry
+        geometry = DefaultGeometry
         geometry.reference.well = Well(row=0, column=0)
         geometry.reference.position = Coordinate(200.0, 100.0)
         geometry.reference.line_index = 11
@@ -108,3 +110,12 @@ class TestMovement(unittest.TestCase):
         coordinate = find_alignment_coordinates(geometry, alignment)
 
         self.assertEqual(coordinate, Coordinate(152.0, 91.0))
+
+    def test_get_gantry_x_movement_speed(self):
+        self.assertAlmostEqual(
+            get_gantry_x_movement_speed(
+                dispense_volume=12.5, pump_speed=500, inter_nozzle_x_distance=1
+            ),
+            40.0,
+            3,
+        )

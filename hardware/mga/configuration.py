@@ -1,7 +1,13 @@
 from dataclasses import dataclass
 from enum import Enum
-from hardware.mga.types import Coordinate, Well, LineIndex, PumpIndex, Direction, LineConfiguration
-
+from hardware.mga.types import (
+    Coordinate,
+    Well,
+    LineIndex,
+    PumpIndex,
+    Direction,
+    LineConfiguration,
+)
 
 
 # mappings
@@ -25,7 +31,7 @@ ReagentToFluidicLineIndexMapping: ReagentToLineMapping = {
     "EB": {
         Direction.forward: 0,
         Direction.backward: 5,
-    },  # make sure this aligns with StandardDispenseTrips in dispense.py
+    },  # make sure this aligns with DefaultDispenseTrips in dispense.py
     "A": 1,
     "C": 2,
     "G": 3,
@@ -62,7 +68,7 @@ class Geometry:
     number_of_columns: int
 
 
-StandardGeometry = Geometry(
+DefaultGeometry = Geometry(
     reference=Reference(
         position=Coordinate(0, 0),
         line_index=0,
@@ -88,8 +94,8 @@ LineConfigurations: dict[LineIndex, LineConfiguration] = {
 
 @dataclass
 class PumpDynamics:
-    acceleration = 5000.0  # µl/s²
-    deceleration = 5000.0  # µl/s²
+    acceleration: float = 5000.0  # µl/s²
+    deceleration: float = 5000.0  # µl/s²
     speed = 500.0  # µl/s
 
 
@@ -100,7 +106,10 @@ PumpDynamicsMapping: dict[PumpIndex, PumpDynamics] = {
 
 @dataclass
 class ValveParameters:
-    open_time_per_ul = 2.0  # ms/µl
+    open_time_per_ul: float  # ms/µl
+
+
+DefaultValveParameters = ValveParameters(open_time_per_ul=2.0)
 
 
 class Axis(Enum):
@@ -110,14 +119,22 @@ class Axis(Enum):
 
 @dataclass
 class AxisDynamics:
-    acceleration = 100.0  # mm/s²
-    deceleration = 100.0  # mm/s²
-    # speed is determined by pump speed and valve opening time
+    acceleration: float  # mm/s²
+    deceleration: float  # mm/s²
+    speed: float | None  # mm/s
 
 
 @dataclass
 class GantryParameters:
     axes: dict[Axis, AxisDynamics]
 
+
+DefaultGantryParameters = GantryParameters(
+    axes={
+        # speed is determined by pump speed and valve opening time
+        Axis.x: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=None),
+        Axis.y: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=40.0),
+    }
+)
 
 MovementMargin = Coordinate(0.5, 0.0)

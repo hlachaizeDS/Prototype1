@@ -1,9 +1,6 @@
 import mga_testbench_interface.generated.valves_pb2 as valves
 import numpy as np
-from hardware.mga.configuration import (
-    Geometry,
-    ReagentToLineMapping,
-)
+from hardware.mga.configuration import Geometry, ReagentToLineMapping, Reference, Axis
 from math import isclose
 from hardware.mga.types import (
     Alignment,
@@ -18,7 +15,7 @@ from hardware.mga.types import (
 )
 from hardware.mga.movement import find_alignment_coordinates
 
-StandardDispenseTrips = [
+DefaultDispenseTrips = [
     (Alignment(line_index=0, nozzle_index=3, row=0), Direction.forward),
     (Alignment(line_index=0, nozzle_index=3, row=1), Direction.backward),
     (Alignment(line_index=0, nozzle_index=3, row=8), Direction.forward),
@@ -64,10 +61,11 @@ def create_dispense_plan(
     return dispense_plan
 
 
-def create_routine(
+# Creates routine where thresholds are expressed in well-spacing units
+def create_abstract_routine(
     dispense_plan: DispensePlan,
     alignment: Alignment,
-    direction: Direction,
+    direction: Direction,  # in reference to the plate
     geometry: Geometry,
     line_configurations: dict[LineIndex, LineConfiguration],
 ):
@@ -85,10 +83,12 @@ def create_routine(
         line_index: [] for line_index in dispense_plan.keys()
     }
 
+    sign = 1 if direction == Direction.forward else -1
+
     max_step = (
         max_column
-        + geometry.number_of_lines_in_manifold * geometry.inter_line_spacing_wells
-        - min_line_index * (1 if direction == Direction.forward else -1)
+        + (geometry.number_of_lines_in_manifold - sign * min_line_index)
+        * geometry.inter_line_spacing_wells
     )
 
     start = 0 if direction == Direction.forward else max_step
@@ -137,7 +137,6 @@ def create_routine(
                 continue
             __add_valve_action_to_routine(
                 routine,
-                alignment,
                 direction,
                 geometry,
                 step,
@@ -211,6 +210,51 @@ def __complete_routine(routine: valves.Routine, geometry: Geometry):
     return routine
 
 
+# Projects an abstract routine (expessed in well-spacing units) to gantry coordinates
+def project_routine_to_axes(
+    abstract_routine: Routine,
+    geometry: Geometry,
+    axis: Axis,
+    is_forward_along_columns: int,
+):
+    routine = Routine()
+
+    opposite = (
+        lambda direction: Direction.forward
+        if direction == Direction.backward
+        else Direction.backward
+    )
+    routine.direction = (
+        abstract_routine.direction
+        if is_forward_along_columns
+        else opposite(abstract_routine.direction)
+    )
+
+    alignment = Alignment(
+        line_index=0,
+        nozzle_index=3,
+        row=6,  # nozzle 1.1 at column 0
+    )
+    reference_coordinates = find_alignment_coordinates(geometry, alignment)
+    reference_in_axis = (
+        reference_coordinates.x if axis == Axis.x else reference_coordinates.y
+    )
+    sign = 1 if is_forward_along_columns else -1
+
+    for item in abstract_routine.positionThresholdToStateMapping:
+        routine.positionThresholdToStateMapping.append(
+            Routine.Item(
+                positionThreshold=(
+                    reference_in_axis
+                    + sign * item.positionThreshold * geometry.inter_well_spacing_mm
+                ),
+                state=item.state,
+            )
+        )
+
+    return routine
+
+
 def __get_nozzle_row_column(
     alignment: Alignment,
     geometry: Geometry,
@@ -261,32 +305,33 @@ def __get_target_well(
             and isclose(
                 -(nozzle_column - well.column) * sign,
                 geometry.x_inter_nozzle_spacing_wells_in_line / 2,
-                abs_tol=0.01,
+                abs_tol=0.001,
             )
         ),
         None,
     )
 
 
-def __get_open_close_positions(
+def __get_open_close_positions_in_wells(
     direction: Direction,
-    alignment: Alignment,
     geometry: Geometry,
     start_step: float,
     line_configurations: LineConfiguration,
 ):
     sign = 1 if direction == Direction.forward else -1
-    reference = find_alignment_coordinates(geometry, alignment)
     open_position = (
-        reference.x
-        + (start_step) * geometry.inter_well_spacing_mm
-        - sign * line_configurations.open_offset
+        start_step
+        - sign
+        * line_configurations.open_offset
+        * geometry.x_inter_nozzle_spacing_wells_in_line
     )
     close_position = (
-        reference.x
-        + (start_step + sign * geometry.x_inter_nozzle_spacing_wells_in_line)
-        * geometry.inter_well_spacing_mm
-        - sign * line_configurations.close_offset
+        start_step
+        + sign * geometry.x_inter_nozzle_spacing_wells_in_line
+        # * geometry.inter_well_spacing_mm
+        - sign
+        * line_configurations.close_offset
+        * geometry.x_inter_nozzle_spacing_wells_in_line
     )
     return (open_position, close_position)
 
@@ -311,15 +356,14 @@ def __find_base_row(
 
 def __add_valve_action_to_routine(
     routine: valves.Routine,
-    alignment: Alignment,
     direction: Direction,
     geometry: Geometry,
     step: float,
     lineConfiguration: LineConfiguration,
     valve_identifier: valves.State.ValveIdentifier,
 ):
-    open_position, close_position = __get_open_close_positions(
-        direction, alignment, geometry, step, lineConfiguration
+    open_position, close_position = __get_open_close_positions_in_wells(
+        direction, geometry, step, lineConfiguration
     )
 
     for position in [open_position, close_position]:
@@ -332,7 +376,7 @@ def __add_valve_action_to_routine(
             (
                 i
                 for i, item in enumerate(routine.positionThresholdToStateMapping)
-                if isclose(item.positionThreshold, position, abs_tol=0.01)
+                if isclose(item.positionThreshold, position, abs_tol=0.001)
             ),
             None,
         )
