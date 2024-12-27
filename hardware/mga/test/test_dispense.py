@@ -464,7 +464,11 @@ class TestCreateRoutine(unittest.TestCase):
             line_configurations=line_configurations,
         )
         routine = project_routine_to_axes(
-            routine, geometry, axis=Axis.x, is_forward_along_columns=True
+            routine,
+            geometry,
+            axis=Axis.x,
+            are_rows_ascending=True,
+            are_columns_ascending=True,
         )
 
         thresholds = [
@@ -507,7 +511,11 @@ class TestCreateRoutine(unittest.TestCase):
             line_configurations=line_configurations,
         )
         routine = project_routine_to_axes(
-            routine, geometry, axis=Axis.x, is_forward_along_columns=True
+            routine,
+            geometry,
+            axis=Axis.x,
+            are_rows_ascending=True,
+            are_columns_ascending=True,
         )
 
         thresholds = [
@@ -521,6 +529,7 @@ class TestCreateRoutine(unittest.TestCase):
         self.assertAlmostEqual(
             routine.positionThresholdToStateMapping[-1].positionThreshold, 435.5, 3
         )
+
     def test_project_routine_foward_in_ascending_x(self):
         geometry = DefaultGeometry
         geometry.reference.position = Coordinate(200, 400)
@@ -536,7 +545,11 @@ class TestCreateRoutine(unittest.TestCase):
             ],
         )
         routine = project_routine_to_axes(
-            abstract_routine, geometry, axis=Axis.x, is_forward_along_columns=True
+            abstract_routine,
+            geometry,
+            axis=Axis.x,
+            are_rows_ascending=True,
+            are_columns_ascending=True,
         )
 
         self.assertEqual(routine.direction, Direction.forward)
@@ -563,7 +576,11 @@ class TestCreateRoutine(unittest.TestCase):
             ],
         )
         routine = project_routine_to_axes(
-            abstract_routine, geometry, axis=Axis.x, is_forward_along_columns=False
+            abstract_routine,
+            geometry,
+            axis=Axis.x,
+            are_rows_ascending=True,
+            are_columns_ascending=False,
         )
 
         self.assertEqual(routine.direction, Direction.backward)
@@ -590,7 +607,11 @@ class TestCreateRoutine(unittest.TestCase):
             ],
         )
         routine = project_routine_to_axes(
-            abstract_routine, geometry, axis=Axis.y, is_forward_along_columns=False
+            abstract_routine,
+            geometry,
+            axis=Axis.y,
+            are_rows_ascending=True,
+            are_columns_ascending=False,
         )
 
         self.assertEqual(routine.direction, Direction.backward)
@@ -617,7 +638,11 @@ class TestCreateRoutine(unittest.TestCase):
             ],
         )
         routine = project_routine_to_axes(
-            abstract_routine, geometry, axis=Axis.y, is_forward_along_columns=False
+            abstract_routine,
+            geometry,
+            axis=Axis.y,
+            are_rows_ascending=True,
+            are_columns_ascending=False,
         )
 
         self.assertEqual(routine.direction, Direction.forward)

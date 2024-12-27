@@ -138,3 +138,6 @@ DefaultGantryParameters = GantryParameters(
 )
 
 MovementMargin = Coordinate(0.5, 0.0)
+
+PumpMaxVolume = 5000.0  # µl
+PumpSlack = 50.0  # µl

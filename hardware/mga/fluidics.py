@@ -2,6 +2,7 @@ from hardware.mga.types import PumpIndex, Routine, LineIndex, Volume
 
 PumpRanges = dict[PumpIndex, tuple[float, float]]
 
+PumpStartMargin = 0.2
 
 def get_pump_start_stop_positions(
     routine: Routine,
@@ -49,11 +50,11 @@ def get_pump_start_stop_positions(
 
 
 def estimate_volume_usage(
-    pump_ranges: PumpRanges, pump_speeds: dict[PumpIndex, float], gantry_x_movement_speed
+    pump_ranges: PumpRanges, pump_speeds: dict[PumpIndex, float], gantry_dispense_movement_speed
 ) -> dict[PumpIndex, Volume]:
     volumeUsage = dict[PumpIndex, Volume]()
     for pumpIndex, (start, stop) in pump_ranges.items():
         volumeUsage[pumpIndex] = Volume(
-            abs(stop - start) / gantry_x_movement_speed * pump_speeds[pumpIndex]
+            abs(stop - start) / gantry_dispense_movement_speed * pump_speeds[pumpIndex]
         )
     return volumeUsage

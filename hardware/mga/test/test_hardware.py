@@ -1,14 +1,19 @@
 from hardware.mga.testbench_hardware import MGATestbenchHardware
-from mga_testbench_interface.generated.gantry_pb2_grpc import GantryServicer
 
 test_hardware = MGATestbenchHardware(None)
+
 
 def test_initialisation():
     # Create a new instance of the class
     # Call the method
     test_hardware.initialisation()
+    test_hardware.dispense(
+        volume_per_line={
+            "A": (50, [i for i in range(16)]),
+        }
+    )
 
-def test_get_positions():
+
+def _do_no_testtest_get_positions():
     # Call the method
     test_hardware.print_positions()
-

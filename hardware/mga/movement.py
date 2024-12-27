@@ -1,9 +1,16 @@
-from hardware.mga.configuration import Geometry
+from hardware.mga.configuration import Geometry, Axis
 from hardware.mga.types import Coordinate, Alignment, Routine
 
+DispenseMovementMargin = Coordinate(0, 0.8)
 
 def get_movement_range_coordinates(
-    geometry: Geometry, alignment: Alignment, routine: Routine, margin: Coordinate
+    geometry: Geometry,
+    alignment: Alignment,
+    routine: Routine,
+    margin: Coordinate,
+    movement_axis: Axis,
+    are_rows_ascending: bool,
+    are_columns_ascending: bool,
 ) -> tuple[Coordinate, Coordinate] | None:
     """
     Get the coordinates of the start and end of a movement for a routine
@@ -13,20 +20,37 @@ def get_movement_range_coordinates(
         return None
 
     sign = 1 if routine.direction == routine.Direction.forward else -1
-    start_x = (
-        routine.positionThresholdToStateMapping[0].positionThreshold - sign * margin.x
-    )
-    end_x = (
-        routine.positionThresholdToStateMapping[-1].positionThreshold + sign * margin.x
-    )
-    y = find_alignment_coordinates(geometry, alignment).y
 
-    return Coordinate(start_x, y), Coordinate(end_x, y)
+    margin_ = margin.x if movement_axis == Axis.x else margin.y
+
+    start = (
+        routine.positionThresholdToStateMapping[0].positionThreshold - sign * margin_
+    )
+    end = routine.positionThresholdToStateMapping[-1].positionThreshold + sign * margin_
+    alignment_coordinates = find_alignment_coordinates(
+        geometry,
+        alignment,
+        movement_axis,
+        are_rows_ascending=are_rows_ascending,
+        are_columns_ascending=are_columns_ascending,
+    )
+
+    if movement_axis == Axis.x:
+        return Coordinate(start, alignment_coordinates.y), Coordinate(
+            end, alignment_coordinates.y
+        )
+
+    return Coordinate(alignment_coordinates.x, start), Coordinate(
+        alignment_coordinates.x, end
+    )
 
 
 def find_alignment_coordinates(
     geometry: Geometry,
     alignment: Alignment,
+    movement_axis: Axis,
+    are_rows_ascending: bool,
+    are_columns_ascending: bool,
 ):
     reference_manifold_index = (
         geometry.reference.line_index // geometry.number_of_lines_in_manifold
@@ -41,18 +65,23 @@ def find_alignment_coordinates(
     )
     alignment_line_index = alignment.line_index % geometry.number_of_lines_in_manifold
 
-    return Coordinate(
-        x=geometry.reference.position.x
-        + (
+    parallel_sign = 1 if are_columns_ascending else -1
+    parallel_offset = (
+        parallel_sign
+        * (
             (alignment_line_index - reference_line_index)
             * geometry.inter_line_spacing_wells
             - geometry.reference.well.column
             + (alignment.nozzle_index - geometry.reference.nozzle_index)
             * geometry.x_inter_nozzle_spacing_wells_in_line
         )
-        * geometry.inter_well_spacing_mm,
-        y=geometry.reference.position.y
-        + (
+        * geometry.inter_well_spacing_mm
+    )
+
+    perpendicular_sign = 1 if are_rows_ascending else -1
+    perpendicular_offset = (
+        perpendicular_sign
+        * (
             (alignment.row - geometry.reference.well.row)
             + (
                 alignment.nozzle_index
@@ -61,14 +90,22 @@ def find_alignment_coordinates(
             )
             * geometry.y_inter_nozzle_spacing_wells_in_line
         )
-        * geometry.inter_well_spacing_mm,
+        * geometry.inter_well_spacing_mm
+    )
+
+    x_offset = parallel_offset if movement_axis == Axis.x else perpendicular_offset
+    y_offset = perpendicular_offset if movement_axis == Axis.x else parallel_offset
+
+    return Coordinate(
+        x=geometry.reference.position.x + x_offset,
+        y=geometry.reference.position.y + y_offset,
     )
 
 
-def get_gantry_x_movement_speed(
-    dispense_volume: float, pump_speed: float, inter_nozzle_x_distance: float
+def get_gantry_dispense_movement_speed(
+    dispense_volume: float, pump_speed: float, inter_nozzle_in_movement_distance: float
 ):
     """
-    Get the gantry x movement speed
+    Get the gantry dispense movement speed
     """
-    return inter_nozzle_x_distance / (dispense_volume / pump_speed)
+    return inter_nozzle_in_movement_distance / (dispense_volume / pump_speed)

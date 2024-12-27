@@ -15,6 +15,7 @@ from hardware.mga.types import (
 )
 from hardware.mga.movement import find_alignment_coordinates
 
+# in reference to the plate (forward = towards the last row)
 DefaultDispenseTrips = [
     (Alignment(line_index=0, nozzle_index=3, row=0), Direction.forward),
     (Alignment(line_index=0, nozzle_index=3, row=1), Direction.backward),
@@ -215,18 +216,17 @@ def project_routine_to_axes(
     abstract_routine: Routine,
     geometry: Geometry,
     axis: Axis,
-    is_forward_along_columns: int,
+    are_rows_ascending: bool,
+    are_columns_ascending: bool,
 ):
     routine = Routine()
 
-    opposite = (
-        lambda direction: Direction.forward
-        if direction == Direction.backward
-        else Direction.backward
-    )
+    def opposite(direction: Direction):
+        return Direction.forward if direction == Direction.backward else Direction.backward
+    
     routine.direction = (
         abstract_routine.direction
-        if is_forward_along_columns
+        if are_columns_ascending
         else opposite(abstract_routine.direction)
     )
 
@@ -235,11 +235,17 @@ def project_routine_to_axes(
         nozzle_index=3,
         row=6,  # nozzle 1.1 at column 0
     )
-    reference_coordinates = find_alignment_coordinates(geometry, alignment)
+    reference_coordinates = find_alignment_coordinates(
+        geometry,
+        alignment,
+        axis,
+        are_rows_ascending=are_rows_ascending,
+        are_columns_ascending=are_columns_ascending,
+    )
     reference_in_axis = (
         reference_coordinates.x if axis == Axis.x else reference_coordinates.y
     )
-    sign = 1 if is_forward_along_columns else -1
+    sign = 1 if are_columns_ascending else -1
 
     for item in abstract_routine.positionThresholdToStateMapping:
         routine.positionThresholdToStateMapping.append(
