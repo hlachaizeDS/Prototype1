@@ -1,6 +1,6 @@
 import datetime
 
-from hardware.dnascript.proto_hardware import *
+from cycles import *
 from PSPs import *
 import sys
 

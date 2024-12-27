@@ -4,7 +4,7 @@ from tkinter import *
 from serial import *
 from time import sleep
 from hardware.common.Vacuum import *
-from cycles import *
+# from cycles import *
 
 # from thermalCamera import *
 from .DispenseUnit_Arduino import *
@@ -27,10 +27,8 @@ Y_step = 9200
 
 
 class ProtoHardware(Frame):
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, mock_components=False, *args, **kwargs):
         self.parent = parent
-
-        mockComponents = True
 
         self.positioning_motors_flag = 1
         self.vacuumController = 0
@@ -40,23 +38,22 @@ class ProtoHardware(Frame):
         self.pumps = 1
 
         if self.positioning_motors_flag:
-            if mockComponents:
+            if mock_components:
                 self.positioning_motors = MockPositioningMotors(self)
             else:
                 self.positioning_motors = PositioningMotors(self)
 
         if self.pumps:
-            if mockComponents:
+            if mock_components:
                 self.dispenseBlock = MockDispenseBlock(self)
             else:
                 self.dispenseBlock = DispenseBlock_USB(self)
 
         if self.arduino:
-            if mockComponents:
+            if mock_components:
                 self.arduinoControl = MockArduinoControl(self)
             else:
                 self.arduinoControl = ArduinoControl(self)
-
 
             self.arduinoControl.close_vac()
             self.arduinoControl.stopShaking()

@@ -1,13 +1,20 @@
 # On importe Tkinter
 import threading
 from tkinter import *
-from hardware.dnascript.proto_hardware import *
+from hardware.dnascript.proto_hardware import ProtoHardware
+from hardware.mga.testbench_hardware import MGATestbenchHardware
 from action import actionButton_Callback
+
 # from hardware.common.Optris import *
 from hardware.common.Thermal import ThermalImageThread
 from PIL import Image, ImageTk
 from matplotlib import pyplot as plt
 import numpy as np
+
+# Hardware = ProtoHardware
+Hardware = MGATestbenchHardware
+
+mock_components = True
 
 
 class MainFrameTab1(Frame):
@@ -16,7 +23,7 @@ class MainFrameTab1(Frame):
         self.parent = parent
 
         """Hardware(motors,Leds,...)"""
-        self.hardware = ProtoHardware(self)
+        self.hardware = Hardware(self, mock_components=mock_components)
 
         # Title
         self.titleLabel = Label(self, text="OligoPrint Soft", justify="center")

@@ -1,4 +1,4 @@
-from hardware.common.arduinoControl import ArduinoControl
+from hardware.common.arduinoControl import ArduinoControl, MockArduinoControl
 from tkinter import Frame
 import grpc
 import mga_testbench_interface.generated.gantry_pb2_grpc as gantry_grpc
@@ -41,9 +41,15 @@ from hardware.mga.fluidics import (
 
 
 class MGATestbenchHardware(Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, mock_components=True):
         self.parent = parent
-        self.arduinoControl = None  # ArduinoControl()
+
+        self.thermalCam = 0  # Will impact rightFrame in guitab1
+
+        if mock_components:
+            self.arduinoControl = MockArduinoControl(self)
+        else:
+            self.arduinoControl = ArduinoControl(self)
 
         self.channel = grpc.insecure_channel("localhost:7050")
         self.gantry = gantry_grpc.GantryStub(self.channel)
@@ -51,7 +57,7 @@ class MGATestbenchHardware(Frame):
         self.pumps = pumps_grpc.PumpsStub(self.channel)
 
     def initialisation(self):
-        # self.parent.directCommand.initialisationLed.configure(bg="red")
+        self.parent.directCommand.initialisationLed.configure(bg="red")
         if self.arduinoControl:
             self.arduinoControl.close_vac()
             self.arduinoControl.stopShaking()
@@ -82,7 +88,7 @@ class MGATestbenchHardware(Frame):
         self.pumps.home(
             pumps.PumpIndexes(pumps=[pumps.PumpIndex(value=i + 1) for i in range(11)])
         )
-        # self.parent.directCommand.initialisationLed.configure(bg="green")
+        self.parent.directCommand.initialisationLed.configure(bg="green")
 
     def print_positions(self):
         position: gantry.Position = self.gantry.getPosition(gantry._())
@@ -101,7 +107,7 @@ class MGATestbenchHardware(Frame):
         else:
             print("Arduino control not initialized")
 
-    def dispense(self, volume_per_line: ReagentVolumeWells, max_vol=None):
+    def dispense(self, volume_per_line: ReagentVolumeWells):
         print("Dispensing ", volume_per_line, "uL")
 
         dispense_plan = create_dispense_plan(
@@ -188,11 +194,6 @@ class MGATestbenchHardware(Frame):
             self.valves.stopRoutine(valves._())
         pass
 
-    def goToWell(self, element, well, quadrant):
-        print("Going to ", element, well, quadrant)
-        self.gantry.moveTo()
-        pass
-
     def move_to(
         self,
         coordinate: Coordinate,
@@ -264,3 +265,10 @@ class MGATestbenchHardware(Frame):
                 pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
             )
         )
+
+    def goToWell(self, element, well, quadrant):
+        print("Going to ", element, well, quadrant)
+        if element == "thermalCamera":
+            coordinate = gantry.Position(x=99, y=99)
+            self.gantry.moveTo(gantry.Position(x=coordinate.x, y=coordinate.y))
+        pass
