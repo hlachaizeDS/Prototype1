@@ -29,8 +29,9 @@ def Synthesis_TwoEnz(hardware,is384):
     TT.snapshot_in_cycle(thermalImages, folder_path, 1, 'BeforeAnything')
 
     #Lines
-    uneven_enzyme = "M"
-    even_enzyme = "N"
+    # uneven_enzyme = "M"
+    # even_enzyme = "N"
+    EB = "EB"
     A = "A"
     C = "C"
     G = "G"
@@ -78,16 +79,19 @@ def Synthesis_TwoEnz(hardware,is384):
         updateCycleLabel(hardware,cycle,"Premix")
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'BefPremix')
 
-        multi_dispense_in_wells(hardware, {uneven_enzyme: [EBVolume, [well for well in activeWells if well % 2 == 1]],
-                                           even_enzyme: [EBVolume, [well for well in activeWells if well % 2 == 0]],
-                                           A: [NucsVolume, A_wells],
-                                           C: [NucsVolume, C_wells],
-                                           G: [NucsVolume, G_wells],
-                                           T: [NucsVolume, T_wells],
-                                           O: [NucsVolume, O_wells],
-                                           P: [NucsVolume, P_wells],
-                                           Q: [NucsVolume, Q_wells]
-                                           }, is384)
+        multi_dispense_in_wells(hardware, 
+                                {
+                                        # uneven_enzyme: [EBVolume, [well for well in activeWells if well % 2 == 1]],
+                                        # even_enzyme: [EBVolume, [well for well in activeWells if well % 2 == 0]],
+                                        EB: [EBVolume, activeWells],
+                                        A: [NucsVolume, A_wells],
+                                        C: [NucsVolume, C_wells],
+                                        G: [NucsVolume, G_wells],
+                                        T: [NucsVolume, T_wells],
+                                        O: [NucsVolume, O_wells],
+                                        P: [NucsVolume, P_wells],
+                                        Q: [NucsVolume, Q_wells]
+                                        }, is384)
 
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixDisp')
         waitAndStir(hardware, Elong_time)

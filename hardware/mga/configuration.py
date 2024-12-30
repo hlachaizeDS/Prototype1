@@ -26,6 +26,19 @@ FluidicLineIndexToPumpIndexMapping: dict[LineIndex, PumpIndex] = {
     11: 0,
 }
 
+    # uneven_enzyme = "M"
+    # even_enzyme = "N"
+    # A = "A"
+    # C = "C"
+    # G = "G"
+    # T = "T"
+    # O = "O"
+    # P = "P"
+    # Q = "Q"
+    # DB = "DB"
+    # Wash1 = "Buff1"
+    # Wash2 = "BB"
+
 ReagentToLineMapping = dict[str, LineIndex | dict[Direction, LineIndex]]
 ReagentToFluidicLineIndexMapping: ReagentToLineMapping = {
     "EB": {
@@ -36,12 +49,12 @@ ReagentToFluidicLineIndexMapping: ReagentToLineMapping = {
     "C": 2,
     "G": 3,
     "T": 4,
-    "M": 6,
-    "N": 7,
+    "Buff1": 6,
+    "DB": 7,
     "O": 8,
     "P": 9,
     "Q": 10,
-    "R": 11,
+    "BB": 11,
 }
 
 
