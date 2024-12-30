@@ -654,6 +654,54 @@ class TestCreateRoutine(unittest.TestCase):
         )
         self.assertEqual(create_geogram(routine), create_geogram(abstract_routine))
 
+    def test_project_routine_real_data(self):
+        wells: list[Well] = [
+            Well(row=row, column=column) for row in range(0, 16) for column in range(1)
+        ]
+
+        dispense_plan = {0: wells}
+
+        line_configurations = {0: LineConfiguration(open_offset=0, close_offset=0)}
+
+        alignment = Alignment(line_index=0, nozzle_index=3, row=6)
+        direction = Direction.forward
+
+        geometry = DefaultGeometry
+        geometry.reference.position = Coordinate(127.67, 162.96)
+        geometry.reference.line_index = 0
+        geometry.reference.nozzle_index = 3
+        geometry.reference.well = Well(row=6, column=0)
+
+        routine = create_abstract_routine(
+            dispense_plan=dispense_plan,
+            alignment=alignment,
+            geometry=geometry,
+            direction=direction,
+            line_configurations=line_configurations,
+        )
+        routine = project_routine_to_axes(
+            routine,
+            geometry,
+            axis=Axis.y,
+            are_rows_ascending=False,
+            are_columns_ascending=False,
+        )
+
+        thresholds = [
+            item.positionThreshold for item in routine.positionThresholdToStateMapping
+        ]
+
+        self.assertEqual(routine.direction, Direction.backward)
+
+        self.assertEqual(thresholds, sorted(thresholds, reverse=True))
+
+        self.assertAlmostEqual(
+            routine.positionThresholdToStateMapping[0].positionThreshold, 163.46, 3
+        )
+        self.assertAlmostEqual(
+            routine.positionThresholdToStateMapping[-1].positionThreshold, 159.46, 3
+        )
+
 
 # utils
 

@@ -1,6 +1,6 @@
 from hardware.mga.testbench_hardware import MGATestbenchHardware
 
-test_hardware = MGATestbenchHardware(None)
+test_hardware = MGATestbenchHardware(None, mock_components=True)
 
 
 def test_initialisation():
@@ -9,7 +9,7 @@ def test_initialisation():
     test_hardware.initialisation()
     test_hardware.dispense(
         volume_per_line={
-            "A": (50, [i for i in range(16)]),
+            "EB": (50, [i for i in range(16)]),
         }
     )
 

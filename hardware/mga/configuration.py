@@ -26,18 +26,18 @@ FluidicLineIndexToPumpIndexMapping: dict[LineIndex, PumpIndex] = {
     11: 0,
 }
 
-    # uneven_enzyme = "M"
-    # even_enzyme = "N"
-    # A = "A"
-    # C = "C"
-    # G = "G"
-    # T = "T"
-    # O = "O"
-    # P = "P"
-    # Q = "Q"
-    # DB = "DB"
-    # Wash1 = "Buff1"
-    # Wash2 = "BB"
+# uneven_enzyme = "M"
+# even_enzyme = "N"
+# A = "A"
+# C = "C"
+# G = "G"
+# T = "T"
+# O = "O"
+# P = "P"
+# Q = "Q"
+# DB = "DB"
+# Wash1 = "Buff1"
+# Wash2 = "BB"
 
 ReagentToLineMapping = dict[str, LineIndex | dict[Direction, LineIndex]]
 ReagentToFluidicLineIndexMapping: ReagentToLineMapping = {
@@ -83,7 +83,7 @@ class Geometry:
 
 DefaultGeometry = Geometry(
     reference=Reference(
-        position=Coordinate(0, 0),
+        position=Coordinate(127.66, 162.96),
         line_index=0,
         nozzle_index=3,
         well=Well(row=6, column=0),

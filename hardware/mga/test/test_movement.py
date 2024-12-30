@@ -10,6 +10,24 @@ from hardware.mga.types import Well
 
 
 class TestMovement(unittest.TestCase):
+    def test_find_alignment_coordinates_reference_self(self):
+        geometry = DefaultGeometry
+        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.position = Coordinate(10.0, 100.0)
+        geometry.reference.line_index = 0
+        geometry.reference.nozzle_index = 3
+
+        alignment = Alignment(line_index=0, nozzle_index=3, row=6)
+        coordinate = find_alignment_coordinates(
+            geometry,
+            alignment,
+            movement_axis=Axis.y,
+            are_rows_ascending=False,
+            are_columns_ascending=False,
+        )
+
+        self.assertEqual(coordinate, Coordinate(10.0, 100.0))
+
     def test_find_alignment_coordinates_reference(self):
         geometry = DefaultGeometry
         geometry.reference.well = Well(row=6, column=0)

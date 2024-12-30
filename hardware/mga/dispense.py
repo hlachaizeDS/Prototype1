@@ -17,12 +17,12 @@ from hardware.mga.movement import find_alignment_coordinates
 
 # in reference to the plate (forward = towards the last row)
 DefaultDispenseTrips = [
-    (Alignment(line_index=0, nozzle_index=3, row=0), Direction.forward),
-    (Alignment(line_index=0, nozzle_index=3, row=1), Direction.backward),
-    (Alignment(line_index=0, nozzle_index=3, row=8), Direction.forward),
-    (Alignment(line_index=0, nozzle_index=3, row=9), Direction.backward),
-    (Alignment(line_index=6, nozzle_index=3, row=8), Direction.forward),
-    (Alignment(line_index=6, nozzle_index=3, row=9), Direction.backward),
+    (Alignment(line_index=0, nozzle_index=3, row=6), Direction.forward),
+    (Alignment(line_index=0, nozzle_index=3, row=7), Direction.backward),
+    (Alignment(line_index=6, nozzle_index=3, row=6), Direction.forward),
+    (Alignment(line_index=6, nozzle_index=3, row=7), Direction.backward),
+    (Alignment(line_index=6, nozzle_index=3, row=14), Direction.forward),
+    (Alignment(line_index=6, nozzle_index=3, row=15), Direction.backward),
 ]
 
 

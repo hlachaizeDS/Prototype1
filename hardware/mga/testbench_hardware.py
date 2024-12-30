@@ -57,7 +57,8 @@ class MGATestbenchHardware(Frame):
         self.pumps = pumps_grpc.PumpsStub(self.channel)
 
     def initialisation(self):
-        self.parent.directCommand.initialisationLed.configure(bg="red")
+        if self.parent:
+            self.parent.directCommand.initialisationLed.configure(bg="red")
         if self.arduinoControl:
             self.arduinoControl.close_vac()
             self.arduinoControl.stopShaking()
@@ -88,7 +89,8 @@ class MGATestbenchHardware(Frame):
         self.pumps.home(
             pumps.PumpIndexes(pumps=[pumps.PumpIndex(value=i + 1) for i in range(11)])
         )
-        self.parent.directCommand.initialisationLed.configure(bg="green")
+        if self.parent:
+            self.parent.directCommand.initialisationLed.configure(bg="green")
 
     def print_positions(self):
         position: gantry.Position = self.gantry.getPosition(gantry._())
@@ -117,7 +119,7 @@ class MGATestbenchHardware(Frame):
         volume = [volume for reagent, (volume, _) in volume_per_line.items()][0]
 
         movement_axis = Axis.y
-        are_rows_ascending = False
+        are_rows_ascending = True
         are_columns_ascending = False
 
         for alignment, direction in DefaultDispenseTrips:
@@ -146,6 +148,7 @@ class MGATestbenchHardware(Frame):
                 are_rows_ascending=are_rows_ascending,
                 are_columns_ascending=are_columns_ascending,
             )
+            print("Range: ", range)
             if range is None:
                 continue
 
