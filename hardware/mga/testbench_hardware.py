@@ -8,6 +8,7 @@ import mga_testbench_interface.generated.valves_pb2 as valves
 import mga_testbench_interface.generated.pumps_pb2_grpc as pumps_grpc
 import mga_testbench_interface.generated.pumps_pb2 as pumps
 import time
+from hardware.mga.test.utils import create_geogram
 
 from hardware.mga.configuration import (
     DefaultGeometry,
@@ -54,8 +55,8 @@ class MGATestbenchHardware(Frame):
 
         self.channel = (
             grpc.secure_channel("localhost:7051", grpc.local_channel_credentials())
-            if not self.mock_components
-            else grpc.insecure_channel("localhost:7050")
+            # if not self.mock_components
+            # else grpc.insecure_channel("localhost:7050")
         )
         self.gantry = gantry_grpc.GantryStub(self.channel)
         self.valves = valves_grpc.ValvesStub(self.channel)
@@ -74,9 +75,10 @@ class MGATestbenchHardware(Frame):
         self.pumps.home(
             pumps.PumpIndexes(pumps=[pumps.PumpIndex(value=i + 1) for i in range(11)])
         )
-        if not self.mock_components:
-            # wait for home to finish
-            time.sleep(10)
+        self._wait_for_pump_moves_to_finish([i for i in range(11)])
+        # if not self.mock_components:
+        #     # wait for home to finish
+        time.sleep(10)
         if self.parent:
             self.parent.directCommand.initialisationLed.configure(bg="green")
 
@@ -139,6 +141,7 @@ class MGATestbenchHardware(Frame):
             print("Range: ", range)
             if range is None:
                 continue
+            print(create_geogram(routine))
 
             start, end = range
             pump_ranges, line_indexes = get_pump_start_stop_positions(
@@ -198,19 +201,18 @@ class MGATestbenchHardware(Frame):
                 self._wait_for_pump_moves_to_finish(pumps_requiring_refill)
                 self.set_aspiration_valves(line_indexes, valves.State.ValveState.closed)
 
+            pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
+
             volume_margin = 0.0
             end_volume_marks = {
                 pump_index: max(
-                    (
-                        PumpMaxVolume
-                        if pump_index in pumps_requiring_refill
-                        else pump_remaining_volumes[pump_index]
-                    )
+                    pump_remaining_volumes[pump_index]
                     - (volume * (1 + volume_margin)),
                     0.0,
                 )
                 for pump_index, volume in volume_usage.items()
             }
+            print("move pumps to marks", end_volume_marks)
 
             # dispense
             self.valves.startRoutine(valves._())

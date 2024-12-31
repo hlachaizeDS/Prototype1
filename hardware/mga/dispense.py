@@ -1,6 +1,7 @@
 import mga_testbench_interface.generated.valves_pb2 as valves
 import numpy as np
 from hardware.mga.configuration import Geometry, ReagentToLineMapping, Reference, Axis
+from hardware.mga.test.utils import print_wells
 from math import isclose
 from hardware.mga.types import (
     Alignment,
@@ -19,8 +20,8 @@ from hardware.mga.movement import find_alignment_coordinates
 DefaultDispenseTrips = [
     (Alignment(line_index=0, nozzle_index=3, row=6), Direction.forward),
     (Alignment(line_index=0, nozzle_index=3, row=7), Direction.backward),
-    (Alignment(line_index=6, nozzle_index=3, row=6), Direction.forward),
-    (Alignment(line_index=6, nozzle_index=3, row=7), Direction.backward),
+    (Alignment(line_index=0, nozzle_index=3, row=14), Direction.forward),
+    (Alignment(line_index=0, nozzle_index=3, row=15), Direction.backward),
     (Alignment(line_index=6, nozzle_index=3, row=14), Direction.forward),
     (Alignment(line_index=6, nozzle_index=3, row=15), Direction.backward),
 ]
@@ -58,7 +59,9 @@ def create_dispense_plan(
         else:
             dispense_plan[lineIndex] = wells
 
-        # print(dispense_plan)
+        for line, wells in dispense_plan.items():
+            print(line)
+            print_wells(wells)
     return dispense_plan
 
 
