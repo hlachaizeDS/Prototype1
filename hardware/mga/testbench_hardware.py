@@ -40,9 +40,6 @@ from hardware.mga.fluidics import (
     PumpStartMargin,
 )
 
-SECURE_CHANNEL = False
-
-
 class MGATestbenchHardware(Frame):
     def __init__(self, parent, mock_components=True):
         self.mock_components = mock_components
@@ -57,7 +54,7 @@ class MGATestbenchHardware(Frame):
 
         self.channel = (
             grpc.secure_channel("localhost:7051", grpc.local_channel_credentials())
-            if SECURE_CHANNEL
+            if not self.mock_components
             else grpc.insecure_channel("localhost:7050")
         )
         self.gantry = gantry_grpc.GantryStub(self.channel)
@@ -340,7 +337,7 @@ class MGATestbenchHardware(Frame):
     def goToWell(self, element, well, quadrant):
         print("Going to ", element, well, quadrant)
         if element == "thermalCamera":
-            coordinate = gantry.Position(x=99, y=99)
+            coordinate = gantry.Position(x=0, y=0)
             self.gantry.moveTo(gantry.Position(x=coordinate.x, y=coordinate.y))
         pass
 
