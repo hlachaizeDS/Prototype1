@@ -175,6 +175,7 @@ class MGATestbenchHardware(Frame):
             self.valves.setRoutine(routine)
             self.refill_pumps(pump_indexes)
             self.move_to(start)
+            self._wait_for_pump_moves_to_finish(pump_indexes)
 
             # dispense
             self.valves.startRoutine(valves._())
@@ -236,7 +237,8 @@ class MGATestbenchHardware(Frame):
             if not status.isBusy:
                 break
 
-    def refill_pumps(self, pumps_: list[PumpIndex]):
+    def refill_pumps(self, lines: list[LineIndex]):
+        pumps_ = [FluidicLineIndexToPumpIndexMapping[lineIndex] for lineIndex in lines]
         print("Refilling pumps ", pumps_)
 
         def get_pump_moves(volume: float):
@@ -257,12 +259,12 @@ class MGATestbenchHardware(Frame):
             return -1
 
         fluidic_lines = [get_fluidic_line(pumpIndex) + 1 for pumpIndex in pumps_]
-        self.set_aspiration_valves(fluidic_lines, valves.State.ValveState.open)
+        # self.set_aspiration_valves(fluidic_lines, valves.State.ValveState.open)
         self.pumps.moveTo(get_pump_moves(PumpMaxVolume + PumpSlack))
-        self._wait_for_pump_moves_to_finish(pumps_)
-        self.pumps.moveTo(get_pump_moves(PumpMaxVolume))
-        self._wait_for_pump_moves_to_finish(pumps_)
-        self.set_aspiration_valves(fluidic_lines, valves.State.ValveState.open)
+        # self._wait_for_pump_moves_to_finish(pumps_)
+        # self.pumps.moveTo(get_pump_moves(PumpMaxVolume))
+        # self._wait_for_pump_moves_to_finish(pumps_)
+        # self.set_aspiration_valves(fluidic_lines, valves.State.ValveState.open)
 
     def _wait_for_pump_moves_to_finish(self, pump_indexes: list[PumpIndex]):
         while True:

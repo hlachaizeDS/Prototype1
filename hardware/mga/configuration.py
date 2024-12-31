@@ -12,18 +12,18 @@ from hardware.mga.types import (
 
 # mappings
 FluidicLineIndexToPumpIndexMapping: dict[LineIndex, PumpIndex] = {
-    0: 0,
-    1: 1,
-    2: 2,
-    3: 3,
-    4: 4,
-    5: 5,
-    6: 6,
-    7: 7,
-    8: 8,
-    9: 9,
-    10: 10,
-    11: 0,
+    0: 6,
+    1: 7,
+    2: 8,
+    3: 9,
+    4: 10,
+    5: 10,
+    6: 0,
+    7: 1,
+    8: 2,
+    9: 3,
+    10: 4,
+    11: 5,
 }
 
 # uneven_enzyme = "M"
