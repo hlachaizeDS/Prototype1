@@ -9,7 +9,7 @@ def test_initialisation():
     test_hardware.initialisation()
     test_hardware.dispense(
         volume_per_line={
-            "A": (50, [i for i in range(1, 384+1)]),
+            "A": (12, [i for i in range(1, 384 + 1)]),
         }
     )
 

@@ -9,6 +9,10 @@ from hardware.mga.types import (
     LineConfiguration,
 )
 
+###########################################################
+############ IMPORTANT: ALL INDEXES START AT 0 ############
+###########################################################
+
 
 # mappings
 FluidicLineIndexToPumpIndexMapping: dict[LineIndex, PumpIndex] = {
@@ -145,8 +149,8 @@ class GantryParameters:
 DefaultGantryParameters = GantryParameters(
     axes={
         # speed is determined by pump speed and valve opening time
-        Axis.x: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=None),
-        Axis.y: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=40.0),
+        Axis.x: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=100.0),
+        Axis.y: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=None),
     }
 )
 

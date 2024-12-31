@@ -33,27 +33,32 @@ from hardware.mga.movement import (
     DispenseMovementMargin,
     get_gantry_dispense_movement_speed,
 )
-from hardware.mga.types import Coordinate, PumpIndex
+from hardware.mga.types import Coordinate, PumpIndex, Volume
 from hardware.mga.fluidics import (
     estimate_volume_usage,
     get_pump_start_stop_positions,
     PumpStartMargin,
 )
 
+SECURE_CHANNEL = False
+
 
 class MGATestbenchHardware(Frame):
     def __init__(self, parent, mock_components=True):
+        self.mock_components = mock_components
         self.parent = parent
 
         self.thermalCam = 0  # Will impact rightFrame in guitab1
 
-        if mock_components:
+        if self.mock_components:
             self.arduinoControl = MockArduinoControl(self)
         else:
             self.arduinoControl = ArduinoControl(self)
 
-        self.channel = grpc.secure_channel(
-            "localhost:7051", grpc.local_channel_credentials()
+        self.channel = (
+            grpc.secure_channel("localhost:7051", grpc.local_channel_credentials())
+            if SECURE_CHANNEL
+            else grpc.insecure_channel("localhost:7050")
         )
         self.gantry = gantry_grpc.GantryStub(self.channel)
         self.valves = valves_grpc.ValvesStub(self.channel)
@@ -72,8 +77,9 @@ class MGATestbenchHardware(Frame):
         self.pumps.home(
             pumps.PumpIndexes(pumps=[pumps.PumpIndex(value=i + 1) for i in range(11)])
         )
-        # wait for home to finish
-        time.sleep(10)
+        if not self.mock_components:
+            # wait for home to finish
+            time.sleep(10)
         if self.parent:
             self.parent.directCommand.initialisationLed.configure(bg="green")
 
@@ -138,7 +144,7 @@ class MGATestbenchHardware(Frame):
                 continue
 
             start, end = range
-            pump_ranges = get_pump_start_stop_positions(
+            pump_ranges, line_indexes = get_pump_start_stop_positions(
                 routine=routine,
                 pump_start_stop_margin_mm=PumpStartMargin,
                 fluidic_line_to_pump_mapping=FluidicLineIndexToPumpIndexMapping,
@@ -152,30 +158,62 @@ class MGATestbenchHardware(Frame):
                 * DefaultGeometry.inter_well_spacing_mm,
                 pump_speed=PumpDynamicsMapping[firstPumpIndex].speed,
             )
+            print(
+                "Dispense axis speed",
+                gantry_dispense_speed,
+                "mm/s, volume",
+                volume,
+                "uL",
+            )
             volume_usage = estimate_volume_usage(
                 pump_ranges=pump_ranges,
                 gantry_dispense_movement_speed=gantry_dispense_speed,
                 pump_speeds={
-                    pumpIndex: PumpDynamicsMapping[pumpIndex].speed
-                    for pumpIndex in pump_ranges.keys()
+                    pump_index: PumpDynamicsMapping[pump_index].speed
+                    for pump_index in pump_ranges.keys()
                 },
             )
 
-            volume_margin = 0.1
-            end_volume_marks = {
-                pumpIndex: max(PumpMaxVolume - (volume * (1 + volume_margin)), 0.0)
-                for pumpIndex, volume in volume_usage.items()
-            }
-
-            pump_indexes = [pumpIndex for pumpIndex in pump_ranges.keys()]
+            pump_indexes = [pump_index for pump_index in pump_ranges.keys()]
 
             # print("Range", range)
 
             # setup
             self.valves.setRoutine(routine)
-            self.refill_pumps(pump_indexes)
             self.move_to(start)
-            self._wait_for_pump_moves_to_finish(pump_indexes)
+            self.set_gantry_parameters(
+                axis=movement_axis, gantry_dispense_speed=gantry_dispense_speed
+            )
+
+            pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
+
+            print("Volume usage: ", volume_usage)
+            print("Pump remaining volumes: ", pump_remaining_volumes)
+            pumps_requiring_refill = [
+                pump_index
+                for pump_index, volume in pump_remaining_volumes.items()
+                if pump_index in volume_usage and volume < volume_usage[pump_index]
+            ]
+            print("Pumps requiring refill: ", pumps_requiring_refill)
+            if len(pumps_requiring_refill) > 0:
+                self.set_aspiration_valves(line_indexes, valves.State.ValveState.open)
+                pump_indexes = self.refill_pumps(pumps_requiring_refill)
+                self._wait_for_pump_moves_to_finish(pumps_requiring_refill)
+                self.set_aspiration_valves(line_indexes, valves.State.ValveState.closed)
+
+            volume_margin = 0.0
+            end_volume_marks = {
+                pump_index: max(
+                    (
+                        PumpMaxVolume
+                        if pump_index in pumps_requiring_refill
+                        else pump_remaining_volumes[pump_index]
+                    )
+                    - (volume * (1 + volume_margin)),
+                    0.0,
+                )
+                for pump_index, volume in volume_usage.items()
+            }
 
             # dispense
             self.valves.startRoutine(valves._())
@@ -237,8 +275,7 @@ class MGATestbenchHardware(Frame):
             if not status.isBusy:
                 break
 
-    def refill_pumps(self, lines: list[LineIndex]):
-        pumps_ = [FluidicLineIndexToPumpIndexMapping[lineIndex] for lineIndex in lines]
+    def refill_pumps(self, pumps_):
         print("Refilling pumps ", pumps_)
 
         def get_pump_moves(volume: float):
@@ -252,19 +289,12 @@ class MGATestbenchHardware(Frame):
                 ]
             )
 
-        def get_fluidic_line(pumpIndex: PumpIndex):
-            for fluidicLine, pumpIndex_ in FluidicLineIndexToPumpIndexMapping.items():
-                if pumpIndex_ == pumpIndex:
-                    return fluidicLine
-            return -1
-
-        fluidic_lines = [get_fluidic_line(pumpIndex) + 1 for pumpIndex in pumps_]
-        # self.set_aspiration_valves(fluidic_lines, valves.State.ValveState.open)
         self.pumps.moveTo(get_pump_moves(PumpMaxVolume + PumpSlack))
-        # self._wait_for_pump_moves_to_finish(pumps_)
-        # self.pumps.moveTo(get_pump_moves(PumpMaxVolume))
-        # self._wait_for_pump_moves_to_finish(pumps_)
-        # self.set_aspiration_valves(fluidic_lines, valves.State.ValveState.open)
+        self._wait_for_pump_moves_to_finish(pumps_)
+        self.pumps.moveTo(get_pump_moves(PumpMaxVolume))
+        self._wait_for_pump_moves_to_finish(pumps_)
+        # self.set_aspiration_valves(lines, valves.State.ValveState.open)
+        return pumps_
 
     def _wait_for_pump_moves_to_finish(self, pump_indexes: list[PumpIndex]):
         while True:
@@ -294,6 +324,18 @@ class MGATestbenchHardware(Frame):
                 pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
             )
         )
+
+    def get_remaining_volumes_in_pumps(
+        self, pump_indexes: list[PumpIndex]
+    ) -> dict[PumpIndex, Volume]:
+        volume_marks = self.pumps.getVolumeMarks(
+            pumps.PumpIndexes(
+                pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
+            )
+        )
+        return {
+            PumpIndex(pump.index.value - 1): pump.value for pump in volume_marks.pumps
+        }
 
     def goToWell(self, element, well, quadrant):
         print("Going to ", element, well, quadrant)

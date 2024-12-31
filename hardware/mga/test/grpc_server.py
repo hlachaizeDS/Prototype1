@@ -53,7 +53,7 @@ class ValvesServicer(valves_pb2_grpc.ValvesServicer):
         return valves_pb2._()
 
     def setRoutine(self, request, context):
-        print("valves setRoutine called", request)
+        print("valves setRoutine called")
         return valves_pb2.ValveStatus(
             routine=valves_pb2.ValveStatus.RoutineStatus.stopped
         )
@@ -70,15 +70,21 @@ class ValvesServicer(valves_pb2_grpc.ValvesServicer):
             routine=valves_pb2.ValveStatus.RoutineStatus.stopped
         )
 
+    def setState(self, request, context):
+        print("valves setState called", request)
+        return valves_pb2.State(valves=[])
+
 
 class PumpsServicer(pumps_pb2_grpc.PumpsServicer):
     initialized = False
+    pumpMarks: list[float] = []
 
     def __init__(self):
         pass
 
     def home(self, request: pumps_pb2.PumpIndexes, context):
         print("pumps home called", request)
+        self.pumpMarks = [0 for _ in range(11)]
         self.initialized = True
         return self._statuses(isBusy=False)
 
@@ -86,8 +92,10 @@ class PumpsServicer(pumps_pb2_grpc.PumpsServicer):
         print("pumps getStatuses called", request)
         return self._statuses(isBusy=False)
 
-    def moveTo(self, request, context):
+    def moveTo(self, request: pumps_pb2.PumpMoves, context):
         print("pumps moveTo called", request)
+        for pump in request.pumps:
+            self.pumpMarks[pump.index.value - 1] = pump.volumeMark
         return self._statuses(isBusy=True)
 
     def stop(self, request, context):
@@ -105,6 +113,17 @@ class PumpsServicer(pumps_pb2_grpc.PumpsServicer):
                     errorMessage="",
                 )
                 for index in range(11)
+            ]
+        )
+
+    def getVolumeMarks(self, request, context):
+        print("pumps getVolumeMarks called", request)
+        return pumps_pb2.VolumeMarks(
+            pumps=[
+                pumps_pb2.VolumeMarks.VolumeMark(
+                    index=pumps_pb2.PumpIndex(value=index + 1), value=value
+                )
+                for index, value in enumerate(self.pumpMarks)
             ]
         )
 

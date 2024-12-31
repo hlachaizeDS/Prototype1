@@ -4,11 +4,12 @@ PumpRanges = dict[PumpIndex, tuple[float, float]]
 
 PumpStartMargin = 0.2
 
+
 def get_pump_start_stop_positions(
     routine: Routine,
     fluidic_line_to_pump_mapping: dict[LineIndex, PumpIndex],
     pump_start_stop_margin_mm: float,
-) -> PumpRanges:
+) -> tuple[PumpRanges, list[LineIndex]]:
     """
     Get the pump usage in routine
     """
@@ -21,6 +22,7 @@ def get_pump_start_stop_positions(
     last = max if direction == Routine.Direction.forward else min
     sign = 1 if direction == Routine.Direction.forward else -1
 
+    line_indexes: set[LineIndex] = set()
     for lineIndex in lineIndexes:
         for item in routine.positionThresholdToStateMapping:
             lineValves = [
@@ -31,6 +33,7 @@ def get_pump_start_stop_positions(
             if len(lineValves) == 0:
                 continue
             pumpIndex = fluidic_line_to_pump_mapping[lineIndex]
+            line_indexes.add(lineIndex)
             if pumpIndex not in pumpRanges:
                 pumpRanges[pumpIndex] = (
                     item.positionThreshold - sign * pump_start_stop_margin_mm,
@@ -46,11 +49,13 @@ def get_pump_start_stop_positions(
                         stop, item.positionThreshold + sign * pump_start_stop_margin_mm
                     ),
                 )
-    return pumpRanges
+    return pumpRanges, [lineIndex for lineIndex in line_indexes]
 
 
 def estimate_volume_usage(
-    pump_ranges: PumpRanges, pump_speeds: dict[PumpIndex, float], gantry_dispense_movement_speed
+    pump_ranges: PumpRanges,
+    pump_speeds: dict[PumpIndex, float],
+    gantry_dispense_movement_speed,
 ) -> dict[PumpIndex, Volume]:
     volumeUsage = dict[PumpIndex, Volume]()
     for pumpIndex, (start, stop) in pump_ranges.items():

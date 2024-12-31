@@ -48,7 +48,6 @@ def create_dispense_plan(
             continue
 
         wells = [Well(index=wellIndex) for wellIndex in wellIndexes]
-        print(wells)
         if isinstance(lineIndex, dict):
             for direction, index in lineIndex.items():
                 dispense_plan[index] = [
@@ -223,8 +222,10 @@ def project_routine_to_axes(
     routine = Routine()
 
     def opposite(direction: Direction):
-        return Direction.forward if direction == Direction.backward else Direction.backward
-    
+        return (
+            Direction.forward if direction == Direction.backward else Direction.backward
+        )
+
     routine.direction = (
         abstract_routine.direction
         if are_columns_ascending

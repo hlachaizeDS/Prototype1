@@ -32,7 +32,7 @@ class TestFluidics(unittest.TestCase):
         )
         fluidic_line_to_pump_mapping = {0: 5, 3: 8}
         pump_start_stop_margin_mm = 1
-        pump_positions = get_pump_start_stop_positions(
+        pump_positions, line_indexes = get_pump_start_stop_positions(
             routine, fluidic_line_to_pump_mapping, pump_start_stop_margin_mm
         )
 
@@ -45,6 +45,7 @@ class TestFluidics(unittest.TestCase):
                     8: (202.0, 209.0),
                 },
             )
+        self.assertListEqual(line_indexes, [0, 3])
 
     def test_get_movement_range_coordinates_backward(self):
         routine = Routine(
@@ -75,7 +76,7 @@ class TestFluidics(unittest.TestCase):
         )
         fluidic_line_to_pump_mapping = {2: 0, 8: 1}
         pump_start_stop_margin_mm = 1
-        pump_positions = get_pump_start_stop_positions(
+        pump_positions, line_indexes = get_pump_start_stop_positions(
             routine, fluidic_line_to_pump_mapping, pump_start_stop_margin_mm
         )
 
@@ -88,6 +89,7 @@ class TestFluidics(unittest.TestCase):
                     1: (133.0, 117.0),
                 },
             )
+        self.assertListEqual(sorted(line_indexes), [2, 8])
 
     def test_estimate_volume_usage(self):
         pump_ranges = {0: (151.0, 141.0), 1: (133.0, 118.0)}
