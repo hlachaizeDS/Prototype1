@@ -48,6 +48,7 @@ def create_dispense_plan(
             continue
 
         wells = [Well(index=wellIndex) for wellIndex in wellIndexes]
+        print(wells)
         if isinstance(lineIndex, dict):
             for direction, index in lineIndex.items():
                 dispense_plan[index] = [

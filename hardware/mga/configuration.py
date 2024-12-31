@@ -83,7 +83,7 @@ class Geometry:
 
 DefaultGeometry = Geometry(
     reference=Reference(
-        position=Coordinate(127.66, 162.96),
+        position=Coordinate(126.63, 162.99),
         line_index=0,
         nozzle_index=3,
         well=Well(row=6, column=0),
