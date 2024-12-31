@@ -19,6 +19,7 @@ from hardware.mga.configuration import (
     PumpMaxVolume,
     PumpSlack,
     DefaultGantryParameters,
+    LineIndex,
 )
 from hardware.mga.dispense import (
     create_dispense_plan,
@@ -51,7 +52,9 @@ class MGATestbenchHardware(Frame):
         else:
             self.arduinoControl = ArduinoControl(self)
 
-        self.channel = grpc.secure_channel('localhost:7051',grpc.local_channel_credentials())
+        self.channel = grpc.secure_channel(
+            "localhost:7051", grpc.local_channel_credentials()
+        )
         self.gantry = gantry_grpc.GantryStub(self.channel)
         self.valves = valves_grpc.ValvesStub(self.channel)
         self.pumps = pumps_grpc.PumpsStub(self.channel)
@@ -62,7 +65,6 @@ class MGATestbenchHardware(Frame):
         if self.arduinoControl:
             self.arduinoControl.close_vac()
             self.arduinoControl.stopShaking()
-
 
         self.set_gantry_parameters()
         self.gantry.home(gantry._())
@@ -182,7 +184,9 @@ class MGATestbenchHardware(Frame):
             self.valves.stopRoutine(valves._())
         pass
 
-    def set_gantry_parameters(self, axis: Axis | None = None, gantry_dispense_speed: float | None = None): 
+    def set_gantry_parameters(
+        self, axis: Axis | None = None, gantry_dispense_speed: float | None = None
+    ):
         parameters = DefaultGantryParameters
         if axis and gantry_dispense_speed:
             parameters.axes[axis].speed = gantry_dispense_speed
@@ -246,10 +250,19 @@ class MGATestbenchHardware(Frame):
                 ]
             )
 
+        def get_fluidic_line(pumpIndex: PumpIndex):
+            for fluidicLine, pumpIndex_ in FluidicLineIndexToPumpIndexMapping.items():
+                if pumpIndex_ == pumpIndex:
+                    return fluidicLine
+            return -1
+
+        fluidic_lines = [get_fluidic_line(pumpIndex) + 1 for pumpIndex in pumps_]
+        self.set_aspiration_valves(fluidic_lines, valves.State.ValveState.open)
         self.pumps.moveTo(get_pump_moves(PumpMaxVolume + PumpSlack))
         self._wait_for_pump_moves_to_finish(pumps_)
         self.pumps.moveTo(get_pump_moves(PumpMaxVolume))
         self._wait_for_pump_moves_to_finish(pumps_)
+        self.set_aspiration_valves(fluidic_lines, valves.State.ValveState.open)
 
     def _wait_for_pump_moves_to_finish(self, pump_indexes: list[PumpIndex]):
         while True:
@@ -286,3 +299,21 @@ class MGATestbenchHardware(Frame):
             coordinate = gantry.Position(x=99, y=99)
             self.gantry.moveTo(gantry.Position(x=coordinate.x, y=coordinate.y))
         pass
+
+    def set_aspiration_valves(
+        self, fluidic_lines: list[LineIndex], state: valves.State.ValveState
+    ):
+        valveStates = valves.State(
+            valves=[
+                valves.State.Valve(
+                    identifier=valves.State.ValveIdentifier(
+                        type=valves.State.ValveIdentifier.Type.aspiration,
+                        fluidicLine=fluidic_line,
+                    ),
+                    state=state,
+                )
+                for fluidic_line in fluidic_lines
+            ]
+        )
+        print("Valve states: ", valveStates)
+        self.valves.setState(valveStates)
