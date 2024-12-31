@@ -14,7 +14,7 @@ import numpy as np
 # Hardware = ProtoHardware
 Hardware = MGATestbenchHardware
 
-mock_components = True
+mock_components = False
 
 
 class MainFrameTab1(Frame):

@@ -51,7 +51,7 @@ class MGATestbenchHardware(Frame):
         else:
             self.arduinoControl = ArduinoControl(self)
 
-        self.channel = grpc.insecure_channel("localhost:7050")
+        self.channel = grpc.secure_channel('localhost:7051',grpc.local_channel_credentials())
         self.gantry = gantry_grpc.GantryStub(self.channel)
         self.valves = valves_grpc.ValvesStub(self.channel)
         self.pumps = pumps_grpc.PumpsStub(self.channel)
@@ -63,32 +63,15 @@ class MGATestbenchHardware(Frame):
             self.arduinoControl.close_vac()
             self.arduinoControl.stopShaking()
 
-        x = DefaultGantryParameters.axes[Axis.x]
-        y = DefaultGantryParameters.axes[Axis.y]
 
+        self.set_gantry_parameters()
         self.gantry.home(gantry._())
-        self.gantry.setParameters(
-            gantry.AxisParameters(
-                axes=[
-                    gantry.AxisParameters.AxisInnerParameters(
-                        axis=gantry.Axis.x,
-                        speed=x.speed if x.speed is not None else 40,
-                        acceleration=x.acceleration,
-                        deceleration=x.deceleration,
-                    ),
-                    gantry.AxisParameters.AxisInnerParameters(
-                        axis=gantry.Axis.y,
-                        speed=y.speed,
-                        acceleration=y.acceleration,
-                        deceleration=y.deceleration,
-                    ),
-                ]
-            )
-        )
         self.valves.initialize(valves._())
         self.pumps.home(
             pumps.PumpIndexes(pumps=[pumps.PumpIndex(value=i + 1) for i in range(11)])
         )
+        # wait for home to finish
+        time.sleep(10)
         if self.parent:
             self.parent.directCommand.initialisationLed.configure(bg="green")
 
@@ -184,6 +167,8 @@ class MGATestbenchHardware(Frame):
 
             pump_indexes = [pumpIndex for pumpIndex in pump_ranges.keys()]
 
+            # print("Range", range)
+
             # setup
             self.valves.setRoutine(routine)
             self.refill_pumps(pump_indexes)
@@ -196,6 +181,31 @@ class MGATestbenchHardware(Frame):
             self.stop_pump_moves(pump_indexes)
             self.valves.stopRoutine(valves._())
         pass
+
+    def set_gantry_parameters(self, axis: Axis | None = None, gantry_dispense_speed: float | None = None): 
+        parameters = DefaultGantryParameters
+        if axis and gantry_dispense_speed:
+            parameters.axes[axis].speed = gantry_dispense_speed
+        x = parameters.axes[Axis.x]
+        y = parameters.axes[Axis.y]
+        self.gantry.setParameters(
+            gantry.AxisParameters(
+                axes=[
+                    gantry.AxisParameters.AxisInnerParameters(
+                        axis=gantry.Axis.x,
+                        speed=x.speed if x.speed is not None else 40,
+                        acceleration=x.acceleration,
+                        deceleration=x.deceleration,
+                    ),
+                    gantry.AxisParameters.AxisInnerParameters(
+                        axis=gantry.Axis.y,
+                        speed=y.speed,
+                        acceleration=y.acceleration,
+                        deceleration=y.deceleration,
+                    ),
+                ]
+            )
+        )
 
     def move_to(
         self,
@@ -213,13 +223,14 @@ class MGATestbenchHardware(Frame):
             self.wait_for_movement_to_finish()
         if correct_slack:
             move()
+            self.wait_for_movement_to_finish()
 
     def wait_for_movement_to_finish(self):
         while True:
+            time.sleep(0.1)
             status = self.gantry.getStatus(gantry._())
             if not status.isBusy:
                 break
-            time.sleep(0.01)
 
     def refill_pumps(self, pumps_: list[PumpIndex]):
         print("Refilling pumps ", pumps_)
