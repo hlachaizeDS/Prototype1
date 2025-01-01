@@ -1,21 +1,21 @@
 from hardware.mga.types import PumpIndex, Routine, LineIndex, Volume
 
-PumpRanges = dict[PumpIndex, tuple[float, float]]
+PumpDispenseAxisRanges = dict[PumpIndex, tuple[float, float]]
 
 PumpStartMargin = 0.2
 
 
-def get_pump_start_stop_positions(
+def get_pump_dispense_axis_start_stop_positions(
     routine: Routine,
     fluidic_line_to_pump_mapping: dict[LineIndex, PumpIndex],
     pump_start_stop_margin_mm: float,
-) -> tuple[PumpRanges, list[LineIndex]]:
+) -> tuple[PumpDispenseAxisRanges, list[LineIndex]]:
     """
     Get the pump usage in routine
     """
     lineIndexes = [lineIndex for lineIndex in fluidic_line_to_pump_mapping.keys()]
 
-    pumpRanges: PumpRanges = {}
+    pumpRanges: PumpDispenseAxisRanges = {}
 
     direction = routine.direction
     first = min if direction == Routine.Direction.forward else max
@@ -51,14 +51,15 @@ def get_pump_start_stop_positions(
                 )
     return pumpRanges, [lineIndex for lineIndex in line_indexes]
 
+VolumeUsage = dict[PumpIndex, Volume]
 
 def estimate_volume_usage(
-    pump_ranges: PumpRanges,
+    pump_dispense_axis_ranges: PumpDispenseAxisRanges,
     pump_speeds: dict[PumpIndex, float],
     gantry_dispense_movement_speed,
-) -> dict[PumpIndex, Volume]:
-    volumeUsage = dict[PumpIndex, Volume]()
-    for pumpIndex, (start, stop) in pump_ranges.items():
+) -> VolumeUsage:
+    volumeUsage = VolumeUsage()
+    for pumpIndex, (start, stop) in pump_dispense_axis_ranges.items():
         volumeUsage[pumpIndex] = Volume(
             abs(stop - start) / gantry_dispense_movement_speed * pump_speeds[pumpIndex]
         )

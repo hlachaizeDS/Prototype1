@@ -3,7 +3,7 @@ from hardware.mga.testbench_hardware import MGATestbenchHardware
 test_hardware = MGATestbenchHardware(None, mock_components=True)
 
 
-def test_initialisation():
+def test_dispense():
     # Create a new instance of the class
     # Call the method
     test_hardware.initialisation()
@@ -12,8 +12,3 @@ def test_initialisation():
             "A": (12, [i for i in range(1, 384 + 1)]),
         }
     )
-
-
-def _do_no_testtest_get_positions():
-    # Call the method
-    test_hardware.print_positions()

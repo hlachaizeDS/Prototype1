@@ -1,13 +1,9 @@
 from hardware.mga.types import (
-    Alignment,
     Direction,
-    LineConfiguration,
     Routine,
     Well,
     LineIndex,
-    DispensePlan,
     ValveState,
-    Coordinate,
 )
 import numpy as np
 import math

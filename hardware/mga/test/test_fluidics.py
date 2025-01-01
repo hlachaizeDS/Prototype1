@@ -1,5 +1,5 @@
 import unittest
-from hardware.mga.fluidics import get_pump_start_stop_positions, estimate_volume_usage
+from hardware.mga.fluidics import get_pump_dispense_axis_start_stop_positions, estimate_volume_usage
 from hardware.mga.types import Routine
 import mga_testbench_interface.generated.valves_pb2 as valves
 
@@ -32,7 +32,7 @@ class TestFluidics(unittest.TestCase):
         )
         fluidic_line_to_pump_mapping = {0: 5, 3: 8}
         pump_start_stop_margin_mm = 1
-        pump_positions, line_indexes = get_pump_start_stop_positions(
+        pump_positions, line_indexes = get_pump_dispense_axis_start_stop_positions(
             routine, fluidic_line_to_pump_mapping, pump_start_stop_margin_mm
         )
 
@@ -76,7 +76,7 @@ class TestFluidics(unittest.TestCase):
         )
         fluidic_line_to_pump_mapping = {2: 0, 8: 1}
         pump_start_stop_margin_mm = 1
-        pump_positions, line_indexes = get_pump_start_stop_positions(
+        pump_positions, line_indexes = get_pump_dispense_axis_start_stop_positions(
             routine, fluidic_line_to_pump_mapping, pump_start_stop_margin_mm
         )
 

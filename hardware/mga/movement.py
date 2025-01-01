@@ -2,6 +2,8 @@ from hardware.mga.configuration import Geometry, Axis
 from hardware.mga.types import Coordinate, Alignment, Routine
 
 DispenseMovementMargin = Coordinate(1, 1)
+MovementRange = tuple[Coordinate, Coordinate]
+
 
 def get_movement_range_coordinates(
     geometry: Geometry,
@@ -11,7 +13,7 @@ def get_movement_range_coordinates(
     movement_axis: Axis,
     are_rows_ascending: bool,
     are_columns_ascending: bool,
-) -> tuple[Coordinate, Coordinate] | None:
+) -> MovementRange | None:
     """
     Get the coordinates of the start and end of a movement for a routine
     """

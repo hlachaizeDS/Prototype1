@@ -14,16 +14,21 @@ from hardware.mga.types import (
     ReagentVolumeWells,
     LineConfiguration,
 )
-from hardware.mga.movement import find_alignment_coordinates
+from hardware.mga.movement import (
+    find_alignment_coordinates,
+    MovementRange,
+    get_movement_range_coordinates,
+    DispenseMovementMargin,
+)
 
 # in reference to the plate (forward = towards the last row)
 DefaultDispenseTrips = [
-    (Alignment(line_index=0, nozzle_index=3, row=6), Direction.forward),
-    (Alignment(line_index=0, nozzle_index=3, row=7), Direction.backward),
-    (Alignment(line_index=0, nozzle_index=3, row=14), Direction.forward),
-    (Alignment(line_index=0, nozzle_index=3, row=15), Direction.backward),
-    (Alignment(line_index=6, nozzle_index=3, row=14), Direction.forward),
-    (Alignment(line_index=6, nozzle_index=3, row=15), Direction.backward),
+    (Alignment(line_index=0, nozzle_index=0, row=6), Direction.forward),
+    (Alignment(line_index=0, nozzle_index=0, row=7), Direction.backward),
+    (Alignment(line_index=6, nozzle_index=0, row=6), Direction.forward),
+    (Alignment(line_index=6, nozzle_index=0, row=7), Direction.backward),
+    (Alignment(line_index=6, nozzle_index=0, row=14), Direction.forward),
+    (Alignment(line_index=6, nozzle_index=0, row=15), Direction.backward),
 ]
 
 
@@ -59,9 +64,9 @@ def create_dispense_plan(
         else:
             dispense_plan[lineIndex] = wells
 
-        for line, wells in dispense_plan.items():
-            print(line)
-            print_wells(wells)
+        # for line, wells in dispense_plan.items():
+        #     print(line)
+        #     print_wells(wells)
     return dispense_plan
 
 
@@ -236,9 +241,9 @@ def project_routine_to_axes(
     )
 
     alignment = Alignment(
-        line_index=0,
-        nozzle_index=3,
-        row=6,  # nozzle 1.1 at column 0
+        line_index=geometry.reference.line_index,
+        nozzle_index=geometry.reference.nozzle_index,
+        row=geometry.reference.well.row,
     )
     reference_coordinates = find_alignment_coordinates(
         geometry,
@@ -411,3 +416,45 @@ def __add_valve_action_to_routine(
                     ),
                 )
             )
+
+
+Trip = tuple[Routine, MovementRange]
+
+
+def create_trips(
+    geometry: Geometry,
+    line_configurations: dict[LineIndex, LineConfiguration],
+    dispense_plan: DispensePlan,
+    movement_axis: Axis,
+) -> list[Trip]:
+    trips: list[Trip] = []
+    are_rows_ascending = True
+    are_columns_ascending = False
+    for alignment, direction in DefaultDispenseTrips:
+        abstract_routine = create_abstract_routine(
+            dispense_plan=dispense_plan,
+            alignment=alignment,
+            geometry=geometry,
+            direction=direction,
+            line_configurations=line_configurations,
+        )
+        routine = project_routine_to_axes(
+            abstract_routine,
+            geometry=geometry,
+            axis=movement_axis,
+            are_rows_ascending=are_rows_ascending,
+            are_columns_ascending=are_columns_ascending,
+        )
+        range = get_movement_range_coordinates(
+            alignment=alignment,
+            geometry=geometry,
+            routine=routine,
+            margin=DispenseMovementMargin,
+            movement_axis=movement_axis,
+            are_rows_ascending=are_rows_ascending,
+            are_columns_ascending=are_columns_ascending,
+        )
+        if range is None:
+            continue
+        trips.append((routine, range))
+    return trips

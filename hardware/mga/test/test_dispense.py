@@ -6,6 +6,7 @@ from hardware.mga.dispense import (
 from hardware.mga.configuration import DefaultGeometry, ReagentToLineMapping, Axis
 import numpy as np
 import sys
+import copy
 from math import isclose
 import unittest
 from hardware.mga.types import (
@@ -164,7 +165,7 @@ class TestDispensePlan(unittest.TestCase):
 
 
 class TestCreateRoutine(unittest.TestCase):
-    geometry = DefaultGeometry
+    geometry = copy.deepcopy(DefaultGeometry)
 
     def test_create_abstract_routine_single_line_forward(self):
         wells: list[Well] = [
@@ -178,6 +179,46 @@ class TestCreateRoutine(unittest.TestCase):
         line_configurations = {0: LineConfiguration(open_offset=0, close_offset=0)}
 
         alignment = Alignment(line_index=0, nozzle_index=3, row=0)
+        direction = Direction.forward
+
+        routine = create_abstract_routine(
+            dispense_plan=dispense_plan,
+            alignment=alignment,
+            geometry=self.geometry,
+            direction=direction,
+            line_configurations=line_configurations,
+        )
+
+        thresholds = [
+            item.positionThreshold for item in routine.positionThresholdToStateMapping
+        ]
+        self.assertEqual(thresholds, sorted(thresholds))
+
+        geogram = create_geogram(routine)
+
+        expected_geogram = (
+            " 1.0 ________█________█\n"
+            " 1.1 ██_______██_______\n"
+            " 1.2 __██_______██_____\n"
+            " 1.3 ____██_______██___\n"
+            " 1.4 ______██_______██_\n"
+        )
+
+        self.assertEqual(geogram, expected_geogram)
+
+
+    def test_create_abstract_routine_single_line_forward_3rd_trip(self):
+        wells: list[Well] = [
+            Well(row=row, column=column)
+            for row in range(0, 16)
+            for column in range(0, 2)
+        ]
+
+        dispense_plan = {0: wells}
+
+        line_configurations = {0: LineConfiguration(open_offset=0, close_offset=0)}
+
+        alignment = Alignment(line_index=0, nozzle_index=0, row=14)
         direction = Direction.forward
 
         routine = create_abstract_routine(
@@ -450,7 +491,7 @@ class TestCreateRoutine(unittest.TestCase):
         alignment = Alignment(line_index=2, nozzle_index=3, row=0)
         direction = Direction.forward
 
-        geometry = DefaultGeometry
+        geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(100, 200)
         geometry.reference.line_index = 0
         geometry.reference.nozzle_index = 3
@@ -497,7 +538,7 @@ class TestCreateRoutine(unittest.TestCase):
         alignment = Alignment(line_index=0, nozzle_index=3, row=0)
         direction = Direction.backward
 
-        geometry = DefaultGeometry
+        geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(400, 0)
         geometry.reference.line_index = 0
         geometry.reference.nozzle_index = 3
@@ -531,7 +572,7 @@ class TestCreateRoutine(unittest.TestCase):
         )
 
     def test_project_routine_foward_in_ascending_x(self):
-        geometry = DefaultGeometry
+        geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(200, 400)
         geometry.reference.line_index = 0
         geometry.reference.nozzle_index = 3
@@ -562,7 +603,7 @@ class TestCreateRoutine(unittest.TestCase):
         self.assertEqual(create_geogram(routine), create_geogram(abstract_routine))
 
     def test_project_routine_foward_in_descending_x(self):
-        geometry = DefaultGeometry
+        geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(200, 400)
         geometry.reference.line_index = 0
         geometry.reference.nozzle_index = 3
@@ -593,7 +634,7 @@ class TestCreateRoutine(unittest.TestCase):
         self.assertEqual(create_geogram(routine), create_geogram(abstract_routine))
 
     def test_project_routine_foward_in_descending_y(self):
-        geometry = DefaultGeometry
+        geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(200, 400)
         geometry.reference.line_index = 0
         geometry.reference.nozzle_index = 3
@@ -624,7 +665,7 @@ class TestCreateRoutine(unittest.TestCase):
         self.assertEqual(create_geogram(routine), create_geogram(abstract_routine))
 
     def test_project_routine_backward_in_descending_y(self):
-        geometry = DefaultGeometry
+        geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(200, 400)
         geometry.reference.line_index = 0
         geometry.reference.nozzle_index = 3
@@ -666,7 +707,7 @@ class TestCreateRoutine(unittest.TestCase):
         alignment = Alignment(line_index=0, nozzle_index=3, row=6)
         direction = Direction.forward
 
-        geometry = DefaultGeometry
+        geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(127.67, 162.96)
         geometry.reference.line_index = 0
         geometry.reference.nozzle_index = 3

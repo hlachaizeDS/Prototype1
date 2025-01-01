@@ -8,7 +8,7 @@ import mga_testbench_interface.generated.valves_pb2 as valves
 import mga_testbench_interface.generated.pumps_pb2_grpc as pumps_grpc
 import mga_testbench_interface.generated.pumps_pb2 as pumps
 import time
-from hardware.mga.test.utils import create_geogram
+from hardware.mga.test.utils import create_geogram, print_routine
 
 from hardware.mga.configuration import (
     DefaultGeometry,
@@ -24,22 +24,21 @@ from hardware.mga.configuration import (
 )
 from hardware.mga.dispense import (
     create_dispense_plan,
-    create_abstract_routine,
-    project_routine_to_axes,
     ReagentVolumeWells,
-    DefaultDispenseTrips,
+    create_trips,
+    Trip,
 )
 from hardware.mga.movement import (
-    get_movement_range_coordinates,
-    DispenseMovementMargin,
     get_gantry_dispense_movement_speed,
 )
 from hardware.mga.types import Coordinate, PumpIndex, Volume
 from hardware.mga.fluidics import (
     estimate_volume_usage,
-    get_pump_start_stop_positions,
+    get_pump_dispense_axis_start_stop_positions,
     PumpStartMargin,
+    VolumeUsage,
 )
+
 
 class MGATestbenchHardware(Frame):
     def __init__(self, parent, mock_components=True):
@@ -55,8 +54,8 @@ class MGATestbenchHardware(Frame):
 
         self.channel = (
             grpc.secure_channel("localhost:7051", grpc.local_channel_credentials())
-            # if not self.mock_components
-            # else grpc.insecure_channel("localhost:7050")
+            if not self.mock_components
+            else grpc.insecure_channel("localhost:7050")
         )
         self.gantry = gantry_grpc.GantryStub(self.channel)
         self.valves = valves_grpc.ValvesStub(self.channel)
@@ -76,9 +75,9 @@ class MGATestbenchHardware(Frame):
             pumps.PumpIndexes(pumps=[pumps.PumpIndex(value=i + 1) for i in range(11)])
         )
         self._wait_for_pump_moves_to_finish([i for i in range(11)])
-        # if not self.mock_components:
-        #     # wait for home to finish
-        time.sleep(10)
+        if not self.mock_components:
+            # wait for home to finish
+            time.sleep(10)
         if self.parent:
             self.parent.directCommand.initialisationLed.configure(bg="green")
 
@@ -100,125 +99,62 @@ class MGATestbenchHardware(Frame):
             print("Arduino control not initialized")
 
     def dispense(self, volume_per_line: ReagentVolumeWells):
-        print("Dispensing ", volume_per_line, "uL")
-
         dispense_plan = create_dispense_plan(
             volume_per_line, ReagentToFluidicLineIndexMapping
         )
 
-        volume = [volume for reagent, (volume, _) in volume_per_line.items()][0]
-
         movement_axis = Axis.y
-        are_rows_ascending = True
-        are_columns_ascending = False
+        volume = [volume for _, (volume, _) in volume_per_line.items()][0]
 
-        for alignment, direction in DefaultDispenseTrips:
-            abstract_routine = create_abstract_routine(
-                dispense_plan=dispense_plan,
-                alignment=alignment,
-                geometry=DefaultGeometry,
-                direction=direction,
-                line_configurations=LineConfigurations,
-            )
-
-            routine = project_routine_to_axes(
-                abstract_routine,
-                geometry=DefaultGeometry,
-                axis=movement_axis,
-                are_rows_ascending=are_rows_ascending,
-                are_columns_ascending=are_columns_ascending,
-            )
-
-            range = get_movement_range_coordinates(
-                alignment=alignment,
-                geometry=DefaultGeometry,
-                routine=routine,
-                margin=DispenseMovementMargin,
-                movement_axis=movement_axis,
-                are_rows_ascending=are_rows_ascending,
-                are_columns_ascending=are_columns_ascending,
-            )
-            print("Range: ", range)
-            if range is None:
-                continue
-            print(create_geogram(routine))
-
-            start, end = range
-            pump_ranges, line_indexes = get_pump_start_stop_positions(
-                routine=routine,
-                pump_start_stop_margin_mm=PumpStartMargin,
-                fluidic_line_to_pump_mapping=FluidicLineIndexToPumpIndexMapping,
-            )
-
-            firstPumpIndex = min(pump_ranges.keys())
-
-            gantry_dispense_speed = get_gantry_dispense_movement_speed(
+        trips = create_trips(
+            geometry=DefaultGeometry,
+            dispense_plan=dispense_plan,
+            movement_axis=movement_axis,
+            line_configurations=LineConfigurations,
+        )
+        for trip_index, (routine, movement_range) in enumerate(trips):
+            gantry_dispense_movement_speed = get_gantry_dispense_movement_speed(
                 dispense_volume=volume,
                 inter_nozzle_in_movement_distance=DefaultGeometry.x_inter_nozzle_spacing_wells_in_line
                 * DefaultGeometry.inter_well_spacing_mm,
-                pump_speed=PumpDynamicsMapping[firstPumpIndex].speed,
-            )
-            print(
-                "Dispense axis speed",
-                gantry_dispense_speed,
-                "mm/s, volume",
-                volume,
-                "uL",
-            )
-            volume_usage = estimate_volume_usage(
-                pump_ranges=pump_ranges,
-                gantry_dispense_movement_speed=gantry_dispense_speed,
-                pump_speeds={
-                    pump_index: PumpDynamicsMapping[pump_index].speed
-                    for pump_index in pump_ranges.keys()
-                },
+                pump_speed=PumpDynamicsMapping[0].speed,
             )
 
-            pump_indexes = [pump_index for pump_index in pump_ranges.keys()]
-
-            # print("Range", range)
-
-            # setup
-            self.valves.setRoutine(routine)
-            self.move_to(start)
-            self.set_gantry_parameters(
-                axis=movement_axis, gantry_dispense_speed=gantry_dispense_speed
-            )
-
-            pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
-
-            print("Volume usage: ", volume_usage)
-            print("Pump remaining volumes: ", pump_remaining_volumes)
-            pumps_requiring_refill = [
-                pump_index
-                for pump_index, volume in pump_remaining_volumes.items()
-                if pump_index in volume_usage and volume < volume_usage[pump_index]
-            ]
-            print("Pumps requiring refill: ", pumps_requiring_refill)
-            if len(pumps_requiring_refill) > 0:
-                self.set_aspiration_valves(line_indexes, valves.State.ValveState.open)
-                pump_indexes = self.refill_pumps(pumps_requiring_refill)
-                self._wait_for_pump_moves_to_finish(pumps_requiring_refill)
-                self.set_aspiration_valves(line_indexes, valves.State.ValveState.closed)
-
-            pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
-
-            volume_margin = 0.0
-            end_volume_marks = {
-                pump_index: max(
-                    pump_remaining_volumes[pump_index]
-                    - (volume * (1 + volume_margin)),
-                    0.0,
+            current_trip_volume_usage, total_upcoming_volume_usage, line_indexes = (
+                self._get_volume_usage_and_line_indexes_for_remaining_trips(
+                    volume=volume,
+                    trips=trips[trip_index:],
                 )
-                for pump_index, volume in volume_usage.items()
-            }
-            print("move pumps to marks", end_volume_marks)
+            )
+
+            self._print_trip_debug_info(
+                routine=routine,
+                movement_range=movement_range,
+                gantry_dispense_speed=gantry_dispense_movement_speed,
+                volume=volume,
+                volume_usage=total_upcoming_volume_usage,
+            )
+
+            # refill if needed
+            end_volume_marks = self._refill_and_get_end_volume_marks(
+                current_trip_volume_usage=current_trip_volume_usage,
+                total_upcoming_volume_usage=total_upcoming_volume_usage,
+                line_indexes=line_indexes,
+            )
+
+            # set routine and gantry parameters
+            self.valves.setRoutine(routine)
+            movement_start, movement_end = movement_range
+            self.set_gantry_parameters(
+                axis=movement_axis, gantry_dispense_speed=gantry_dispense_movement_speed
+            )
+            self.move_to(movement_start)
 
             # dispense
             self.valves.startRoutine(valves._())
             self.start_pump_moves(end_volume_marks)
-            self.move_to(end, wait_to_finish=True, correct_slack=False)
-            self.stop_pump_moves(pump_indexes)
+            self.move_to(movement_end, wait_to_finish=True, correct_slack=False)
+            self.stop_pump_moves([pumpIndex for pumpIndex in end_volume_marks.keys()])
             self.valves.stopRoutine(valves._())
         pass
 
@@ -326,7 +262,7 @@ class MGATestbenchHardware(Frame):
 
     def get_remaining_volumes_in_pumps(
         self, pump_indexes: list[PumpIndex]
-    ) -> dict[PumpIndex, Volume]:
+    ) -> VolumeUsage:
         volume_marks = self.pumps.getVolumeMarks(
             pumps.PumpIndexes(
                 pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
@@ -358,5 +294,102 @@ class MGATestbenchHardware(Frame):
                 for fluidic_line in fluidic_lines
             ]
         )
-        print("Valve states: ", valveStates)
+        # print("Valve states: ", valveStates)
         self.valves.setState(valveStates)
+
+    def _refill_and_get_end_volume_marks(
+        self,
+        current_trip_volume_usage: VolumeUsage,
+        total_upcoming_volume_usage: VolumeUsage,
+        line_indexes: list[LineIndex],
+    ):
+        pump_indexes = [pump_index for pump_index in total_upcoming_volume_usage.keys()]
+        pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
+        # print("Volume usage: ", volume_usage)
+        print("Pump remaining volumes: ", pump_remaining_volumes)
+        pumps_requiring_refill = [
+            pump_index
+            for pump_index, volume in pump_remaining_volumes.items()
+            if pump_index in total_upcoming_volume_usage
+            and volume < total_upcoming_volume_usage[pump_index]
+        ]
+        print("Pumps requiring refill: ", pumps_requiring_refill)
+        if len(pumps_requiring_refill) > 0:
+            # if any pump requires a refill, use the opportunity
+            # to refill all pumps in the trip
+            self.set_aspiration_valves(line_indexes, valves.State.ValveState.open)
+            self.refill_pumps(pump_indexes)
+            self._wait_for_pump_moves_to_finish(pump_indexes)
+            self.set_aspiration_valves(line_indexes, valves.State.ValveState.closed)
+
+        pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
+
+        volume_margin = 0.0
+        end_volume_marks = {
+            pump_index: max(
+                pump_remaining_volumes[pump_index] - (volume * (1 + volume_margin)),
+                0.0,
+            )
+            for pump_index, volume in current_trip_volume_usage.items()
+        }
+        print("move pumps to marks", end_volume_marks)
+        return end_volume_marks
+
+    def _get_volume_usage_and_line_indexes_for_remaining_trips(
+        self, volume: Volume, trips: list[Trip]
+    ) -> tuple[VolumeUsage, VolumeUsage, list[LineIndex]]:
+        current_trip_volume_usage = {}
+        total_volume_usage = {}
+        all_line_indexes: set[LineIndex] = set()
+        for index, (routine, _) in enumerate(trips):
+            gantry_dispense_movement_speed = get_gantry_dispense_movement_speed(
+                dispense_volume=volume,
+                inter_nozzle_in_movement_distance=DefaultGeometry.x_inter_nozzle_spacing_wells_in_line
+                * DefaultGeometry.inter_well_spacing_mm,
+                pump_speed=PumpDynamicsMapping[0].speed,
+            )
+            pump_dispense_axis_ranges, line_indexes = (
+                get_pump_dispense_axis_start_stop_positions(
+                    routine=routine,
+                    pump_start_stop_margin_mm=PumpStartMargin,
+                    fluidic_line_to_pump_mapping=FluidicLineIndexToPumpIndexMapping,
+                )
+            )
+            volume_usage = estimate_volume_usage(
+                pump_dispense_axis_ranges=pump_dispense_axis_ranges,
+                gantry_dispense_movement_speed=gantry_dispense_movement_speed,
+                pump_speeds={
+                    pump_index: PumpDynamicsMapping[pump_index].speed
+                    for pump_index in pump_dispense_axis_ranges.keys()
+                },
+            )
+            if index == 0:
+                current_trip_volume_usage = volume_usage
+            for pump_index, estimated_volume in volume_usage.items():
+                if pump_index not in total_volume_usage:
+                    total_volume_usage[pump_index] = 0.0
+                total_volume_usage[pump_index] += estimated_volume
+
+            for line_index in line_indexes:
+                all_line_indexes.add(line_index)
+
+        return (
+            current_trip_volume_usage,
+            total_volume_usage,
+            [line_index for line_index in all_line_indexes],
+        )
+
+    def _print_trip_debug_info(
+        self, routine, movement_range, gantry_dispense_speed, volume, volume_usage
+    ):
+        print("Movement range: ", movement_range)
+        print(create_geogram(routine))
+        # print_routine(routine)
+        print(
+            "Dispense axis speed",
+            gantry_dispense_speed,
+            "mm/s, volume",
+            volume,
+            "uL",
+        )
+        print("Volume usage: ", volume_usage)

@@ -88,8 +88,9 @@ class Geometry:
 DefaultGeometry = Geometry(
     reference=Reference(
         position=Coordinate(126.66, 162.99),
+        # the following values should not be modified
         line_index=0,
-        nozzle_index=3,
+        nozzle_index=0,
         well=Well(row=6, column=0),
     ),
     inter_well_spacing_mm=4.5,
