@@ -41,7 +41,7 @@ from hardware.mga.fluidics import (
     get_pump_speed,
 )
 
-ON_MACHINE = False
+ON_MACHINE = True
 
 
 class MGATestbenchHardware(Frame):
@@ -173,7 +173,6 @@ class MGATestbenchHardware(Frame):
                     for pump_index in end_volume_marks.keys()
                 }
                 self._set_pump_speeds(pump_speeds)
-                return
 
             self.move_to(movement_start)
 
