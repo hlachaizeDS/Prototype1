@@ -1,4 +1,6 @@
 from hardware.mga.types import PumpIndex, Routine, LineIndex, Volume
+from hardware.mga.dispense import DispensePlan
+from hardware.mga.configuration import ReagentToLineMapping, LineToPumpMapping
 
 PumpDispenseAxisRanges = dict[PumpIndex, tuple[float, float]]
 
@@ -51,7 +53,9 @@ def get_pump_dispense_axis_start_stop_positions(
                 )
     return pumpRanges, [lineIndex for lineIndex in line_indexes]
 
+
 VolumeUsage = dict[PumpIndex, Volume]
+
 
 def estimate_volume_usage(
     pump_dispense_axis_ranges: PumpDispenseAxisRanges,
@@ -64,3 +68,11 @@ def estimate_volume_usage(
             abs(stop - start) / gantry_dispense_movement_speed * pump_speeds[pumpIndex]
         )
     return volumeUsage
+
+
+def get_pump_speed(
+    dispense_volume: float,
+    gantry_speed: float,
+    inter_nozzle_in_movement_distance: float,
+):
+    return dispense_volume * (gantry_speed / inter_nozzle_in_movement_distance)

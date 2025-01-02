@@ -9,6 +9,8 @@ from mga_testbench_interface.generated import pumps_pb2
 
 
 class GantryServicer(gantry_pb2_grpc.GantryServicer):
+    parameters: gantry_pb2.AxisParameters
+
     def __init__(self):
         pass
 
@@ -32,10 +34,15 @@ class GantryServicer(gantry_pb2_grpc.GantryServicer):
 
     def setParameters(self, request: gantry_pb2.AxisParameters, context):
         print("gantry setParameters called with", request)
+        self.parameters = request
         return gantry_pb2.GantryStatus(
             isBusy=False,
             initialized=True,
         )
+
+    def getParameters(self, request, context):
+        print("gantry getParameters called")
+        return self.parameters
 
     def getStatus(self, request, context):
         return gantry_pb2.GantryStatus(
@@ -100,6 +107,10 @@ class PumpsServicer(pumps_pb2_grpc.PumpsServicer):
 
     def stop(self, request, context):
         print("pumps stop called", request)
+        return self._statuses(isBusy=False)
+
+    def setParameters(self, request, context):
+        print("pumps setParameters called", request)
         return self._statuses(isBusy=False)
 
     def _statuses(self, isBusy: bool):

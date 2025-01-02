@@ -15,7 +15,8 @@ from hardware.mga.types import (
 
 
 # mappings
-FluidicLineIndexToPumpIndexMapping: dict[LineIndex, PumpIndex] = {
+LineToPumpMapping = dict[LineIndex, PumpIndex]
+FluidicLineIndexToPumpIndexMapping: LineToPumpMapping = {
     0: 6,
     1: 7,
     # 2: 8,
