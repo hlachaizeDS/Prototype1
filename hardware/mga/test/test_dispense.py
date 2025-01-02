@@ -206,7 +206,6 @@ class TestCreateRoutine(unittest.TestCase):
 
         self.assertEqual(geogram, expected_geogram)
 
-
     def test_create_abstract_routine_single_line_forward_3rd_trip(self):
         wells: list[Well] = [
             Well(row=row, column=column)
@@ -245,6 +244,49 @@ class TestCreateRoutine(unittest.TestCase):
         )
 
         self.assertEqual(geogram, expected_geogram)
+
+    def test_create_abstract_routine_single_line_forward_2nd_manifold(self):
+        wells: list[Well] = [
+            Well(row=row, column=column)
+            for row in range(0, 16)
+            for column in range(0, 2)
+        ]
+
+        dispense_plan = {11: wells}
+
+        line_configurations = {11: LineConfiguration(open_offset=0, close_offset=0)}
+
+        alignment = Alignment(line_index=6, nozzle_index=0, row=14)
+        direction = Direction.forward
+
+        routine = create_abstract_routine(
+            dispense_plan=dispense_plan,
+            alignment=alignment,
+            geometry=self.geometry,
+            direction=direction,
+            line_configurations=line_configurations,
+        )
+
+        thresholds = [
+            item.positionThreshold for item in routine.positionThresholdToStateMapping
+        ]
+        self.assertEqual(thresholds, sorted(thresholds))
+
+        geogram = create_geogram(routine)
+
+        print()
+        print(geogram)
+        # print_routine(routine)
+
+        expected_geogram = (
+            "12.0 ________█________█\n"
+            "12.1 ██_______██_______\n"
+            "12.2 __██_______██_____\n"
+            "12.3 ____██_______██___\n"
+            "12.4 ______██_______██_\n"
+        )
+
+        # self.assertEqual(geogram, expected_geogram)
 
     def test_create_abstract_routine_single_line_backward(self):
         wells: list[Well] = [

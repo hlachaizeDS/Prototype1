@@ -18,30 +18,17 @@ from hardware.mga.types import (
 FluidicLineIndexToPumpIndexMapping: dict[LineIndex, PumpIndex] = {
     0: 6,
     1: 7,
-    2: 8,
-    3: 9,
-    4: 10,
-    5: 10,
+    # 2: 8,
+    # 3: 9,
+    # 4: 10,
+    # 5: 10,
     6: 0,
     7: 1,
     8: 2,
     9: 3,
-    # 10: 4,
+    10: 4,
     11: 5,
 }
-
-# uneven_enzyme = "M"
-# even_enzyme = "N"
-# A = "A"
-# C = "C"
-# G = "G"
-# T = "T"
-# O = "O"
-# P = "P"
-# Q = "Q"
-# DB = "DB"
-# Wash1 = "Buff1"
-# Wash2 = "BB"
 
 ReagentToLineMapping = dict[str, LineIndex | dict[Direction, LineIndex]]
 ReagentToFluidicLineIndexMapping: ReagentToLineMapping = {

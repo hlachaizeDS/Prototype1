@@ -86,7 +86,7 @@ def create_abstract_routine(
     max_column = max(
         well.column for _, wells in dispense_plan.items() for well in wells
     )
-    min_line_index = min(line_index for line_index, _ in dispense_plan.items())
+    min_line_index_in_manifold = min(line_index for line_index, _ in dispense_plan.items()) % geometry.number_of_lines_in_manifold
 
     dispensed_wells: dict[LineIndex, list[Well]] = {
         line_index: [] for line_index in dispense_plan.keys()
@@ -96,9 +96,10 @@ def create_abstract_routine(
 
     max_step = (
         max_column
-        + (geometry.number_of_lines_in_manifold - sign * min_line_index)
+        + (geometry.number_of_lines_in_manifold + sign * min_line_index_in_manifold)
         * geometry.inter_line_spacing_wells
     )
+
 
     start = 0 if direction == Direction.forward else max_step
     stop = max_step if direction == Direction.forward else 0
