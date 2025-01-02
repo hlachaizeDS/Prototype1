@@ -40,7 +40,7 @@ from hardware.mga.fluidics import (
     VolumeUsage,
 )
 
-ON_MACHINE = False
+ON_MACHINE = True
 
 
 class MGATestbenchHardware(Frame):
@@ -84,10 +84,10 @@ class MGATestbenchHardware(Frame):
                 pumps=[pumps.PumpIndex(value=i + 1) for i in pump_indexes]
             )
         )
-        if ON_MACHINE:
-            # wait for home to finish
-            time.sleep(10)
-        self._wait_for_pump_moves_to_finish(pump_indexes)
+        self.move_to(Coordinate(0,0))
+        self.wait_for_movement_to_finish()
+        # self.start_pump_moves({pump_index: 0 for pump_index in pump_indexes})
+        self._wait_for_pump_home_to_finish(pump_indexes)
         if self.parent:
             self.parent.directCommand.initialisationLed.configure(bg="green")
 
@@ -218,6 +218,7 @@ class MGATestbenchHardware(Frame):
         while True:
             time.sleep(0.1)
             status = self.gantry.getStatus(gantry._())
+            # print("gantry", status)
             if not status.isBusy:
                 break
 
@@ -241,6 +242,19 @@ class MGATestbenchHardware(Frame):
         self._wait_for_pump_moves_to_finish(pumps_)
         # self.set_aspiration_valves(lines, valves.State.ValveState.open)
         return pumps_
+    
+    def _wait_for_pump_home_to_finish(self, pump_indexes: list[PumpIndex]):
+        while True:
+            status: pumps.Statuses = self.pumps.getStatuses(
+                pumps.PumpIndexes(
+                    pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
+                )
+            )
+            initialized = [pump.initialized for pump in status.pumps]
+            # print(initialized)
+            if all(initialized):
+                break
+            time.sleep(0.1)
 
     def _wait_for_pump_moves_to_finish(self, pump_indexes: list[PumpIndex]):
         while True:
@@ -249,8 +263,9 @@ class MGATestbenchHardware(Frame):
                     pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
                 )
             )
-            print(status.pumps)
-            if all(not pump.isBusy for pump in status.pumps):
+            busy = [pump.isBusy for pump in status.pumps]
+            # print("pumps busy", busy)
+            if not any(busy):
                 break
             time.sleep(0.1)
 
