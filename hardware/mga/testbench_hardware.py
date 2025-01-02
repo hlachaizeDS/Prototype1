@@ -9,6 +9,7 @@ import mga_testbench_interface.generated.pumps_pb2_grpc as pumps_grpc
 import mga_testbench_interface.generated.pumps_pb2 as pumps
 import time
 from hardware.mga.test.utils import create_geogram, print_routine
+import datetime
 
 from hardware.mga.configuration import (
     DefaultGeometry,
@@ -54,8 +55,8 @@ class MGATestbenchHardware(Frame):
 
         self.channel = (
             grpc.secure_channel("localhost:7051", grpc.local_channel_credentials())
-            if not self.mock_components
-            else grpc.insecure_channel("localhost:7050")
+            # if not self.mock_components
+            # else grpc.insecure_channel("localhost:7050")
         )
         self.gantry = gantry_grpc.GantryStub(self.channel)
         self.valves = valves_grpc.ValvesStub(self.channel)
@@ -71,13 +72,16 @@ class MGATestbenchHardware(Frame):
         self.set_gantry_parameters()
         self.gantry.home(gantry._())
         self.valves.initialize(valves._())
+        # pump_indexes = [i for i in range(0, 8)]
+        pump_indexes = [0,5]
         self.pumps.home(
-            pumps.PumpIndexes(pumps=[pumps.PumpIndex(value=i + 1) for i in range(11)])
+            pumps.PumpIndexes(pumps=[pumps.PumpIndex(value=i+1) for i in pump_indexes])
         )
-        self._wait_for_pump_moves_to_finish([i for i in range(11)])
-        if not self.mock_components:
-            # wait for home to finish
-            time.sleep(10)
+        # if not self.mock_components:
+        #     # wait for home to finish
+        #     time.sleep(10)
+        time.sleep(10)
+        self._wait_for_pump_moves_to_finish(pump_indexes)
         if self.parent:
             self.parent.directCommand.initialisationLed.configure(bg="green")
 
@@ -99,6 +103,8 @@ class MGATestbenchHardware(Frame):
             print("Arduino control not initialized")
 
     def dispense(self, volume_per_line: ReagentVolumeWells):
+        
+        print(datetime.datetime.now())  
         dispense_plan = create_dispense_plan(
             volume_per_line, ReagentToFluidicLineIndexMapping
         )
@@ -156,7 +162,7 @@ class MGATestbenchHardware(Frame):
             self.move_to(movement_end, wait_to_finish=True, correct_slack=False)
             self.stop_pump_moves([pumpIndex for pumpIndex in end_volume_marks.keys()])
             self.valves.stopRoutine(valves._())
-        pass
+        print(datetime.datetime.now())  
 
     def set_gantry_parameters(
         self, axis: Axis | None = None, gantry_dispense_speed: float | None = None
@@ -238,9 +244,10 @@ class MGATestbenchHardware(Frame):
                     pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
                 )
             )
+            print(status.pumps)
             if all(not pump.isBusy for pump in status.pumps):
                 break
-            time.sleep(0.01)
+            time.sleep(0.1)
 
     def start_pump_moves(self, end_volume_marks: dict[PumpIndex, float]):
         moves = pumps.PumpMoves(
@@ -323,6 +330,7 @@ class MGATestbenchHardware(Frame):
             self.set_aspiration_valves(line_indexes, valves.State.ValveState.closed)
 
         pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
+        print("Pump remaining volumes: ", pump_remaining_volumes)
 
         volume_margin = 0.0
         end_volume_marks = {

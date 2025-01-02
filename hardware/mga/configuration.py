@@ -26,7 +26,7 @@ FluidicLineIndexToPumpIndexMapping: dict[LineIndex, PumpIndex] = {
     7: 1,
     8: 2,
     9: 3,
-    10: 4,
+    # 10: 4,
     11: 5,
 }
 
@@ -46,8 +46,8 @@ FluidicLineIndexToPumpIndexMapping: dict[LineIndex, PumpIndex] = {
 ReagentToLineMapping = dict[str, LineIndex | dict[Direction, LineIndex]]
 ReagentToFluidicLineIndexMapping: ReagentToLineMapping = {
     "EB": {
-        Direction.forward: 0,
-        Direction.backward: 5,
+        Direction.forward: 11,
+        Direction.backward: 6,
     },  # make sure this aligns with DefaultDispenseTrips in dispense.py
     "A": 1,
     "C": 2,
