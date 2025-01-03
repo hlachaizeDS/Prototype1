@@ -39,14 +39,11 @@ ReagentToFluidicLineIndexMapping: ReagentToLineMapping = {
     },  # make sure this aligns with DefaultDispenseTrips in dispense.py
     "DB": 1,
     "Buff1": 2,
-    "O": 3,
-    # "P": 9,
-    # "Q": 10,
+    "BB": 3,
     "A": 7,
     "C": 8,
     "G": 9,
     "T": 10,
-    "BB": 11,
 }
 
 
@@ -139,7 +136,7 @@ DefaultGantryParameters = GantryParameters(
     axes={
         # speed is determined by pump speed and valve opening time
         Axis.x: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=100.0),
-        Axis.y: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=None),
+        Axis.y: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=100.0),
     }
 )
 

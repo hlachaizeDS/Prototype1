@@ -89,9 +89,9 @@ def Synthesis_TwoEnz(hardware,is384):
                                         C: [NucsVolume, C_wells],
                                         G: [NucsVolume, G_wells],
                                         T: [NucsVolume, T_wells],
-                                        O: [NucsVolume, O_wells],
-                                        P: [NucsVolume, P_wells],
-                                        Q: [NucsVolume, Q_wells]
+                                        # O: [NucsVolume, O_wells],
+                                        # P: [NucsVolume, P_wells],
+                                        # Q: [NucsVolume, Q_wells]
                                         }, is384)
 
         TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'AftPremixDisp')

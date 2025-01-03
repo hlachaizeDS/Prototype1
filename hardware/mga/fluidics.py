@@ -35,6 +35,8 @@ def get_pump_dispense_axis_start_stop_positions(
             if len(lineValves) == 0:
                 continue
             pumpIndex = fluidic_line_to_pump_mapping[lineIndex]
+            if pumpIndex is None:
+                raise KeyError("{lineIndex} does not exist in fluidic_line_to_pump_mapping")
             line_indexes.add(lineIndex)
             if pumpIndex not in pumpRanges:
                 pumpRanges[pumpIndex] = (

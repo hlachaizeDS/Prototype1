@@ -157,9 +157,6 @@ class MGATestbenchHardware(Frame):
             # set routine and gantry parameters
             self.valves.setRoutine(routine)
             movement_start, movement_end = movement_range
-            self.set_gantry_parameters(
-                axis=movement_axis, gantry_dispense_speed=gantry_dispense_movement_speed
-            )
             output_movement_axis_speed = self.get_gantry_speed(movement_axis)
             if output_movement_axis_speed is not None:
                 print("Precise speed: ", output_movement_axis_speed)
@@ -175,6 +172,9 @@ class MGATestbenchHardware(Frame):
                 self._set_pump_speeds(pump_speeds)
 
             self.move_to(movement_start)
+            self.set_gantry_parameters(
+                axis=movement_axis, gantry_dispense_speed=gantry_dispense_movement_speed
+            )
 
             # dispense
             self.valves.startRoutine(valves._())
@@ -182,6 +182,7 @@ class MGATestbenchHardware(Frame):
             self.move_to(movement_end, wait_to_finish=True, correct_slack=False)
             self.stop_pump_moves([pumpIndex for pumpIndex in end_volume_marks.keys()])
             self.valves.stopRoutine(valves._())
+            self.set_gantry_parameters()
         print(datetime.datetime.now())
 
     def set_gantry_parameters(
@@ -197,7 +198,7 @@ class MGATestbenchHardware(Frame):
                 axes=[
                     gantry.AxisParameters.AxisInnerParameters(
                         axis=gantry.Axis.x,
-                        speed=x.speed if x.speed is not None else 40,
+                        speed=x.speed,
                         acceleration=x.acceleration,
                         deceleration=x.deceleration,
                     ),
@@ -341,8 +342,7 @@ class MGATestbenchHardware(Frame):
     def goToWell(self, element, well, quadrant):
         print("Going to ", element, well, quadrant)
         if element == "thermalCamera":
-            coordinate = gantry.Position(x=0, y=0)
-            self.gantry.moveTo(gantry.Position(x=coordinate.x, y=coordinate.y))
+            self.move_to(Coordinate(0,0))
         pass
 
     def set_aspiration_valves(
