@@ -44,9 +44,9 @@ def create_dispense_plan(
     if len(volumes) > 1 or (len(volumes) > 0 and volumes.pop() < 0):
         raise ValueError("All volumes must be the same and positive")
 
-    for reagent, (_, wellIndexes) in reagent_volume_wells.items():
-        lineIndex = reagentToFluidicLineIndexMapping.get(reagent)
-        if lineIndex is None:
+    for reagent, (volume, wellIndexes) in reagent_volume_wells.items():
+        line_index = reagentToFluidicLineIndexMapping.get(reagent)
+        if line_index is None:
             raise ValueError(
                 f"Reagent {reagent} not found in reagentToFluidicLineIndexMapping"
             )
@@ -54,19 +54,18 @@ def create_dispense_plan(
             continue
 
         wells = [Well(index=wellIndex) for wellIndex in wellIndexes]
-        if isinstance(lineIndex, dict):
-            for direction, index in lineIndex.items():
+        if isinstance(line_index, dict):
+            for direction, index in line_index.items():
                 dispense_plan[index] = [
                     well
                     for well in wells
                     if well.row % 2 == (0 if direction == Direction.forward else 1)
                 ]
         else:
-            dispense_plan[lineIndex] = wells
+            dispense_plan[line_index] = wells
+        print(f"{volume}µl of {reagent} (line {line_index})")
+        print_wells(wells)
 
-        # for line, wells in dispense_plan.items():
-        #     print(line)
-        #     print_wells(wells)
     return dispense_plan
 
 
@@ -86,7 +85,10 @@ def create_abstract_routine(
     max_column = max(
         well.column for _, wells in dispense_plan.items() for well in wells
     )
-    min_line_index_in_manifold = min(line_index for line_index, _ in dispense_plan.items()) % geometry.number_of_lines_in_manifold
+    min_line_index_in_manifold = (
+        min(line_index for line_index, _ in dispense_plan.items())
+        % geometry.number_of_lines_in_manifold
+    )
 
     dispensed_wells: dict[LineIndex, list[Well]] = {
         line_index: [] for line_index in dispense_plan.keys()
@@ -99,7 +101,6 @@ def create_abstract_routine(
         + (geometry.number_of_lines_in_manifold + sign * min_line_index_in_manifold)
         * geometry.inter_line_spacing_wells
     )
-
 
     start = 0 if direction == Direction.forward else max_step
     stop = max_step if direction == Direction.forward else 0

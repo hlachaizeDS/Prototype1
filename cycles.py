@@ -45,19 +45,20 @@ def Synthesis_TwoEnz(hardware,is384):
 
     cycle = int(easygui.enterbox("What cycle do you wanna start at ?"))
 
+    # We read the excel and get the parameters back
+    synthesis_sheet = getExcelSheet(path) if not is384 else getExcelSheet_384(path)
+    getParameters(synthesis_sheet)
+    sequences = getSequences(synthesis_sheet)
+    [ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells,O_wells,P_wells,X_wells,Q_wells] \
+        = splitSequences(sequences,cycle)
 
+    usedWells = getUsedWells(sequences)
+    
     while cycle!=0:
 
         updateCycleLabel(hardware, cycle, "")
 
-        # We read the excel and get the parameters back
-        synthesis_sheet = getExcelSheet(path)
-        getParameters(synthesis_sheet)
-        sequences = getSequences(synthesis_sheet)
-        [ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells,O_wells,P_wells,X_wells,Q_wells] \
-            = splitSequences(sequences,cycle)
-
-        usedWells = getUsedWells(sequences)
+       
         activeWells = getActiveWells(sequences,cycle)
         activeWellsButX = [well for well in activeWells if well not in X_wells]
 

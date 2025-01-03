@@ -1,7 +1,7 @@
 import xlrd
 
 # path = r'D:\Proto7\Quartet_Control.xlsm'
-path = r'/home/mouaadh/Downloads/240920_P6_USNavy.xlsm'
+path = r'/home/mouaadh/Downloads/241023_P088_StabB5-1_iDNA384_b1_4C_T52_61.xlsm'
 
 #Parameters
 
