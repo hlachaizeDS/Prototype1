@@ -41,7 +41,8 @@ def Synthesis_TwoEnz(hardware,is384):
     Q = "Q"
     DB = "DB"
     Wash1 = "Buff1"
-    Wash2 = "BB"
+    # Wash2 = "BB"
+    Wash2 = "Buff1"
 
     cycle = int(easygui.enterbox("What cycle do you wanna start at ?"))
 

@@ -10,6 +10,7 @@ import mga_testbench_interface.generated.pumps_pb2 as pumps
 import time
 from hardware.mga.test.utils import create_geogram, print_routine
 import datetime
+import copy
 
 from hardware.mga.configuration import (
     DefaultGeometry,
@@ -37,7 +38,7 @@ from hardware.mga.fluidics import (
     estimate_volume_usage,
     get_pump_dispense_axis_start_stop_positions,
     PumpStartMargin,
-    VolumeUsage,
+    Volumes,
     get_pump_speed,
 )
 
@@ -157,23 +158,13 @@ class MGATestbenchHardware(Frame):
             # set routine and gantry parameters
             self.valves.setRoutine(routine)
             movement_start, movement_end = movement_range
-            output_movement_axis_speed = self.get_gantry_speed(movement_axis)
-            if output_movement_axis_speed is not None:
-                print("Precise speed: ", output_movement_axis_speed)
-                pump_speeds = {
-                    pump_index: get_pump_speed(
-                        dispense_volume=volume,
-                        gantry_speed=output_movement_axis_speed,
-                        inter_nozzle_in_movement_distance=DefaultGeometry.x_inter_nozzle_spacing_wells_in_line
-                        * DefaultGeometry.inter_well_spacing_mm,
-                    )
-                    for pump_index in end_volume_marks.keys()
-                }
-                self._set_pump_speeds(pump_speeds)
 
             self.move_to(movement_start)
-            self.set_gantry_parameters(
-                axis=movement_axis, gantry_dispense_speed=gantry_dispense_movement_speed
+            self._set_gantry_and_pump_speeds_for_dispense(
+                volume=volume,
+                movement_axis=movement_axis,
+                gantry_dispense_movement_speed=gantry_dispense_movement_speed,
+                end_volume_marks=end_volume_marks
             )
 
             # dispense
@@ -188,13 +179,12 @@ class MGATestbenchHardware(Frame):
     def set_gantry_parameters(
         self, axis: Axis | None = None, gantry_dispense_speed: float | None = None
     ):
-        parameters = DefaultGantryParameters
+        parameters = copy.deepcopy(DefaultGantryParameters)
         if axis and gantry_dispense_speed:
             parameters.axes[axis].speed = gantry_dispense_speed
         x = parameters.axes[Axis.x]
         y = parameters.axes[Axis.y]
-        self.gantry.setParameters(
-            gantry.AxisParameters(
+        axis_parameters = gantry.AxisParameters(
                 axes=[
                     gantry.AxisParameters.AxisInnerParameters(
                         axis=gantry.Axis.x,
@@ -210,6 +200,9 @@ class MGATestbenchHardware(Frame):
                     ),
                 ]
             )
+        # print(axis_parameters)
+        self.gantry.setParameters(
+            axis_parameters
         )
 
     def get_gantry_speed(self, axis: Axis):
@@ -283,6 +276,24 @@ class MGATestbenchHardware(Frame):
             )
         )
 
+    def _set_gantry_and_pump_speeds_for_dispense(self, volume: Volume, movement_axis: Axis, gantry_dispense_movement_speed: float, end_volume_marks: Volumes):
+        self.set_gantry_parameters(
+                axis=movement_axis, gantry_dispense_speed=gantry_dispense_movement_speed
+            )
+        output_movement_axis_speed = self.get_gantry_speed(movement_axis)
+        if output_movement_axis_speed is not None:
+            print("Precise speed: ", output_movement_axis_speed)
+            pump_speeds = {
+                pump_index: get_pump_speed(
+                    dispense_volume=volume,
+                    gantry_speed=output_movement_axis_speed,
+                    inter_nozzle_in_movement_distance=DefaultGeometry.x_inter_nozzle_spacing_wells_in_line
+                    * DefaultGeometry.inter_well_spacing_mm,
+                )
+                for pump_index in end_volume_marks.keys()
+            }
+            self._set_pump_speeds(pump_speeds)
+
     def _wait_for_pump_home_to_finish(self, pump_indexes: list[PumpIndex]):
         while True:
             status: pumps.Statuses = self.pumps.getStatuses(
@@ -329,7 +340,7 @@ class MGATestbenchHardware(Frame):
 
     def get_remaining_volumes_in_pumps(
         self, pump_indexes: list[PumpIndex]
-    ) -> VolumeUsage:
+    ) -> Volumes:
         volume_marks = self.pumps.getVolumeMarks(
             pumps.PumpIndexes(
                 pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
@@ -353,7 +364,7 @@ class MGATestbenchHardware(Frame):
                 valves.State.Valve(
                     identifier=valves.State.ValveIdentifier(
                         type=valves.State.ValveIdentifier.Type.aspiration,
-                        fluidicLine=fluidic_line,
+                        fluidicLine=fluidic_line+1,
                     ),
                     state=state,
                 )
@@ -365,8 +376,8 @@ class MGATestbenchHardware(Frame):
 
     def _refill_and_get_end_volume_marks(
         self,
-        current_trip_volume_usage: VolumeUsage,
-        total_upcoming_volume_usage: VolumeUsage,
+        current_trip_volume_usage: Volumes,
+        total_upcoming_volume_usage: Volumes,
         line_indexes: list[LineIndex],
     ):
         pump_indexes = [pump_index for pump_index in total_upcoming_volume_usage.keys()]
@@ -409,7 +420,7 @@ class MGATestbenchHardware(Frame):
 
     def _get_volume_usage_and_line_indexes_for_remaining_trips(
         self, volume: Volume, trips: list[Trip]
-    ) -> tuple[VolumeUsage, VolumeUsage, list[LineIndex]]:
+    ) -> tuple[Volumes, Volumes, list[LineIndex]]:
         current_trip_volume_usage = {}
         total_volume_usage = {}
         all_line_indexes: set[LineIndex] = set()

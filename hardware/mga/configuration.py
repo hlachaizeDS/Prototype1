@@ -37,9 +37,8 @@ ReagentToFluidicLineIndexMapping: ReagentToLineMapping = {
         Direction.forward: 11,
         Direction.backward: 6,
     },  # make sure this aligns with DefaultDispenseTrips in dispense.py
-    "DB": 1,
-    "Buff1": 2,
-    "BB": 3,
+    "DB": 0,
+    "Buff1": 1,
     "A": 7,
     "C": 8,
     "G": 9,

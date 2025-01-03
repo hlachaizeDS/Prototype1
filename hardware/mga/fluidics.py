@@ -56,15 +56,15 @@ def get_pump_dispense_axis_start_stop_positions(
     return pumpRanges, [lineIndex for lineIndex in line_indexes]
 
 
-VolumeUsage = dict[PumpIndex, Volume]
+Volumes = dict[PumpIndex, Volume]
 
 
 def estimate_volume_usage(
     pump_dispense_axis_ranges: PumpDispenseAxisRanges,
     pump_speeds: dict[PumpIndex, float],
     gantry_dispense_movement_speed,
-) -> VolumeUsage:
-    volumeUsage = VolumeUsage()
+) -> Volumes:
+    volumeUsage = Volumes()
     for pumpIndex, (start, stop) in pump_dispense_axis_ranges.items():
         volumeUsage[pumpIndex] = Volume(
             abs(stop - start) / gantry_dispense_movement_speed * pump_speeds[pumpIndex]
