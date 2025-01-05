@@ -1,14 +1,11 @@
 from hardware.mga.testbench_hardware import MGATestbenchHardware
 from hardware.mga.movement import Coordinate
-import datetime
 
 test_hardware = MGATestbenchHardware(None, mock_components=True)
 
 
 def test_dispense():
-    # Create a new instance of the class
-    # Call the method
-    all_wells= [i for i in range(1, 384 + 1)]
+    all_wells= [i for i in range(1, 385)]
     test_hardware.initialisation()
     test_hardware.dispense(
         volume_per_line={

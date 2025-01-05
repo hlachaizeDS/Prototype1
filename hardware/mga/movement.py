@@ -50,23 +50,30 @@ def find_alignment_coordinates(
     are_rows_ascending: bool,
     are_columns_ascending: bool,
 ):
-    manifold_index_difference = (
-        geometry.reference.line_index - alignment.line_index
+    reference_manifold_index = (
+        geometry.reference.line_index - 1
     ) // geometry.number_of_lines_in_manifold
+    alignment_manifold_index = (
+        alignment.line_index - 1
+    ) // geometry.number_of_lines_in_manifold
+    manifold_index_difference = alignment_manifold_index - reference_manifold_index
 
-    alignment_line_index_difference = (
-        geometry.reference.line_index - alignment.line_index
+    reference_line_index = (
+        geometry.reference.line_index - 1
     ) % geometry.number_of_lines_in_manifold
-    nozzle_index_difference = alignment.nozzle_index - geometry.reference.nozzle_index
-    row_difference = alignment.row - geometry.reference.well.row
+    alignment_line_index = (
+        alignment.line_index - 1
+    ) % geometry.number_of_lines_in_manifold
 
     parallel_sign = 1 if are_columns_ascending else -1
     parallel_offset = (
         parallel_sign
         * (
-            alignment_line_index_difference * geometry.inter_line_spacing_wells
+            (alignment_line_index - reference_line_index)
+            * geometry.inter_line_spacing_wells
             - (geometry.reference.well.column - 1)
-            + nozzle_index_difference * geometry.x_inter_nozzle_spacing_wells_in_line
+            + (alignment.nozzle_index - geometry.reference.nozzle_index)
+            * geometry.x_inter_nozzle_spacing_wells_in_line
         )
         * geometry.inter_well_spacing_mm
     )
@@ -75,9 +82,9 @@ def find_alignment_coordinates(
     perpendicular_offset = (
         perpendicular_sign
         * (
-            row_difference
+            (alignment.row - geometry.reference.well.row)
             + (
-                nozzle_index_difference
+                (alignment.nozzle_index - geometry.reference.nozzle_index)
                 + manifold_index_difference * geometry.number_of_nozzles_per_line
             )
             * geometry.y_inter_nozzle_spacing_wells_in_line

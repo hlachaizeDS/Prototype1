@@ -42,7 +42,7 @@ from hardware.mga.fluidics import (
     get_pump_speed,
 )
 
-ON_MACHINE = True
+ON_MACHINE = False
 
 
 class MGATestbenchHardware(Frame):
@@ -83,7 +83,7 @@ class MGATestbenchHardware(Frame):
         print("Home pumps ", pump_indexes)
         self.pumps.home(
             pumps.PumpIndexes(
-                pumps=[pumps.PumpIndex(value=i + 1) for i in pump_indexes]
+                pumps=[pumps.PumpIndex(value=i) for i in pump_indexes]
             )
         )
         self.move_to(Coordinate(0, 0))
@@ -130,7 +130,7 @@ class MGATestbenchHardware(Frame):
                 dispense_volume=volume,
                 inter_nozzle_in_movement_distance=DefaultGeometry.x_inter_nozzle_spacing_wells_in_line
                 * DefaultGeometry.inter_well_spacing_mm,
-                pump_speed=PumpDynamicsMapping[0].speed,
+                pump_speed=PumpDynamicsMapping[1].speed,
             )
 
             current_trip_volume_usage, total_upcoming_volume_usage, line_indexes = (
@@ -246,7 +246,7 @@ class MGATestbenchHardware(Frame):
             return pumps.PumpMoves(
                 pumps=[
                     pumps.PumpMoves.PumpMove(
-                        index=pumps.PumpIndex(value=index + 1),
+                        index=pumps.PumpIndex(value=index),
                         volumeMark=volume,
                     )
                     for index in pumps_
@@ -266,7 +266,7 @@ class MGATestbenchHardware(Frame):
             pumps.PumpParameters(
                 pumps=[
                     pumps.PumpParameters.PumpInnerParameters(
-                        index=pumps.PumpIndex(value=index + 1),
+                        index=pumps.PumpIndex(value=index),
                         speed=speed,
                         acceleration=PumpDynamicsMapping[index].acceleration,
                         deceleration=PumpDynamicsMapping[index].deceleration,
@@ -298,7 +298,7 @@ class MGATestbenchHardware(Frame):
         while True:
             status: pumps.Statuses = self.pumps.getStatuses(
                 pumps.PumpIndexes(
-                    pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
+                    pumps=[pumps.PumpIndex(value=index) for index in pump_indexes]
                 )
             )
             initialized = [pump.initialized for pump in status.pumps]
@@ -311,7 +311,7 @@ class MGATestbenchHardware(Frame):
         while True:
             status: pumps.Statuses = self.pumps.getStatuses(
                 pumps.PumpIndexes(
-                    pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
+                    pumps=[pumps.PumpIndex(value=index) for index in pump_indexes]
                 )
             )
             busy = [pump.isBusy for pump in status.pumps]
@@ -324,7 +324,7 @@ class MGATestbenchHardware(Frame):
         moves = pumps.PumpMoves(
             pumps=[
                 pumps.PumpMoves.PumpMove(
-                    index=pumps.PumpIndex(value=index + 1), volumeMark=volume
+                    index=pumps.PumpIndex(value=index), volumeMark=volume
                 )
                 for index, volume in end_volume_marks.items()
             ]
@@ -334,7 +334,7 @@ class MGATestbenchHardware(Frame):
     def stop_pump_moves(self, pump_indexes: list[PumpIndex]):
         self.pumps.stop(
             pumps.PumpIndexes(
-                pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
+                pumps=[pumps.PumpIndex(value=index) for index in pump_indexes]
             )
         )
 
@@ -343,11 +343,11 @@ class MGATestbenchHardware(Frame):
     ) -> Volumes:
         volume_marks = self.pumps.getVolumeMarks(
             pumps.PumpIndexes(
-                pumps=[pumps.PumpIndex(value=index + 1) for index in pump_indexes]
+                pumps=[pumps.PumpIndex(value=index) for index in pump_indexes]
             )
         )
         return {
-            PumpIndex(pump.index.value - 1): pump.value for pump in volume_marks.pumps
+            PumpIndex(pump.index.value): pump.value for pump in volume_marks.pumps
         }
 
     def goToWell(self, element, well, quadrant):
@@ -429,7 +429,7 @@ class MGATestbenchHardware(Frame):
                 dispense_volume=volume,
                 inter_nozzle_in_movement_distance=DefaultGeometry.x_inter_nozzle_spacing_wells_in_line
                 * DefaultGeometry.inter_well_spacing_mm,
-                pump_speed=PumpDynamicsMapping[0].speed,
+                pump_speed=PumpDynamicsMapping[1].speed,
             )
             pump_dispense_axis_ranges, line_indexes = (
                 get_pump_dispense_axis_start_stop_positions(

@@ -1,5 +1,8 @@
 import unittest
-from hardware.mga.fluidics import get_pump_dispense_axis_start_stop_positions, estimate_volume_usage
+from hardware.mga.fluidics import (
+    get_pump_dispense_axis_start_stop_positions,
+    estimate_volume_usage,
+)
 from hardware.mga.types import Routine
 import mga_testbench_interface.generated.valves_pb2 as valves
 
@@ -30,7 +33,7 @@ class TestFluidics(unittest.TestCase):
                 ]
             ],
         )
-        fluidic_line_to_pump_mapping = {0: 5, 3: 8}
+        fluidic_line_to_pump_mapping = {1: 6, 4: 9}
         pump_start_stop_margin_mm = 1
         pump_positions, line_indexes = get_pump_dispense_axis_start_stop_positions(
             routine, fluidic_line_to_pump_mapping, pump_start_stop_margin_mm
@@ -41,11 +44,11 @@ class TestFluidics(unittest.TestCase):
             self.assertDictEqual(
                 pump_positions,
                 {
-                    5: (199.0, 206.0),
-                    8: (202.0, 209.0),
+                    6: (199.0, 206.0),
+                    9: (202.0, 209.0),
                 },
             )
-        self.assertListEqual(line_indexes, [0, 3])
+        self.assertListEqual(line_indexes, [1, 4])
 
     def test_get_movement_range_coordinates_backward(self):
         routine = Routine(
@@ -74,7 +77,7 @@ class TestFluidics(unittest.TestCase):
                 ]
             ],
         )
-        fluidic_line_to_pump_mapping = {2: 0, 8: 1}
+        fluidic_line_to_pump_mapping = {3: 1, 9: 2}
         pump_start_stop_margin_mm = 1
         pump_positions, line_indexes = get_pump_dispense_axis_start_stop_positions(
             routine, fluidic_line_to_pump_mapping, pump_start_stop_margin_mm
@@ -85,15 +88,15 @@ class TestFluidics(unittest.TestCase):
             self.assertDictEqual(
                 pump_positions,
                 {
-                    0: (151.0, 141.0),
-                    1: (133.0, 117.0),
+                    1: (151.0, 141.0),
+                    2: (133.0, 117.0),
                 },
             )
-        self.assertListEqual(sorted(line_indexes), [2, 8])
+        self.assertListEqual(sorted(line_indexes), [3, 9])
 
     def test_estimate_volume_usage(self):
-        pump_ranges = {0: (151.0, 141.0), 1: (133.0, 118.0)}
-        pump_speeds = {0: 10.0, 1: 20.0}  # µl/s
+        pump_ranges = {1: (151.0, 141.0), 2: (133.0, 118.0)}
+        pump_speeds = {1: 10.0, 2: 20.0}  # µl/s
         gantry_x_movement_speed = 5.0  # mm/s
         volume_usage = estimate_volume_usage(
             pump_ranges, pump_speeds, gantry_x_movement_speed
@@ -104,7 +107,7 @@ class TestFluidics(unittest.TestCase):
             self.assertDictEqual(
                 volume_usage,
                 {
-                    0: 20.0,
-                    1: 60.0,
+                    1: 20.0,
+                    2: 60.0,
                 },
             )
