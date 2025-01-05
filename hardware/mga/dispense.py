@@ -77,6 +77,7 @@ def create_abstract_routine(
     direction: Direction,  # in reference to the plate
     geometry: Geometry,
     line_configurations: dict[LineIndex, LineConfiguration],
+    lines_with_common_discharge_valve: dict[LineIndex, LineIndex] = {},
 ):
     if len(dispense_plan) == 0:
         return valves.Routine()
@@ -156,14 +157,21 @@ def create_abstract_routine(
                 valve_identifier,
             )
 
-    return __complete_routine(routine, geometry)
+    return __complete_routine(routine, geometry, lines_with_common_discharge_valve)
 
 
-def __complete_routine(routine: valves.Routine, geometry: Geometry):
-    for item in routine.positionThresholdToStateMapping:
+def __complete_routine(
+    routine: valves.Routine,
+    geometry: Geometry,
+    lines_with_common_discharge_valve: dict[LineIndex, LineIndex] = {},
+):
+    for index, item in enumerate(routine.positionThresholdToStateMapping):
         for line in range(
             1, geometry.number_of_lines_in_manifold * geometry.number_of_manifolds + 1
         ):
+            common_valves = _get_valves_in_line_with_common_discharge_valve(
+                line, index, routine, lines_with_common_discharge_valve
+            )
 
             def lineValves():
                 return [
@@ -175,27 +183,13 @@ def __complete_routine(routine: valves.Routine, geometry: Geometry):
             if len(lineValves()) == 0:
                 continue
 
-            valve_open = len(
-                [
-                    valve
-                    for valve in lineValves()
-                    if valve.state == valves.State.ValveState.open
-                ]
+            _manage_discharge_valves(
+                line,
+                item,
+                lineValves(),
+                common_valves,
+                lines_with_common_discharge_valve,
             )
-            if valve_open > 1:
-                raise ValueError(f"More than one valve open in line {line}")
-
-            if valve_open == 0:
-                item.state.valves.append(
-                    valves.State.Valve(
-                        identifier=valves.State.ValveIdentifier(
-                            type=valves.State.ValveIdentifier.Type.discharge,
-                            fluidicLine=line,
-                            id=0,  # discharge id
-                        ),
-                        state=valves.State.ValveState.open,
-                    )
-                )
 
             missing_valve_indexes = [
                 index
@@ -289,13 +283,13 @@ def __get_nozzle_row_column(
     nozzle_row = (
         base_row
         - manifold_row_offset
-        - (nozzle_index-1) * geometry.y_inter_nozzle_spacing_wells_in_line
+        - (nozzle_index - 1) * geometry.y_inter_nozzle_spacing_wells_in_line
     )
     nozzle_column: float = (
         step
         - ((line_index - 1) % geometry.number_of_lines_in_manifold)
         * geometry.inter_line_spacing_wells
-        - (nozzle_index-1) * geometry.x_inter_nozzle_spacing_wells_in_line
+        - (nozzle_index - 1) * geometry.x_inter_nozzle_spacing_wells_in_line
     )
     if (
         (nozzle_row - 1) < 0
@@ -459,3 +453,86 @@ def create_trips(
             continue
         trips.append((routine, range))
     return trips
+
+
+def _get_valves_in_line_with_common_discharge_valve(
+    current_line: LineIndex,
+    current_item_index: int,
+    routine: valves.Routine,
+    lines_with_common_discharge_valve: dict[LineIndex, LineIndex],
+):
+    if current_line not in lines_with_common_discharge_valve:
+        return []
+    line_with_common_discharge_valve = lines_with_common_discharge_valve[current_line]
+    valves_in_line_with_common_discharge_valve: list[valves.State.Valve] = []
+    for item_index in reversed(range(0, current_item_index + 1)):
+        if any(
+            valve.identifier.fluidicLine == line_with_common_discharge_valve
+            for valve in routine.positionThresholdToStateMapping[
+                item_index
+            ].state.valves
+        ):
+            valves_in_line_with_common_discharge_valve = [
+                valve
+                for valve in routine.positionThresholdToStateMapping[
+                    item_index
+                ].state.valves
+                if valve.identifier.fluidicLine == line_with_common_discharge_valve
+                and valve.identifier.type != valves.State.ValveIdentifier.Type.discharge
+            ]
+            break
+    return valves_in_line_with_common_discharge_valve
+
+
+def _manage_discharge_valves(
+    current_line: LineIndex,
+    item: Routine.Item,
+    current_line_valves: list[valves.State.Valve],
+    common_line_valves: list[valves.State.Valve],
+    lines_with_common_discharge_valve: dict[LineIndex, LineIndex],
+):
+    def count_open_valves(valves_: list[valves.State.Valve]):
+        return len(
+            [
+                valve
+                for valve in valves_
+                if valve.state == valves.State.ValveState.open
+                and valve.identifier.type != valves.State.ValveIdentifier.Type.discharge
+            ]
+        )
+
+    open_valve_count_in_current_line = count_open_valves(current_line_valves)
+    open_valve_count_in_common_line = count_open_valves(common_line_valves)
+
+    if open_valve_count_in_current_line > 1:
+        raise ValueError(f"More than one valve open in line {current_line}")
+
+    def set_discharge_valve(lines: list[LineIndex], state: valves.State.ValveState):
+        item.state.valves.extend(
+            valves.State.Valve(
+                identifier=valves.State.ValveIdentifier(
+                    type=valves.State.ValveIdentifier.Type.discharge,
+                    fluidicLine=line,
+                    id=0,  # discharge id
+                ),
+                state=state,
+            )
+            for line in lines
+        )
+
+    has_common_line = current_line in lines_with_common_discharge_valve
+
+    if not has_common_line:
+        set_discharge_valve(
+            [current_line],
+            valves.State.ValveState.open
+            if open_valve_count_in_current_line == 0
+            else valves.State.ValveState.closed,
+        )
+    else:
+        set_discharge_valve(
+            [current_line, lines_with_common_discharge_valve[current_line]],
+            valves.State.ValveState.open
+            if (open_valve_count_in_common_line + open_valve_count_in_current_line) == 0
+            else valves.State.ValveState.closed,
+        )

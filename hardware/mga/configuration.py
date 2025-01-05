@@ -24,7 +24,7 @@ FluidicLineIndexToPumpIndexMapping: LineToPumpMapping = {
     9: 3,
     10: 4,
     11: 5,
-    12: 6,
+    12: 1,
 }
 
 ReagentToLineMapping = dict[str, LineIndex | dict[Direction, LineIndex]]
