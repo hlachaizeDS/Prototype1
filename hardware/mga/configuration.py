@@ -10,39 +10,35 @@ from hardware.mga.types import (
 )
 
 ###########################################################
-############ IMPORTANT: ALL INDEXES START AT 0 ############
+############ IMPORTANT: ALL INDEXES START AT 1 ############
 ###########################################################
 
 
 # mappings
 LineToPumpMapping = dict[LineIndex, PumpIndex]
 FluidicLineIndexToPumpIndexMapping: LineToPumpMapping = {
-    0: 6,
     1: 7,
-    # 2: 8,
-    # 3: 9,
-    # 4: 10,
-    # 5: 10,
-    6: 0,
+    2: 8,
     7: 1,
     8: 2,
     9: 3,
     10: 4,
     11: 5,
+    12: 6,
 }
 
 ReagentToLineMapping = dict[str, LineIndex | dict[Direction, LineIndex]]
 ReagentToFluidicLineIndexMapping: ReagentToLineMapping = {
     "EB": {
-        Direction.forward: 11,
-        Direction.backward: 6,
-    },  # make sure this aligns with DefaultDispenseTrips in dispense.py
-    "DB": 0,
-    "Buff1": 1,
-    "A": 7,
-    "C": 8,
-    "G": 9,
-    "T": 10,
+        Direction.forward: 12,
+        Direction.backward: 7,
+    },
+    "DB": 1,
+    "Buff1": 2,
+    "A": 8,
+    "C": 9,
+    "G": 10,
+    "T": 11,
 }
 
 
@@ -73,9 +69,9 @@ DefaultGeometry = Geometry(
     reference=Reference(
         position=Coordinate(126.66, 162.99),
         # the following values should not be modified
-        line_index=0,
-        nozzle_index=0,
-        well=Well(row=6, column=0),
+        line_index=1,
+        nozzle_index=1,
+        well=Well(row=7, column=1),
     ),
     inter_well_spacing_mm=4.5,
     number_of_lines_in_manifold=6,
@@ -90,7 +86,7 @@ DefaultGeometry = Geometry(
 
 
 LineConfigurations: dict[LineIndex, LineConfiguration] = {
-    index: LineConfiguration(open_offset=0, close_offset=0) for index in range(12)
+    index: LineConfiguration(open_offset=0, close_offset=0) for index in range(1, 13)
 }
 
 
@@ -102,7 +98,7 @@ class PumpDynamics:
 
 
 PumpDynamicsMapping: dict[PumpIndex, PumpDynamics] = {
-    index: PumpDynamics() for index in range(11)
+    index: PumpDynamics() for index in range(1, 9)
 }
 
 
@@ -138,8 +134,6 @@ DefaultGantryParameters = GantryParameters(
         Axis.y: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=100.0),
     }
 )
-
-MovementMargin = Coordinate(0.5, 0.0)
 
 PumpMaxVolume = 5000.0  # µl
 PumpSlack = 50.0  # µl

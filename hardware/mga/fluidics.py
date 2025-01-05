@@ -30,7 +30,7 @@ def get_pump_dispense_axis_start_stop_positions(
             lineValves = [
                 valve
                 for valve in item.state.valves
-                if valve.identifier.fluidicLine == lineIndex + 1
+                if valve.identifier.fluidicLine == lineIndex
             ]
             if len(lineValves) == 0:
                 continue

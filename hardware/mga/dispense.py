@@ -23,12 +23,12 @@ from hardware.mga.movement import (
 
 # in reference to the plate (forward = towards the last row)
 DefaultDispenseTrips = [
-    (Alignment(line_index=0, nozzle_index=0, row=6), Direction.forward),
-    (Alignment(line_index=0, nozzle_index=0, row=7), Direction.backward),
-    (Alignment(line_index=6, nozzle_index=0, row=6), Direction.forward),
-    (Alignment(line_index=6, nozzle_index=0, row=7), Direction.backward),
-    (Alignment(line_index=6, nozzle_index=0, row=14), Direction.forward),
-    (Alignment(line_index=6, nozzle_index=0, row=15), Direction.backward),
+    (Alignment(line_index=1, nozzle_index=1, row=7), Direction.forward),
+    (Alignment(line_index=1, nozzle_index=1, row=8), Direction.backward),
+    (Alignment(line_index=7, nozzle_index=1, row=7), Direction.forward),
+    (Alignment(line_index=7, nozzle_index=1, row=8), Direction.backward),
+    (Alignment(line_index=7, nozzle_index=1, row=15), Direction.forward),
+    (Alignment(line_index=7, nozzle_index=1, row=16), Direction.backward),
 ]
 
 
@@ -59,7 +59,8 @@ def create_dispense_plan(
                 dispense_plan[index] = [
                     well
                     for well in wells
-                    if well.row % 2 == (0 if direction == Direction.forward else 1)
+                    if (well.row - 1) % 2
+                    == (0 if direction == Direction.forward else 1)
                 ]
         else:
             dispense_plan[line_index] = wells
@@ -86,9 +87,9 @@ def create_abstract_routine(
         well.column for _, wells in dispense_plan.items() for well in wells
     )
     min_line_index_in_manifold = (
-        min(line_index for line_index, _ in dispense_plan.items())
+        (min(line_index for line_index, _ in dispense_plan.items()) - 1)
         % geometry.number_of_lines_in_manifold
-    )
+    ) + 1
 
     dispensed_wells: dict[LineIndex, list[Well]] = {
         line_index: [] for line_index in dispense_plan.keys()
@@ -102,8 +103,8 @@ def create_abstract_routine(
         * geometry.inter_line_spacing_wells
     )
 
-    start = 0 if direction == Direction.forward else max_step
-    stop = max_step if direction == Direction.forward else 0
+    start = 1 if direction == Direction.forward else max_step
+    stop = max_step if direction == Direction.forward else 1
     step_change = (
         (1 if direction == Direction.forward else -1)
         * geometry.x_inter_nozzle_spacing_wells_in_line
@@ -120,9 +121,9 @@ def create_abstract_routine(
         for line_index, wells in dispense_plan.items():
             valve_identifier: valves.State.ValveIdentifier | None = None
 
-            for nozzle_index in range(0, geometry.number_of_nozzles_per_line):
+            for nozzle_index in range(1, geometry.number_of_nozzles_per_line + 1):
                 nozzle_row, nozzle_column = __get_nozzle_row_column(
-                    alignment, geometry, base_row, step, nozzle_index, line_index
+                    geometry, base_row, step, nozzle_index, line_index
                 )
                 if nozzle_row is None or nozzle_column is None:
                     continue
@@ -138,8 +139,8 @@ def create_abstract_routine(
                 if should_dispense:
                     valve_identifier = valves.State.ValveIdentifier(
                         type=valves.State.ValveIdentifier.Type.dispense,
-                        fluidicLine=line_index + 1,
-                        id=nozzle_index + 1,
+                        fluidicLine=line_index,
+                        id=nozzle_index,
                     )
                     dispensed_wells[line_index].append(target_well)
                     break
@@ -210,7 +211,7 @@ def __complete_routine(routine: valves.Routine, geometry: Geometry):
                             if missing_valve_index == 0
                             else valves.State.ValveIdentifier.Type.dispense,
                             fluidicLine=line,
-                            id=missing_valve_index,  # discharge id
+                            id=missing_valve_index,
                         ),
                         state=valves.State.ValveState.closed,
                     )
@@ -274,7 +275,6 @@ def project_routine_to_axes(
 
 
 def __get_nozzle_row_column(
-    alignment: Alignment,
     geometry: Geometry,
     base_row: int,
     step: float,
@@ -282,26 +282,26 @@ def __get_nozzle_row_column(
     line_index: LineIndex,
 ):
     manifold_row_offset = (
-        (line_index // geometry.number_of_lines_in_manifold)
+        ((line_index - 1) // geometry.number_of_lines_in_manifold)
         * geometry.number_of_nozzles_per_line
         * geometry.y_inter_nozzle_spacing_wells_in_line
     )
     nozzle_row = (
         base_row
         - manifold_row_offset
-        - nozzle_index * geometry.y_inter_nozzle_spacing_wells_in_line
+        - (nozzle_index-1) * geometry.y_inter_nozzle_spacing_wells_in_line
     )
     nozzle_column: float = (
         step
-        - (line_index % geometry.number_of_lines_in_manifold)
+        - ((line_index - 1) % geometry.number_of_lines_in_manifold)
         * geometry.inter_line_spacing_wells
-        - nozzle_index * geometry.x_inter_nozzle_spacing_wells_in_line
+        - (nozzle_index-1) * geometry.x_inter_nozzle_spacing_wells_in_line
     )
     if (
-        nozzle_row < 0
-        or nozzle_row >= geometry.number_of_rows
-        or nozzle_column < -1
-        or nozzle_column > geometry.number_of_columns + 1
+        (nozzle_row - 1) < 0
+        or (nozzle_row - 1) >= geometry.number_of_rows
+        or (nozzle_column - 1) < -1
+        or (nozzle_column - 1) > geometry.number_of_columns + 1
     ):
         return (None, None)
     return (nozzle_row, nozzle_column)
@@ -338,13 +338,13 @@ def __get_open_close_positions_in_wells(
 ):
     sign = 1 if direction == Direction.forward else -1
     open_position = (
-        start_step
+        (start_step - 1)
         - sign
         * line_configurations.open_offset
         * geometry.x_inter_nozzle_spacing_wells_in_line
     )
     close_position = (
-        start_step
+        (start_step - 1)
         + sign * geometry.x_inter_nozzle_spacing_wells_in_line
         # * geometry.inter_well_spacing_mm
         - sign
@@ -354,18 +354,17 @@ def __get_open_close_positions_in_wells(
     return (open_position, close_position)
 
 
-# row on which line 0 nozzle 0 is aligned
 def __find_base_row(
     alignment: Alignment,
     geometry: Geometry,
 ):
-    manifold_index = alignment.line_index // geometry.number_of_lines_in_manifold
+    manifold_index = (alignment.line_index - 1) // geometry.number_of_lines_in_manifold
     if manifold_index >= geometry.number_of_manifolds:
         raise ValueError("Manifold index out of bounds")
     return (
         alignment.row
         + (
-            alignment.nozzle_index
+            (alignment.nozzle_index - 1)
             + manifold_index * geometry.number_of_nozzles_per_line
         )
         * geometry.y_inter_nozzle_spacing_wells_in_line

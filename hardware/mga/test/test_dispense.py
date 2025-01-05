@@ -24,12 +24,12 @@ from hardware.mga.types import (
 
 class TestDispensePlan(unittest.TestCase):
     reagentToFluidicLineIndexMapping: ReagentToLineMapping = {
-        "A": {Direction.forward: 0, Direction.backward: 5},
-        "B": 1,
-        "C": 2,
-        "D": 3,
-        "E": 4,
-        "F": 6,
+        "A": {Direction.forward: 1, Direction.backward: 6},
+        "B": 2,
+        "C": 3,
+        "D": 4,
+        "E": 5,
+        "F": 7,
     }
 
     def test_create_dispense_plan_with_empty_reagent_volume_wells(self):
@@ -72,7 +72,7 @@ class TestDispensePlan(unittest.TestCase):
         )
 
         expected_dispense_plan: DispensePlan = {
-            4: [Well(wellIndex + 1) for wellIndex in range(384)]
+            5: [Well(wellIndex + 1) for wellIndex in range(384)]
         }
         self.assertDictEqual(dispense_plan, expected_dispense_plan)
 
@@ -87,8 +87,8 @@ class TestDispensePlan(unittest.TestCase):
         )
 
         expected_dispense_plan: DispensePlan = {
-            1: [Well(wellIndex + 1) for wellIndex in range(0, 384, 2)],
-            2: [Well(wellIndex + 1) for wellIndex in range(1, 384, 2)],
+            2: [Well(wellIndex + 1) for wellIndex in range(0, 384, 2)],
+            3: [Well(wellIndex + 1) for wellIndex in range(1, 384, 2)],
         }
 
         self.assertDictEqual(dispense_plan, expected_dispense_plan)
@@ -104,7 +104,7 @@ class TestDispensePlan(unittest.TestCase):
         )
 
         expected_dispense_plan: DispensePlan = {
-            1: [Well(wellIndex + 1) for wellIndex in range(0, 384, 2)],
+            2: [Well(wellIndex + 1) for wellIndex in range(0, 384, 2)],
         }
 
         self.assertDictEqual(dispense_plan, expected_dispense_plan)
@@ -121,8 +121,8 @@ class TestDispensePlan(unittest.TestCase):
         )
 
         expected_dispense_plan: DispensePlan = {
-            1: [Well(wellIndex + 1) for wellIndex in range(0, 384, 2)],
-            2: [Well(wellIndex + 1) for wellIndex in range(1, 384, 2)],
+            2: [Well(wellIndex + 1) for wellIndex in range(0, 384, 2)],
+            3: [Well(wellIndex + 1) for wellIndex in range(1, 384, 2)],
         }
 
         self.assertDictEqual(dispense_plan, expected_dispense_plan)
@@ -143,19 +143,19 @@ class TestDispensePlan(unittest.TestCase):
         }
 
         expected_dispense_plan: DispensePlan = {
-            0: sorted(
+            1: sorted(
                 [
                     Well(row=row, column=column)
-                    for row in range(0, 16, 2)
-                    for column in range(0, 24)
+                    for row in range(1, 17, 2)
+                    for column in range(1, 25)
                 ],
                 key=lambda well: (well.row, well.column),
             ),
-            5: sorted(
+            6: sorted(
                 [
                     Well(row=row, column=column)
-                    for row in range(1, 16, 2)
-                    for column in range(0, 24)
+                    for row in range(2, 17, 2)
+                    for column in range(1, 25)
                 ],
                 key=lambda well: (well.row, well.column),
             ),
@@ -170,15 +170,15 @@ class TestCreateRoutine(unittest.TestCase):
     def test_create_abstract_routine_single_line_forward(self):
         wells: list[Well] = [
             Well(row=row, column=column)
-            for row in range(0, 8, 2)
-            for column in range(0, 2)
+            for row in range(1, 9, 2)
+            for column in range(1, 3)
         ]
 
-        dispense_plan = {0: wells}
+        dispense_plan = {1: wells}
 
-        line_configurations = {0: LineConfiguration(open_offset=0, close_offset=0)}
+        line_configurations = {1: LineConfiguration(open_offset=0, close_offset=0)}
 
-        alignment = Alignment(line_index=0, nozzle_index=3, row=0)
+        alignment = Alignment(line_index=1, nozzle_index=4, row=1)
         direction = Direction.forward
 
         routine = create_abstract_routine(
@@ -209,15 +209,15 @@ class TestCreateRoutine(unittest.TestCase):
     def test_create_abstract_routine_single_line_forward_3rd_trip(self):
         wells: list[Well] = [
             Well(row=row, column=column)
-            for row in range(0, 16)
-            for column in range(0, 2)
+            for row in range(1, 17)
+            for column in range(1, 3)
         ]
 
-        dispense_plan = {0: wells}
+        dispense_plan = {1: wells}
 
-        line_configurations = {0: LineConfiguration(open_offset=0, close_offset=0)}
+        line_configurations = {1: LineConfiguration(open_offset=0, close_offset=0)}
 
-        alignment = Alignment(line_index=0, nozzle_index=0, row=14)
+        alignment = Alignment(line_index=1, nozzle_index=1, row=15)
         direction = Direction.forward
 
         routine = create_abstract_routine(
@@ -248,15 +248,15 @@ class TestCreateRoutine(unittest.TestCase):
     def test_create_abstract_routine_single_line_forward_2nd_manifold(self):
         wells: list[Well] = [
             Well(row=row, column=column)
-            for row in range(0, 16)
-            for column in range(0, 2)
+            for row in range(1, 17)
+            for column in range(1, 3)
         ]
 
-        dispense_plan = {11: wells}
+        dispense_plan = {12: wells}
 
-        line_configurations = {11: LineConfiguration(open_offset=0, close_offset=0)}
+        line_configurations = {12: LineConfiguration(open_offset=0, close_offset=0)}
 
-        alignment = Alignment(line_index=6, nozzle_index=0, row=14)
+        alignment = Alignment(line_index=7, nozzle_index=1, row=15)
         direction = Direction.forward
 
         routine = create_abstract_routine(
@@ -291,15 +291,15 @@ class TestCreateRoutine(unittest.TestCase):
     def test_create_abstract_routine_single_line_backward(self):
         wells: list[Well] = [
             Well(row=row, column=column)
-            for row in range(0, 8, 2)
-            for column in range(0, 2)
+            for row in range(1, 9, 2)
+            for column in range(1, 3)
         ]
 
-        dispense_plan = {0: wells}
+        dispense_plan = {1: wells}
 
-        line_configurations = {0: LineConfiguration(open_offset=0, close_offset=0)}
+        line_configurations = {1: LineConfiguration(open_offset=0, close_offset=0)}
 
-        alignment = Alignment(line_index=0, nozzle_index=3, row=0)
+        alignment = Alignment(line_index=1, nozzle_index=4, row=1)
         direction = Direction.backward
 
         routine = create_abstract_routine(
@@ -330,13 +330,13 @@ class TestCreateRoutine(unittest.TestCase):
     def test_create_abstract_routine_multi_line_same_manifold_forward(self):
         wells: list[Well] = [
             Well(row=row, column=column)
-            for row in range(0, 8, 2)
-            for column in range(0, 2)
+            for row in range(1, 9, 2)
+            for column in range(1, 3)
         ]
 
         dispense_plan = {
-            0: wells,
-            5: wells,
+            1: wells,
+            6: wells,
         }
 
         line_configurations = {
@@ -344,7 +344,7 @@ class TestCreateRoutine(unittest.TestCase):
             for index in dispense_plan.keys()
         }
 
-        alignment = Alignment(line_index=0, nozzle_index=3, row=0)
+        alignment = Alignment(line_index=1, nozzle_index=4, row=1)
         direction = Direction.forward
 
         routine = create_abstract_routine(
@@ -379,13 +379,13 @@ class TestCreateRoutine(unittest.TestCase):
     def test_create_abstract_routine_multi_line_same_manifold_backward(self):
         wells: list[Well] = [
             Well(row=row, column=column)
-            for row in range(0, 8, 2)
-            for column in range(0, 2)
+            for row in range(1, 9, 2)
+            for column in range(1, 3)
         ]
 
         dispense_plan = {
-            6: wells,
-            9: wells,
+            7: wells,
+            10: wells,
         }
 
         line_configurations = {
@@ -393,7 +393,7 @@ class TestCreateRoutine(unittest.TestCase):
             for index in dispense_plan.keys()
         }
 
-        alignment = Alignment(line_index=6, nozzle_index=3, row=0)
+        alignment = Alignment(line_index=7, nozzle_index=4, row=1)
         direction = Direction.backward
 
         routine = create_abstract_routine(
@@ -428,13 +428,13 @@ class TestCreateRoutine(unittest.TestCase):
     def test_create_abstract_routine_multi_line_different_manifold_forward(self):
         wells: list[Well] = [
             Well(row=row, column=column)
-            for row in range(0, 16, 2)
-            for column in range(0, 2)
+            for row in range(1, 17, 2)
+            for column in range(1, 3)
         ]
 
         dispense_plan = {
-            0: wells,
-            11: wells,
+            1: wells,
+            12: wells,
         }
 
         line_configurations = {
@@ -442,7 +442,7 @@ class TestCreateRoutine(unittest.TestCase):
             for index in dispense_plan.keys()
         }
 
-        alignment = Alignment(line_index=6, nozzle_index=3, row=0)
+        alignment = Alignment(line_index=7, nozzle_index=4, row=1)
         direction = Direction.forward
 
         routine = create_abstract_routine(
@@ -477,13 +477,13 @@ class TestCreateRoutine(unittest.TestCase):
     def test_create_abstract_routine_multi_line_single_manifold_missing_column(self):
         wells: list[Well] = [
             Well(row=row, column=column)
-            for row in range(0, 16, 2)
-            for column in range(0, 4)
-            if column != 2  # missing column
+            for row in range(1, 17, 2)
+            for column in range(1, 5)
+            if column != 3  # missing column
         ]
 
         dispense_plan = {
-            0: wells,
+            1: wells,
         }
 
         line_configurations = {
@@ -491,7 +491,7 @@ class TestCreateRoutine(unittest.TestCase):
             for index in dispense_plan.keys()
         }
 
-        alignment = Alignment(line_index=6, nozzle_index=3, row=0)
+        alignment = Alignment(line_index=7, nozzle_index=4, row=1)
         direction = Direction.forward
 
         routine = create_abstract_routine(
@@ -522,22 +522,22 @@ class TestCreateRoutine(unittest.TestCase):
     def test_project_routine_start_end_thresholds_forward(self):
         wells: list[Well] = [
             Well(row=row, column=column)
-            for row in range(0, 8, 2)
-            for column in range(0, 2)
+            for row in range(1, 9, 2)
+            for column in range(1, 3)
         ]
 
-        dispense_plan = {0: wells}
+        dispense_plan = {1: wells}
 
-        line_configurations = {0: LineConfiguration(open_offset=0, close_offset=0)}
+        line_configurations = {1: LineConfiguration(open_offset=0, close_offset=0)}
 
-        alignment = Alignment(line_index=2, nozzle_index=3, row=0)
+        alignment = Alignment(line_index=3, nozzle_index=4, row=1)
         direction = Direction.forward
 
         geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(100, 200)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
+        geometry.reference.well = Well(row=7, column=1)
 
         routine = create_abstract_routine(
             dispense_plan=dispense_plan,
@@ -569,22 +569,22 @@ class TestCreateRoutine(unittest.TestCase):
     def test_project_routine_start_end_thresholds_backward(self):
         wells: list[Well] = [
             Well(row=row, column=column)
-            for row in range(0, 8, 2)
-            for column in range(6, 8)
+            for row in range(1, 9, 2)
+            for column in range(7, 9)
         ]
 
-        dispense_plan = {1: wells}
+        dispense_plan = {2: wells}
 
-        line_configurations = {1: LineConfiguration(open_offset=0, close_offset=0)}
+        line_configurations = {2: LineConfiguration(open_offset=0, close_offset=0)}
 
-        alignment = Alignment(line_index=0, nozzle_index=3, row=0)
+        alignment = Alignment(line_index=1, nozzle_index=4, row=1)
         direction = Direction.backward
 
         geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(400, 0)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
+        geometry.reference.well = Well(row=7, column=1)
 
         routine = create_abstract_routine(
             dispense_plan=dispense_plan,
@@ -616,9 +616,9 @@ class TestCreateRoutine(unittest.TestCase):
     def test_project_routine_foward_in_ascending_x(self):
         geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(200, 400)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
+        geometry.reference.well = Well(row=7, column=1)
 
         abstract_routine = Routine(
             direction=Direction.forward,
@@ -647,9 +647,9 @@ class TestCreateRoutine(unittest.TestCase):
     def test_project_routine_foward_in_descending_x(self):
         geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(200, 400)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
+        geometry.reference.well = Well(row=7, column=1)
 
         abstract_routine = Routine(
             direction=Direction.forward,
@@ -678,9 +678,9 @@ class TestCreateRoutine(unittest.TestCase):
     def test_project_routine_foward_in_descending_y(self):
         geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(200, 400)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
+        geometry.reference.well = Well(row=7, column=1)
 
         abstract_routine = Routine(
             direction=Direction.forward,
@@ -709,9 +709,9 @@ class TestCreateRoutine(unittest.TestCase):
     def test_project_routine_backward_in_descending_y(self):
         geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(200, 400)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
+        geometry.reference.well = Well(row=7, column=1)
 
         abstract_routine = Routine(
             direction=Direction.backward,
@@ -739,21 +739,23 @@ class TestCreateRoutine(unittest.TestCase):
 
     def test_project_routine_real_data(self):
         wells: list[Well] = [
-            Well(row=row, column=column) for row in range(0, 16) for column in range(1)
+            Well(row=row, column=column)
+            for row in range(1, 17)
+            for column in range(1, 2)
         ]
 
-        dispense_plan = {0: wells}
+        dispense_plan = {1: wells}
 
-        line_configurations = {0: LineConfiguration(open_offset=0, close_offset=0)}
+        line_configurations = {1: LineConfiguration(open_offset=0, close_offset=0)}
 
-        alignment = Alignment(line_index=0, nozzle_index=3, row=6)
+        alignment = Alignment(line_index=1, nozzle_index=4, row=7)
         direction = Direction.forward
 
         geometry = copy.deepcopy(DefaultGeometry)
         geometry.reference.position = Coordinate(127.67, 162.96)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
+        geometry.reference.well = Well(row=7, column=1)
 
         routine = create_abstract_routine(
             dispense_plan=dispense_plan,
@@ -856,9 +858,9 @@ def create_geogram(routine: Routine) -> str:
 
 def print_wells(wells: list[Well]):
     print()
-    for row in range(0, 16):
+    for row in range(1, 17):
         print("|", end="")
-        for column in range(0, 24):
+        for column in range(1, 25):
             print("x|" if Well(row=row, column=column) in wells else " |", end="")
         print()
     print()

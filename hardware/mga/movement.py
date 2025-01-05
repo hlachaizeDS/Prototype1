@@ -1,7 +1,7 @@
 from hardware.mga.configuration import Geometry, Axis
 from hardware.mga.types import Coordinate, Alignment, Routine
 
-DispenseMovementMargin = Coordinate(1, 1)
+DispenseMovementMargin = 1.0  # mm
 MovementRange = tuple[Coordinate, Coordinate]
 
 
@@ -9,7 +9,7 @@ def get_movement_range_coordinates(
     geometry: Geometry,
     alignment: Alignment,
     routine: Routine,
-    margin: Coordinate,
+    margin: float,
     movement_axis: Axis,
     are_rows_ascending: bool,
     are_columns_ascending: bool,
@@ -23,12 +23,8 @@ def get_movement_range_coordinates(
 
     sign = 1 if routine.direction == routine.Direction.forward else -1
 
-    margin_ = margin.x if movement_axis == Axis.x else margin.y
-
-    start = (
-        routine.positionThresholdToStateMapping[0].positionThreshold - sign * margin_
-    )
-    end = routine.positionThresholdToStateMapping[-1].positionThreshold + sign * margin_
+    start = routine.positionThresholdToStateMapping[0].positionThreshold - sign * margin
+    end = routine.positionThresholdToStateMapping[-1].positionThreshold + sign * margin
     alignment_coordinates = find_alignment_coordinates(
         geometry,
         alignment,
@@ -54,28 +50,23 @@ def find_alignment_coordinates(
     are_rows_ascending: bool,
     are_columns_ascending: bool,
 ):
-    reference_manifold_index = (
-        geometry.reference.line_index // geometry.number_of_lines_in_manifold
-    )
-    alignment_manifold_index = (
-        alignment.line_index // geometry.number_of_lines_in_manifold
-    )
-    manifold_index_difference = alignment_manifold_index - reference_manifold_index
+    manifold_index_difference = (
+        geometry.reference.line_index - alignment.line_index
+    ) // geometry.number_of_lines_in_manifold
 
-    reference_line_index = (
-        geometry.reference.line_index % geometry.number_of_lines_in_manifold
-    )
-    alignment_line_index = alignment.line_index % geometry.number_of_lines_in_manifold
+    alignment_line_index_difference = (
+        geometry.reference.line_index - alignment.line_index
+    ) % geometry.number_of_lines_in_manifold
+    nozzle_index_difference = alignment.nozzle_index - geometry.reference.nozzle_index
+    row_difference = alignment.row - geometry.reference.well.row
 
     parallel_sign = 1 if are_columns_ascending else -1
     parallel_offset = (
         parallel_sign
         * (
-            (alignment_line_index - reference_line_index)
-            * geometry.inter_line_spacing_wells
-            - geometry.reference.well.column
-            + (alignment.nozzle_index - geometry.reference.nozzle_index)
-            * geometry.x_inter_nozzle_spacing_wells_in_line
+            alignment_line_index_difference * geometry.inter_line_spacing_wells
+            - (geometry.reference.well.column - 1)
+            + nozzle_index_difference * geometry.x_inter_nozzle_spacing_wells_in_line
         )
         * geometry.inter_well_spacing_mm
     )
@@ -84,10 +75,9 @@ def find_alignment_coordinates(
     perpendicular_offset = (
         perpendicular_sign
         * (
-            (alignment.row - geometry.reference.well.row)
+            row_difference
             + (
-                alignment.nozzle_index
-                - geometry.reference.nozzle_index
+                nozzle_index_difference
                 + manifold_index_difference * geometry.number_of_nozzles_per_line
             )
             * geometry.y_inter_nozzle_spacing_wells_in_line

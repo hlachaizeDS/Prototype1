@@ -28,8 +28,8 @@ class Well:
         column: int | None = None,
     ):
         if index is not None:
-            self.row = (index - 1) % 16
-            self.column = (index - 1) // 16
+            self.row = ((index - 1) % 16) + 1
+            self.column = ((index - 1) // 16) + 1
         elif row is not None and column is not None:
             self.row = row
             self.column = column
@@ -46,8 +46,8 @@ class Alignment:
 
 @dataclass
 class LineConfiguration:
-    open_offset: float # % of inter-nozzle spacing
-    close_offset: float # % of inter-nozzle spacing
+    open_offset: float  # % of inter-nozzle spacing
+    close_offset: float  # % of inter-nozzle spacing
 
 
 PumpIndex = int

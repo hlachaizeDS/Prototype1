@@ -13,12 +13,12 @@ import copy
 class TestMovement(unittest.TestCase):
     def test_find_alignment_coordinates_reference_self(self):
         geometry = copy.deepcopy(DefaultGeometry)
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.well = Well(row=7, column=1)
         geometry.reference.position = Coordinate(10.0, 100.0)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
 
-        alignment = Alignment(line_index=0, nozzle_index=3, row=6)
+        alignment = Alignment(line_index=1, nozzle_index=4, row=7)
         coordinate = find_alignment_coordinates(
             geometry,
             alignment,
@@ -31,12 +31,12 @@ class TestMovement(unittest.TestCase):
 
     def test_find_alignment_coordinates_reference(self):
         geometry = copy.deepcopy(DefaultGeometry)
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.well = Well(row=7, column=1)
         geometry.reference.position = Coordinate(10.0, 100.0)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 0
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 1
 
-        alignment = Alignment(line_index=0, nozzle_index=3, row=0)
+        alignment = Alignment(line_index=1, nozzle_index=4, row=1)
         coordinate = find_alignment_coordinates(
             geometry,
             alignment,
@@ -49,12 +49,12 @@ class TestMovement(unittest.TestCase):
 
     def test_find_alignment_coordinates_different_line_to_reference(self):
         geometry = copy.deepcopy(DefaultGeometry)
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.well = Well(row=7, column=1)
         geometry.reference.position = Coordinate(300.0, 10.0)
-        geometry.reference.line_index = 2
-        geometry.reference.nozzle_index = 3
+        geometry.reference.line_index = 3
+        geometry.reference.nozzle_index = 4
 
-        alignment = Alignment(line_index=5, nozzle_index=3, row=6)
+        alignment = Alignment(line_index=6, nozzle_index=4, row=7)
         coordinate = find_alignment_coordinates(
             geometry,
             alignment,
@@ -67,12 +67,12 @@ class TestMovement(unittest.TestCase):
 
     def test_find_alignment_coordinates_different_nozzle_to_reference(self):
         geometry = copy.deepcopy(DefaultGeometry)
-        geometry.reference.well = Well(row=8, column=0)
+        geometry.reference.well = Well(row=9, column=1)
         geometry.reference.position = Coordinate(200.0, 100.0)
-        geometry.reference.line_index = 2
-        geometry.reference.nozzle_index = 3
+        geometry.reference.line_index = 3
+        geometry.reference.nozzle_index = 4
 
-        alignment = Alignment(line_index=2, nozzle_index=1, row=8)
+        alignment = Alignment(line_index=3, nozzle_index=2, row=9)
         coordinate = find_alignment_coordinates(
             geometry,
             alignment,
@@ -85,12 +85,12 @@ class TestMovement(unittest.TestCase):
 
     def test_find_alignment_coordinates_different_row_to_reference(self):
         geometry = copy.deepcopy(DefaultGeometry)
-        geometry.reference.well = Well(row=4, column=0)
+        geometry.reference.well = Well(row=5, column=1)
         geometry.reference.position = Coordinate(200.0, 100.0)
-        geometry.reference.line_index = 3
-        geometry.reference.nozzle_index = 1
+        geometry.reference.line_index = 4
+        geometry.reference.nozzle_index = 2
 
-        alignment = Alignment(line_index=3, nozzle_index=1, row=10)
+        alignment = Alignment(line_index=4, nozzle_index=2, row=11)
         coordinate = find_alignment_coordinates(
             geometry,
             alignment,
@@ -105,12 +105,12 @@ class TestMovement(unittest.TestCase):
         self,
     ):
         geometry = copy.deepcopy(DefaultGeometry)
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.well = Well(row=7, column=1)
         geometry.reference.position = Coordinate(200.0, 100.0)
-        geometry.reference.line_index = 6
-        geometry.reference.nozzle_index = 0
+        geometry.reference.line_index = 7
+        geometry.reference.nozzle_index = 1
 
-        alignment = Alignment(line_index=0, nozzle_index=0, row=6)
+        alignment = Alignment(line_index=1, nozzle_index=1, row=7)
         coordinate = find_alignment_coordinates(
             geometry,
             alignment,
@@ -125,12 +125,12 @@ class TestMovement(unittest.TestCase):
         self,
     ):
         geometry = copy.deepcopy(DefaultGeometry)
-        geometry.reference.well = Well(row=0, column=0)
+        geometry.reference.well = Well(row=1, column=1)
         geometry.reference.position = Coordinate(200.0, 100.0)
-        geometry.reference.line_index = 11
-        geometry.reference.nozzle_index = 3
+        geometry.reference.line_index = 12
+        geometry.reference.nozzle_index = 4
 
-        alignment = Alignment(line_index=0, nozzle_index=0, row=12)
+        alignment = Alignment(line_index=1, nozzle_index=1, row=13)
         coordinate = find_alignment_coordinates(
             geometry,
             alignment,
@@ -144,7 +144,9 @@ class TestMovement(unittest.TestCase):
     def test_get_gantry_x_movement_speed(self):
         self.assertAlmostEqual(
             get_gantry_dispense_movement_speed(
-                dispense_volume=12.5, pump_speed=500, inter_nozzle_in_movement_distance=1
+                dispense_volume=12.5,
+                pump_speed=500,
+                inter_nozzle_in_movement_distance=1,
             ),
             40.0,
             3,
@@ -152,12 +154,12 @@ class TestMovement(unittest.TestCase):
 
     def test_get_movement_range_coordinates_forward_x(self):
         geometry = copy.deepcopy(DefaultGeometry)
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.well = Well(row=7, column=1)
         geometry.reference.position = Coordinate(200.0, 100.0)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
 
-        alignment = Alignment(line_index=0, nozzle_index=3, row=6)
+        alignment = Alignment(line_index=1, nozzle_index=4, row=7)
         routine = Routine(
             direction=Routine.Direction.forward,
             positionThresholdToStateMapping=[
@@ -169,7 +171,7 @@ class TestMovement(unittest.TestCase):
             geometry,
             alignment,
             routine,
-            margin=Coordinate(2, 10),
+            margin=2.0,
             movement_axis=Axis.x,
             are_rows_ascending=True,
             are_columns_ascending=True,
@@ -183,12 +185,12 @@ class TestMovement(unittest.TestCase):
 
     def test_get_movement_range_coordinates_backward_x(self):
         geometry = copy.deepcopy(DefaultGeometry)
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.well = Well(row=7, column=1)
         geometry.reference.position = Coordinate(200.0, 100.0)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
 
-        alignment = Alignment(line_index=0, nozzle_index=3, row=6)
+        alignment = Alignment(line_index=1, nozzle_index=4, row=7)
         routine = Routine(
             direction=Routine.Direction.backward,
             positionThresholdToStateMapping=[
@@ -200,7 +202,7 @@ class TestMovement(unittest.TestCase):
             geometry,
             alignment,
             routine,
-            margin=Coordinate(2, 10),
+            margin=2.0,
             movement_axis=Axis.x,
             are_rows_ascending=True,
             are_columns_ascending=True,
@@ -214,12 +216,12 @@ class TestMovement(unittest.TestCase):
 
     def test_get_movement_range_coordinates_forward_y(self):
         geometry = copy.deepcopy(DefaultGeometry)
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.well = Well(row=7, column=1)
         geometry.reference.position = Coordinate(200.0, 100.0)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
 
-        alignment = Alignment(line_index=6, nozzle_index=3, row=6)
+        alignment = Alignment(line_index=7, nozzle_index=4, row=7)
         routine = Routine(
             direction=Routine.Direction.forward,
             positionThresholdToStateMapping=[
@@ -231,7 +233,7 @@ class TestMovement(unittest.TestCase):
             geometry,
             alignment,
             routine,
-            margin=Coordinate(5, 3),
+            margin=3.0,
             movement_axis=Axis.y,
             are_rows_ascending=False,
             are_columns_ascending=False,
@@ -245,12 +247,12 @@ class TestMovement(unittest.TestCase):
 
     def test_get_movement_range_coordinates_backward_y(self):
         geometry = copy.deepcopy(DefaultGeometry)
-        geometry.reference.well = Well(row=6, column=0)
+        geometry.reference.well = Well(row=7, column=1)
         geometry.reference.position = Coordinate(200.0, 100.0)
-        geometry.reference.line_index = 0
-        geometry.reference.nozzle_index = 3
+        geometry.reference.line_index = 1
+        geometry.reference.nozzle_index = 4
 
-        alignment = Alignment(line_index=0, nozzle_index=3, row=7)
+        alignment = Alignment(line_index=1, nozzle_index=4, row=8)
         routine = Routine(
             direction=Routine.Direction.backward,
             positionThresholdToStateMapping=[
@@ -262,7 +264,7 @@ class TestMovement(unittest.TestCase):
             geometry,
             alignment,
             routine,
-            margin=Coordinate(5, 3),
+            margin=3.0,
             movement_axis=Axis.y,
             are_rows_ascending=False,
             are_columns_ascending=False,

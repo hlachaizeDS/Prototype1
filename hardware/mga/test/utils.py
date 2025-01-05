@@ -64,9 +64,9 @@ def create_geogram(routine: Routine) -> str:
 
 def print_wells(wells: list[Well]):
     print()
-    for row in range(0, 16):
+    for row in range(1, 17):
         print("|", end="")
-        for column in range(0, 24):
+        for column in range(1, 25):
             print("x|" if Well(row=row, column=column) in wells else " |", end="")
         print()
     print()
