@@ -42,7 +42,7 @@ from hardware.mga.fluidics import (
     get_pump_speed,
 )
 
-ON_MACHINE = False
+ON_MACHINE = True
 
 
 class MGATestbenchHardware(Frame):
@@ -82,9 +82,7 @@ class MGATestbenchHardware(Frame):
         )
         print("Home pumps ", pump_indexes)
         self.pumps.home(
-            pumps.PumpIndexes(
-                pumps=[pumps.PumpIndex(value=i) for i in pump_indexes]
-            )
+            pumps.PumpIndexes(pumps=[pumps.PumpIndex(value=i) for i in pump_indexes])
         )
         self.move_to(Coordinate(0, 0))
         self.wait_for_movement_to_finish()
@@ -124,6 +122,7 @@ class MGATestbenchHardware(Frame):
             dispense_plan=dispense_plan,
             movement_axis=movement_axis,
             line_configurations=LineConfigurations,
+            fluidic_line_to_pump_mapping=FluidicLineIndexToPumpIndexMapping,
         )
         for trip_index, (routine, movement_range) in enumerate(trips):
             gantry_dispense_movement_speed = get_gantry_dispense_movement_speed(
@@ -164,7 +163,7 @@ class MGATestbenchHardware(Frame):
                 volume=volume,
                 movement_axis=movement_axis,
                 gantry_dispense_movement_speed=gantry_dispense_movement_speed,
-                end_volume_marks=end_volume_marks
+                end_volume_marks=end_volume_marks,
             )
 
             # dispense
@@ -185,25 +184,23 @@ class MGATestbenchHardware(Frame):
         x = parameters.axes[Axis.x]
         y = parameters.axes[Axis.y]
         axis_parameters = gantry.AxisParameters(
-                axes=[
-                    gantry.AxisParameters.AxisInnerParameters(
-                        axis=gantry.Axis.x,
-                        speed=x.speed,
-                        acceleration=x.acceleration,
-                        deceleration=x.deceleration,
-                    ),
-                    gantry.AxisParameters.AxisInnerParameters(
-                        axis=gantry.Axis.y,
-                        speed=y.speed,
-                        acceleration=y.acceleration,
-                        deceleration=y.deceleration,
-                    ),
-                ]
-            )
-        # print(axis_parameters)
-        self.gantry.setParameters(
-            axis_parameters
+            axes=[
+                gantry.AxisParameters.AxisInnerParameters(
+                    axis=gantry.Axis.x,
+                    speed=x.speed,
+                    acceleration=x.acceleration,
+                    deceleration=x.deceleration,
+                ),
+                gantry.AxisParameters.AxisInnerParameters(
+                    axis=gantry.Axis.y,
+                    speed=y.speed,
+                    acceleration=y.acceleration,
+                    deceleration=y.deceleration,
+                ),
+            ]
         )
+        # print(axis_parameters)
+        self.gantry.setParameters(axis_parameters)
 
     def get_gantry_speed(self, axis: Axis):
         parameters: gantry.AxisParameters = self.gantry.getParameters(gantry._())
@@ -276,10 +273,16 @@ class MGATestbenchHardware(Frame):
             )
         )
 
-    def _set_gantry_and_pump_speeds_for_dispense(self, volume: Volume, movement_axis: Axis, gantry_dispense_movement_speed: float, end_volume_marks: Volumes):
+    def _set_gantry_and_pump_speeds_for_dispense(
+        self,
+        volume: Volume,
+        movement_axis: Axis,
+        gantry_dispense_movement_speed: float,
+        end_volume_marks: Volumes,
+    ):
         self.set_gantry_parameters(
-                axis=movement_axis, gantry_dispense_speed=gantry_dispense_movement_speed
-            )
+            axis=movement_axis, gantry_dispense_speed=gantry_dispense_movement_speed
+        )
         output_movement_axis_speed = self.get_gantry_speed(movement_axis)
         if output_movement_axis_speed is not None:
             print("Precise speed: ", output_movement_axis_speed)
@@ -338,22 +341,18 @@ class MGATestbenchHardware(Frame):
             )
         )
 
-    def get_remaining_volumes_in_pumps(
-        self, pump_indexes: list[PumpIndex]
-    ) -> Volumes:
+    def get_remaining_volumes_in_pumps(self, pump_indexes: list[PumpIndex]) -> Volumes:
         volume_marks = self.pumps.getVolumeMarks(
             pumps.PumpIndexes(
                 pumps=[pumps.PumpIndex(value=index) for index in pump_indexes]
             )
         )
-        return {
-            PumpIndex(pump.index.value): pump.value for pump in volume_marks.pumps
-        }
+        return {PumpIndex(pump.index.value): pump.value for pump in volume_marks.pumps}
 
     def goToWell(self, element, well, quadrant):
         print("Going to ", element, well, quadrant)
         if element == "thermalCamera":
-            self.move_to(Coordinate(0,0))
+            self.move_to(Coordinate(0, 0))
         pass
 
     def set_aspiration_valves(
@@ -364,7 +363,7 @@ class MGATestbenchHardware(Frame):
                 valves.State.Valve(
                     identifier=valves.State.ValveIdentifier(
                         type=valves.State.ValveIdentifier.Type.aspiration,
-                        fluidicLine=fluidic_line+1,
+                        fluidicLine=fluidic_line + 1,
                     ),
                     state=state,
                 )

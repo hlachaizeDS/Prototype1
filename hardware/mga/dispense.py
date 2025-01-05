@@ -1,6 +1,11 @@
 import mga_testbench_interface.generated.valves_pb2 as valves
 import numpy as np
-from hardware.mga.configuration import Geometry, ReagentToLineMapping, Reference, Axis
+from hardware.mga.configuration import (
+    Geometry,
+    ReagentToLineMapping,
+    LineToPumpMapping,
+    Axis,
+)
 from hardware.mga.test.utils import print_wells
 from math import isclose
 from hardware.mga.types import (
@@ -418,6 +423,7 @@ Trip = tuple[Routine, MovementRange]
 
 def create_trips(
     geometry: Geometry,
+    fluidic_line_to_pump_mapping: LineToPumpMapping,
     line_configurations: dict[LineIndex, LineConfiguration],
     dispense_plan: DispensePlan,
     movement_axis: Axis,
@@ -425,6 +431,11 @@ def create_trips(
     trips: list[Trip] = []
     are_rows_ascending = True
     are_columns_ascending = False
+
+    lines_with_common_discharge_valve = _get_lines_with_common_discharge_valve(
+        fluidic_line_to_pump_mapping
+    )
+
     for alignment, direction in DefaultDispenseTrips:
         abstract_routine = create_abstract_routine(
             dispense_plan=dispense_plan,
@@ -432,6 +443,7 @@ def create_trips(
             geometry=geometry,
             direction=direction,
             line_configurations=line_configurations,
+            lines_with_common_discharge_valve=lines_with_common_discharge_valve,
         )
         routine = project_routine_to_axes(
             abstract_routine,
@@ -536,3 +548,23 @@ def _manage_discharge_valves(
             if (open_valve_count_in_common_line + open_valve_count_in_current_line) == 0
             else valves.State.ValveState.closed,
         )
+
+
+def _get_lines_with_common_discharge_valve(
+    fluidic_line_to_pump_mapping: LineToPumpMapping,
+):
+    lines_with_common_discharge_valve: dict[LineIndex, LineIndex] = {}
+    pump_to_lines: dict[int, list[LineIndex]] = {}
+    for line_index, pump_index in fluidic_line_to_pump_mapping.items():
+        if pump_index not in pump_to_lines:
+            pump_to_lines[pump_index] = []
+        pump_to_lines[pump_index].append(line_index)
+
+    for pump_index, lines in pump_to_lines.items():
+        if len(lines) > 2:
+            raise ValueError(
+                f"More than two lines with the same pump index {pump_index}"
+            )
+        if len(lines) == 2:
+            lines_with_common_discharge_valve = {lines[0]: lines[1], lines[1]: lines[0]}
+    return lines_with_common_discharge_valve

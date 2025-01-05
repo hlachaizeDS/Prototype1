@@ -111,3 +111,44 @@ class TestFluidics(unittest.TestCase):
                     2: 60.0,
                 },
             )
+
+    def test_get_movement_range_coordinates_two_lines_one_pump(self):
+            routine = Routine(
+                direction=Routine.Direction.forward,
+                positionThresholdToStateMapping=[
+                    Routine.Item(
+                        positionThreshold=threshold,
+                        state=valves.State(
+                            valves=[
+                                valves.State.Valve(
+                                    identifier=valves.State.ValveIdentifier(
+                                        fluidicLine=line
+                                    ),
+                                    state=state,
+                                )
+                            ]
+                        ),
+                    )
+                    for threshold, line, state in [
+                        (100.0, 7, valves.State.open),
+                        (120.0, 7, valves.State.closed),
+                        (200.0, 12, valves.State.closed),
+                        (210.0, 12, valves.State.closed),
+                    ]
+                ],
+            )
+            fluidic_line_to_pump_mapping = {7: 1, 12: 1}
+            pump_start_stop_margin_mm = 1
+            pump_positions, line_indexes = get_pump_dispense_axis_start_stop_positions(
+                routine, fluidic_line_to_pump_mapping, pump_start_stop_margin_mm
+            )
+
+            self.assertIsNotNone(pump_positions)
+            if pump_positions is not None:
+                self.assertDictEqual(
+                    pump_positions,
+                    {
+                        1: (99.0, 211.0),
+                    },
+                )
+            self.assertListEqual(sorted(line_indexes), sorted([7, 12]))

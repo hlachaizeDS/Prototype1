@@ -323,6 +323,54 @@ class TestCreateRoutine(unittest.TestCase):
 
         self.assertEqual(geogram, expected_geogram)
 
+    def test_create_abstract_routine_single_line_backward_absent_common_line(self):
+        wells: list[Well] = [
+            Well(row=row, column=column)
+            for row in range(1, 9, 2)
+            for column in range(1, 3)
+        ]
+
+        dispense_plan = {1: wells}
+
+        line_configurations = {
+            1: LineConfiguration(open_offset=0, close_offset=0),
+            5: LineConfiguration(open_offset=0, close_offset=0),
+        }
+
+        alignment = Alignment(line_index=1, nozzle_index=4, row=1)
+        direction = Direction.backward
+
+        routine = create_abstract_routine(
+            dispense_plan=dispense_plan,
+            alignment=alignment,
+            geometry=self.geometry,
+            direction=direction,
+            line_configurations=line_configurations,
+            lines_with_common_discharge_valve={1: 5, 5: 1},
+        )
+
+        thresholds = [
+            item.positionThreshold for item in routine.positionThresholdToStateMapping
+        ]
+        self.assertEqual(thresholds, sorted(thresholds, reverse=True))
+
+        geogram = create_geogram(routine)
+
+        expected_geogram = (
+            " 1.0 ________█________█\n"
+            " 1.1 ______██_______██_\n"
+            " 1.2 ____██_______██___\n"
+            " 1.3 __██_______██_____\n"
+            " 1.4 ██_______██_______\n"
+            " 5.0 ________█________█\n"
+            " 5.1 __________________\n"
+            " 5.2 __________________\n"
+            " 5.3 __________________\n"
+            " 5.4 __________________\n"
+        )
+
+        self.assertEqual(geogram, expected_geogram)
+
     def test_create_abstract_routine_multi_line_same_manifold_forward(self):
         wells: list[Well] = [
             Well(row=row, column=column)
