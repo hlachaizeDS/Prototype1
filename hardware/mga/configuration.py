@@ -19,12 +19,13 @@ LineToPumpMapping = dict[LineIndex, PumpIndex]
 FluidicLineIndexToPumpIndexMapping: LineToPumpMapping = {
     1: 7,
     2: 8,
-    7: 1,
+    3: 1,
+    7: 6,
     8: 2,
     9: 3,
     10: 4,
     11: 5,
-    12: 1,
+    12: 6,
 }
 
 

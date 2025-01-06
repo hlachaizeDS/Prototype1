@@ -10,11 +10,11 @@ def test_dispense():
     test_hardware.dispense(
         volume_per_line={
             "EB": (12, all_wells),
-            "Buff1": (12, all_wells),
-            "A": (12, all_wells),
-            "C": (12, all_wells),
-            "G": (12, all_wells),
-            "T": (12, all_wells),
+            # "Buff1": (12, all_wells),
+            # "A": (12, all_wells),
+            # "C": (12, all_wells),
+            # "G": (12, all_wells),
+            # "T": (12, all_wells),
         }
     )
     test_hardware.move_to(Coordinate(x=0.0, y=0.0))

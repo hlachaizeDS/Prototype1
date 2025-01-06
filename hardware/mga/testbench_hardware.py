@@ -77,7 +77,7 @@ class MGATestbenchHardware(Frame):
         self.gantry.home(gantry._())
         self.valves.initialize(valves._())
         # pump_indexes = [i for i in range(0, 8)]
-        pump_indexes = sorted(
+        pump_indexes = set(
             [pump_index for _, pump_index in FluidicLineIndexToPumpIndexMapping.items()]
         )
         print("Home pumps ", pump_indexes)
@@ -363,7 +363,7 @@ class MGATestbenchHardware(Frame):
                 valves.State.Valve(
                     identifier=valves.State.ValveIdentifier(
                         type=valves.State.ValveIdentifier.Type.aspiration,
-                        fluidicLine=fluidic_line + 1,
+                        fluidicLine=fluidic_line,
                     ),
                     state=state,
                 )
