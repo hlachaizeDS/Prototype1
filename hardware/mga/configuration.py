@@ -94,13 +94,14 @@ LineConfigurations: dict[LineIndex, LineConfiguration] = {
 
 @dataclass
 class PumpDynamics:
-    acceleration: float = 5000.0  # µl/s²
-    deceleration: float = 5000.0  # µl/s²
-    speed = 500.0  # µl/s
+    acceleration: float  # µl/s²
+    deceleration: float  # µl/s²
+    speed: float  # µl/s
 
 
-PumpDynamicsMapping: dict[PumpIndex, PumpDynamics] = {
-    index: PumpDynamics() for index in range(1, 9)
+DefaultPumpDynamicsMapping: dict[PumpIndex, PumpDynamics] = {
+    index: PumpDynamics(acceleration=5000.0, deceleration=5000.0, speed=500.0)
+    for index in range(1, 9)
 }
 
 
@@ -136,6 +137,8 @@ DefaultGantryParameters = GantryParameters(
         Axis.y: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=100.0),
     }
 )
+GantryDispenseMovementSpeed = 40.0  # mm/s
+
 
 PumpMaxVolume = 5000.0  # µl
 PumpSlack = 50.0  # µl

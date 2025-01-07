@@ -11,10 +11,9 @@ from PIL import Image, ImageTk
 from matplotlib import pyplot as plt
 import numpy as np
 
-# Hardware = ProtoHardware
-Hardware = MGATestbenchHardware
 
-mock_components = False
+on_machine = True
+mock_components = True
 
 
 class MainFrameTab1(Frame):
@@ -23,7 +22,11 @@ class MainFrameTab1(Frame):
         self.parent = parent
 
         """Hardware(motors,Leds,...)"""
-        self.hardware = Hardware(self, mock_components=mock_components)
+
+        # self.hardware = ProtoHardware(self, mock_components=mock_components)
+        self.hardware = MGATestbenchHardware(
+            self, mock_components=mock_components, on_machine=on_machine
+        )
 
         # Title
         self.titleLabel = Label(self, text="OligoPrint Soft", justify="center")

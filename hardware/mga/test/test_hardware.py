@@ -1,7 +1,7 @@
 from hardware.mga.testbench_hardware import MGATestbenchHardware
 from hardware.mga.movement import Coordinate
 
-test_hardware = MGATestbenchHardware(None, mock_components=True)
+test_hardware = MGATestbenchHardware(None, mock_components=True, on_machine=False)
 
 
 def test_dispense():

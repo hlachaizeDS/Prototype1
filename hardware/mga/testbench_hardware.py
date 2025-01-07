@@ -18,11 +18,12 @@ from hardware.mga.configuration import (
     ReagentToFluidicLineIndexMapping,
     FluidicLineIndexToPumpIndexMapping,
     Axis,
-    PumpDynamicsMapping,
+    DefaultPumpDynamicsMapping,
     PumpMaxVolume,
     PumpSlack,
     DefaultGantryParameters,
     LineIndex,
+    GantryDispenseMovementSpeed,
 )
 from hardware.mga.dispense import (
     create_dispense_plan,
@@ -42,11 +43,10 @@ from hardware.mga.fluidics import (
     get_pump_speed,
 )
 
-ON_MACHINE = True
 
 
 class MGATestbenchHardware(Frame):
-    def __init__(self, parent, mock_components=True):
+    def __init__(self, parent, mock_components=True, on_machine=True):
         self.mock_components = mock_components
         self.parent = parent
 
@@ -59,7 +59,7 @@ class MGATestbenchHardware(Frame):
 
         self.channel = (
             grpc.secure_channel("localhost:7051", grpc.local_channel_credentials())
-            if ON_MACHINE
+            if on_machine
             else grpc.insecure_channel("localhost:7050")
         )
         self.gantry = gantry_grpc.GantryStub(self.channel)
@@ -125,12 +125,7 @@ class MGATestbenchHardware(Frame):
             fluidic_line_to_pump_mapping=FluidicLineIndexToPumpIndexMapping,
         )
         for trip_index, (routine, movement_range) in enumerate(trips):
-            gantry_dispense_movement_speed = get_gantry_dispense_movement_speed(
-                dispense_volume=volume,
-                inter_nozzle_in_movement_distance=DefaultGeometry.x_inter_nozzle_spacing_wells_in_line
-                * DefaultGeometry.inter_well_spacing_mm,
-                pump_speed=PumpDynamicsMapping[1].speed,
-            )
+            gantry_dispense_movement_speed = GantryDispenseMovementSpeed
 
             current_trip_volume_usage, total_upcoming_volume_usage, line_indexes = (
                 self._get_volume_usage_and_line_indexes_for_remaining_trips(
@@ -265,8 +260,8 @@ class MGATestbenchHardware(Frame):
                     pumps.PumpParameters.PumpInnerParameters(
                         index=pumps.PumpIndex(value=index),
                         speed=speed,
-                        acceleration=PumpDynamicsMapping[index].acceleration,
-                        deceleration=PumpDynamicsMapping[index].deceleration,
+                        acceleration=DefaultPumpDynamicsMapping[index].acceleration,
+                        deceleration=DefaultPumpDynamicsMapping[index].deceleration,
                     )
                     for index, speed in pump_speeds.items()
                 ]
@@ -285,7 +280,7 @@ class MGATestbenchHardware(Frame):
         )
         output_movement_axis_speed = self.get_gantry_speed(movement_axis)
         if output_movement_axis_speed is not None:
-            print("Precise speed: ", output_movement_axis_speed)
+            print("Precise dispense movement speed: ", output_movement_axis_speed)
             pump_speeds = {
                 pump_index: get_pump_speed(
                     dispense_volume=volume,
@@ -395,7 +390,7 @@ class MGATestbenchHardware(Frame):
             # to refill all pumps in the trip
             self.set_aspiration_valves(line_indexes, valves.State.ValveState.open)
             pump_speeds = {
-                pump_index: PumpDynamicsMapping[pump_index].speed
+                pump_index: DefaultPumpDynamicsMapping[pump_index].speed
                 for pump_index in pump_indexes
             }
             self._set_pump_speeds(pump_speeds)
@@ -428,7 +423,7 @@ class MGATestbenchHardware(Frame):
                 dispense_volume=volume,
                 inter_nozzle_in_movement_distance=DefaultGeometry.x_inter_nozzle_spacing_wells_in_line
                 * DefaultGeometry.inter_well_spacing_mm,
-                pump_speed=PumpDynamicsMapping[1].speed,
+                pump_speed=DefaultPumpDynamicsMapping[1].speed,
             )
             pump_dispense_axis_ranges, line_indexes = (
                 get_pump_dispense_axis_start_stop_positions(
@@ -441,7 +436,7 @@ class MGATestbenchHardware(Frame):
                 pump_dispense_axis_ranges=pump_dispense_axis_ranges,
                 gantry_dispense_movement_speed=gantry_dispense_movement_speed,
                 pump_speeds={
-                    pump_index: PumpDynamicsMapping[pump_index].speed
+                    pump_index: DefaultPumpDynamicsMapping[pump_index].speed
                     for pump_index in pump_dispense_axis_ranges.keys()
                 },
             )
