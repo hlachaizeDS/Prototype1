@@ -13,7 +13,7 @@ import numpy as np
 
 
 on_machine = True
-mock_components = True
+mock_components = False
 
 
 class MainFrameTab1(Frame):

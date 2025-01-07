@@ -37,6 +37,7 @@ ReagentToFluidicLineIndexMapping: ReagentToLineMapping = {
     },
     "DB": 1,
     "Buff1": 2,
+    "BB": 3,
     "A": 8,
     "C": 9,
     "G": 10,
@@ -98,19 +99,11 @@ class PumpDynamics:
     deceleration: float  # µl/s²
     speed: float  # µl/s
 
-
+NumberOfPumps=8
 DefaultPumpDynamicsMapping: dict[PumpIndex, PumpDynamics] = {
     index: PumpDynamics(acceleration=5000.0, deceleration=5000.0, speed=500.0)
-    for index in range(1, 9)
+    for index in range(1, NumberOfPumps+1)
 }
-
-
-@dataclass
-class ValveParameters:
-    open_time_per_ul: float  # ms/µl
-
-
-DefaultValveParameters = ValveParameters(open_time_per_ul=2.0)
 
 
 class Axis(Enum):
