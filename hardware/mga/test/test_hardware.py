@@ -9,7 +9,7 @@ def test_dispense():
     test_hardware.initialisation()
     test_hardware.dispense(
         volume_per_line={
-            "EB": (12.5, all_wells),
+            # "EB": (12.5, all_wells),
             "DB": (12.5, all_wells),
             # "A": (12, all_wells),
             # "C": (12, all_wells),

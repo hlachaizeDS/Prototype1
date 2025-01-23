@@ -1,6 +1,13 @@
-from hardware.mga.types import PumpIndex, Routine, LineIndex, Volume
-from hardware.mga.dispense import DispensePlan
-from hardware.mga.configuration import ReagentToLineMapping, LineToPumpMapping
+from hardware.mga.types import (
+    PumpIndex,
+    Routine,
+    LineIndex,
+    Volume,
+    ValveStates,
+    ValveState,
+    Valve,
+    ValveType,
+)
 
 PumpDispenseAxisRanges = dict[PumpIndex, tuple[float, float]]
 
@@ -36,7 +43,9 @@ def get_pump_dispense_axis_start_stop_positions(
                 continue
             pumpIndex = fluidic_line_to_pump_mapping[lineIndex]
             if pumpIndex is None:
-                raise KeyError("{lineIndex} does not exist in fluidic_line_to_pump_mapping")
+                raise KeyError(
+                    "{lineIndex} does not exist in fluidic_line_to_pump_mapping"
+                )
             line_indexes.add(lineIndex)
             if pumpIndex not in pumpRanges:
                 pumpRanges[pumpIndex] = (
@@ -78,3 +87,26 @@ def get_pump_speed(
     inter_nozzle_in_movement_distance: float,
 ):
     return dispense_volume * (gantry_speed / inter_nozzle_in_movement_distance)
+
+
+def get_valve_states_for_aspiration(
+    line_indexes: list[LineIndex],
+    aspiration_valve_state: ValveState,
+) -> ValveStates:
+    return {
+        lineIndex: {
+            Valve(
+                type=ValveType.aspiration, fluidicLine=lineIndex
+            ): aspiration_valve_state,
+            Valve(type=ValveType.discharge, fluidicLine=lineIndex): ValveState.open
+            if aspiration_valve_state == ValveState.closed
+            else ValveState.closed,
+            **{
+                Valve(
+                    type=ValveType.dispense, fluidicLine=lineIndex, id=id
+                ): ValveState.closed
+                for id in range(1, 5)
+            },
+        }
+        for lineIndex in line_indexes
+    }

@@ -34,19 +34,19 @@ from hardware.mga.dispense import (
 from hardware.mga.movement import (
     get_gantry_dispense_movement_speed,
 )
-from hardware.mga.types import Coordinate, PumpIndex, Volume
+from hardware.mga.types import Coordinate, PumpIndex, Volume, ValveStates, ValveState
 from hardware.mga.fluidics import (
     estimate_volume_usage,
     get_pump_dispense_axis_start_stop_positions,
     PumpStartMargin,
     Volumes,
     get_pump_speed,
+    get_valve_states_for_aspiration,
 )
 
 
-
 class MGATestbenchHardware(Frame):
-    def __init__(self, parent, mock_components=True, on_machine=True):
+    def __init__(self, parent, mock_components=False, on_machine=True):
         self.mock_components = mock_components
         self.parent = parent
 
@@ -87,7 +87,7 @@ class MGATestbenchHardware(Frame):
         self.move_to(Coordinate(0, 0))
         self.wait_for_movement_to_finish()
         # self.start_pump_moves({pump_index: 0 for pump_index in pump_indexes})
-        self._wait_for_pump_home_to_finish(pump_indexes)
+        self._wait_for_pump_home_to_finish([pump for pump in pump_indexes])
         if self.parent:
             self.parent.directCommand.initialisationLed.configure(bg="green")
 
@@ -249,7 +249,7 @@ class MGATestbenchHardware(Frame):
         self._wait_for_pump_moves_to_finish(pumps_)
         self.pumps.moveTo(get_pump_moves(PumpMaxVolume))
         self._wait_for_pump_moves_to_finish(pumps_)
-        # self.set_aspiration_valves(lines, valves.State.ValveState.open)
+        # self.set_aspiration_valves(lines, ValveState.open)
         return pumps_
 
     def _set_pump_speeds(self, pump_speeds: dict[PumpIndex, float]):
@@ -350,19 +350,19 @@ class MGATestbenchHardware(Frame):
             self.move_to(Coordinate(0, 0))
         pass
 
-    def set_aspiration_valves(
-        self, fluidic_lines: list[LineIndex], state: valves.State.ValveState
-    ):
+    def set_valves(self, states: ValveStates):
         valveStates = valves.State(
             valves=[
                 valves.State.Valve(
                     identifier=valves.State.ValveIdentifier(
-                        type=valves.State.ValveIdentifier.Type.aspiration,
+                        type=valve.type,
                         fluidicLine=fluidic_line,
+                        id=valve.id,
                     ),
                     state=state,
                 )
-                for fluidic_line in fluidic_lines
+                for fluidic_line in states.keys()
+                for valve, state in states[fluidic_line].items()
             ]
         )
         # print("Valve states: ", valveStates)
@@ -388,7 +388,11 @@ class MGATestbenchHardware(Frame):
         if len(pumps_requiring_refill) > 0:
             # if any pump requires a refill, use the opportunity
             # to refill all pumps in the trip
-            self.set_aspiration_valves(line_indexes, valves.State.ValveState.open)
+            self.set_valves(
+                get_valve_states_for_aspiration(
+                    line_indexes=line_indexes, aspiration_valve_state=ValveState.open
+                )
+            )
             pump_speeds = {
                 pump_index: DefaultPumpDynamicsMapping[pump_index].speed
                 for pump_index in pump_indexes
@@ -396,7 +400,11 @@ class MGATestbenchHardware(Frame):
             self._set_pump_speeds(pump_speeds)
             self.refill_pumps(pump_indexes)
             self._wait_for_pump_moves_to_finish(pump_indexes)
-            self.set_aspiration_valves(line_indexes, valves.State.ValveState.closed)
+            self.set_valves(
+                get_valve_states_for_aspiration(
+                    line_indexes=line_indexes, aspiration_valve_state=ValveState.closed
+                )
+            )
 
         pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
         print("Pump remaining volumes: ", pump_remaining_volumes)

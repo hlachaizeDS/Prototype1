@@ -53,3 +53,13 @@ class LineConfiguration:
 PumpIndex = int
 DispensePlan = dict[LineIndex, list[Well]]
 ReagentVolumeWells = dict[str, tuple[float, list[int]]]
+
+ValveType = valves.State.ValveIdentifier.Type
+
+@dataclass(frozen=True)
+class Valve:
+    type: ValveType
+    fluidicLine: int
+    id: int = 0
+
+ValveStates = dict[LineIndex, dict[Valve, valves.State.ValveState]]
