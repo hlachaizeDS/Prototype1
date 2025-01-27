@@ -14,7 +14,7 @@ def Synthesis_TwoEnz(hardware,is384):
     if saveQuartet:
         saveQuartetControlFile(title,inspect.getsource(inspect.currentframe()))
 
-    thermalImages = 0
+    thermalImages = 1
     if thermalImages:
         TT = hardware.parent.rightFrame.thermalThread
     else:

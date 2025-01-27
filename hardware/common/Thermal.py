@@ -1,7 +1,7 @@
 """
 This module handles extracting well temperatures from Optris images
 """
-# from hardware.common.Optris import *
+from hardware.common.Optris import *
 import numpy as np
 #import imageio
 from pathlib import Path
@@ -27,7 +27,7 @@ class ThermalImageThread:
     def __init__(self, mainFrame):
 
         """Parameters"""
-        self.is_384 = 0                   #format of the plate
+        self.is_384 = 1                   #format of the plate
         self.OS = "Proto"                 # Ubuntu(named_pipe), Windows (communication via bat) or Proto
         self.camera_type = "Xi400"          # so far only Xi400
         self.automatic_detection = 2        # 0 for no detection, 1 for image processing, 2 for fixed pixels
@@ -46,7 +46,7 @@ class ThermalImageThread:
         elif self.OS=="Windows":
             self.root_path = "Thermal_Camera"
         elif self.OS=="Proto":
-            self.root_path = "D:\\Proto7\\Thermal_Camera"
+            self.root_path = "C:\\Users\\admOTF\\workspace\\Prototype1\\Thermal_Camera"
 
 
         self.cm = plt.get_cmap('seismic')               #Color map
@@ -59,7 +59,7 @@ class ThermalImageThread:
 
 
         """Initialize connection with the camera"""
-        # self.o = Optris()
+        self.o = Optris()
         self.thermalFrame = None    #Contains temperature data
         self.topng = None    #the frame we'll save as png
         self.frame = None   #the frame we show on the gui

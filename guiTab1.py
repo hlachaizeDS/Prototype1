@@ -59,7 +59,7 @@ class RightFrame(Frame):
         self.ImageLabel.pack()
         self.ImageLabel.Image = img
 
-        # self.thermalThread = ThermalImageThread(self)
+        self.thermalThread = ThermalImageThread(self)
 
         self.tempLabel = Label(self, text="", width=40)
         self.tempLabel.pack(side="bottom", fill="x")

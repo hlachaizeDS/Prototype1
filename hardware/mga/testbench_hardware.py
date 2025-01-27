@@ -50,7 +50,7 @@ class MGATestbenchHardware(Frame):
         self.mock_components = mock_components
         self.parent = parent
 
-        self.thermalCam = 0  # Will impact rightFrame in guitab1
+        self.thermalCam = 1  # Will impact rightFrame in guitab1
 
         if self.mock_components:
             self.arduinoControl = MockArduinoControl(self)

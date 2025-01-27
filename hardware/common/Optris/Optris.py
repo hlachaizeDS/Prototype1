@@ -1,7 +1,7 @@
 import numpy as np
 import imageio
 from pathlib import Path
-from libirimager import *
+from hardware.common.Optris.libirimager import *
 import time
 import logging
 

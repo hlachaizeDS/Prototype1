@@ -1,7 +1,7 @@
 import xlrd
 
 # path = r'D:\Proto7\Quartet_Control.xlsm'
-path = r'./sequence_files/241023_P088_StabB5-1_iDNA384_b1_4C_T52_61.xlsm'
+path = r'./sequence_files/OTF_testing.xlsm'
 
 #Parameters
 
