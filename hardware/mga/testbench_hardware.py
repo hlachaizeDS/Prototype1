@@ -335,6 +335,7 @@ class MGATestbenchHardware(Frame):
                 pumps=[pumps.PumpIndex(value=index) for index in pump_indexes]
             )
         )
+        self._wait_for_pump_moves_to_finish(pump_indexes)
 
     def get_remaining_volumes_in_pumps(self, pump_indexes: list[PumpIndex]) -> Volumes:
         volume_marks = self.pumps.getVolumeMarks(
