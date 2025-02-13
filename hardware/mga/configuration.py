@@ -99,6 +99,7 @@ class PumpDynamics:
     deceleration: float  # µl/s²
     speed: float  # µl/s
 
+
 NumberOfPumps=8
 DefaultPumpDynamicsMapping: dict[PumpIndex, PumpDynamics] = {
     index: PumpDynamics(acceleration=5000.0, deceleration=5000.0, speed=500.0)
@@ -130,7 +131,7 @@ DefaultGantryParameters = GantryParameters(
         Axis.y: AxisDynamics(acceleration=100.0, deceleration=100.0, speed=100.0),
     }
 )
-GantryDispenseMovementSpeed = 40.0  # mm/s
+GantryDispenseMovementSpeed = 20.0  # mm/s, default is 40
 
 
 PumpMaxVolume = 5000.0  # µl
