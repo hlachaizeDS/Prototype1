@@ -49,12 +49,13 @@ def Synthesis_TwoEnz(hardware,is384):
     synthesis_sheet = getExcelSheet(path) if not is384 else getExcelSheet_384(path)
     getParameters(synthesis_sheet)
     sequences = getSequences(synthesis_sheet) if not is384 else getSequences_384(synthesis_sheet)
-    [ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells,O_wells,P_wells,X_wells,Q_wells] \
-        = splitSequences(sequences,cycle)
-
     usedWells = getUsedWells(sequences)
+
     
     while cycle!=0:
+
+        [ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells,O_wells,P_wells,X_wells,Q_wells] \
+            = splitSequences(sequences,cycle)
 
         updateCycleLabel(hardware, cycle, "")
 
