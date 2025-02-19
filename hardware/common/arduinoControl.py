@@ -5,7 +5,7 @@ from serial import *
 from time import sleep
 
 
-COMPORT='COM10'
+COMPORT='COM12'
 
 class ArduinoControl():
     def __init__(self, parent,*args, **kwargs):
