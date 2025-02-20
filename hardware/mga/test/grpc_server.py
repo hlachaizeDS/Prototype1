@@ -8,6 +8,14 @@ from mga_testbench_interface.generated import pumps_pb2_grpc
 from mga_testbench_interface.generated import pumps_pb2
 
 
+def print_to_file(*args):
+    with open("server.log", "a") as f:
+        f.write(" ".join(map(str, args)) + "\n")
+
+
+print = print_to_file
+
+
 class GantryServicer(gantry_pb2_grpc.GantryServicer):
     parameters: gantry_pb2.AxisParameters
 
@@ -26,7 +34,7 @@ class GantryServicer(gantry_pb2_grpc.GantryServicer):
         return gantry_pb2.Position(x=10, y=20)
 
     def moveTo(self, request, context):
-        print("gantry moveTo called")
+        print("gantry moveTo called", request)
         return gantry_pb2.GantryStatus(
             isBusy=True,
             initialized=True,
@@ -61,6 +69,7 @@ class ValvesServicer(valves_pb2_grpc.ValvesServicer):
 
     def setRoutine(self, request, context):
         print("valves setRoutine called")
+        print(request)
         return valves_pb2.ValveStatus(
             routine=valves_pb2.ValveStatus.RoutineStatus.stopped
         )

@@ -1,7 +1,7 @@
 from hardware.mga.testbench_hardware import MGATestbenchHardware
 from hardware.mga.movement import Coordinate
 
-test_hardware = MGATestbenchHardware(None, mock_components=True, on_machine=True)
+test_hardware = MGATestbenchHardware(None, mock_components=True, on_machine=False)
 
 
 def test_dispense():
@@ -15,10 +15,10 @@ def test_dispense():
         volume_per_line={
             # "EB": (12.5, all_wells),
             # "DB": (12.5, all_wells),
-            "A": (25, left_wells),
-            "C": (25, right_wells),
+            "A": (12,right_wells),
+            # "C": (25, right_wells),
             # "G": (12, all_wells),
-            # "T": (25, right_wells),
+            "T": (25, left_wells),
         }
     )
     test_hardware.move_to(Coordinate(x=0.0, y=0.0))

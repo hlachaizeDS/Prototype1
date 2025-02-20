@@ -63,3 +63,5 @@ class Valve:
     id: int = 0
 
 ValveStates = dict[LineIndex, dict[Valve, valves.State.ValveState]]
+
+MovementRange = tuple[Coordinate, Coordinate]

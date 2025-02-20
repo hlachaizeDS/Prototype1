@@ -34,10 +34,11 @@ class TestDispensePlan(unittest.TestCase):
 
     def test_create_dispense_plan_with_empty_reagent_volume_wells(self):
         reagent_volume_wells = {}
-        dispense_plan = create_dispense_plan(
+        dispense_plan, volumes_per_well_per_line = create_dispense_plan(
             reagent_volume_wells, self.reagentToFluidicLineIndexMapping
         )
         self.assertDictEqual(dispense_plan, dict())
+        self.assertDictEqual(volumes_per_well_per_line, dict())
 
     def test_create_dispense_plan_with_empty_reagent_to_line_mapping(self):
         reagent_volume_wells = {
@@ -50,24 +51,12 @@ class TestDispensePlan(unittest.TestCase):
             dict(),
         )
 
-    def test_create_multi_dispense_plan_with_different_volumes(self):
-        reagent_volume_wells = {
-            "E": (10.0, [well + 1 for well in range(384)]),
-            "D": (5.0, [well + 1 for well in range(384)]),
-        }
-        self.assertRaises(
-            ValueError,
-            create_dispense_plan,
-            reagent_volume_wells,
-            self.reagentToFluidicLineIndexMapping,
-        )
-
     def test_create_single_dispense_plan(self):
         reagent_volume_wells = {
             "E": (10.0, [well + 1 for well in range(384)]),
         }
 
-        dispense_plan = create_dispense_plan(
+        dispense_plan, volumes_per_well_per_line = create_dispense_plan(
             reagent_volume_wells, self.reagentToFluidicLineIndexMapping
         )
 
@@ -75,14 +64,15 @@ class TestDispensePlan(unittest.TestCase):
             5: [Well(wellIndex + 1) for wellIndex in range(384)]
         }
         self.assertDictEqual(dispense_plan, expected_dispense_plan)
+        self.assertDictEqual(volumes_per_well_per_line, {5: 10.0})
 
     def test_create_multi_dispense_plan(self):
         reagent_volume_wells = {
             "B": (50.0, [well + 1 for well in range(384) if well % 2 == 0]),
-            "C": (50.0, [well + 1 for well in range(384) if well % 2 == 1]),
+            "C": (25.0, [well + 1 for well in range(384) if well % 2 == 1]),
         }
 
-        dispense_plan = create_dispense_plan(
+        dispense_plan, volumes_per_well_per_line = create_dispense_plan(
             reagent_volume_wells, self.reagentToFluidicLineIndexMapping
         )
 
@@ -92,14 +82,15 @@ class TestDispensePlan(unittest.TestCase):
         }
 
         self.assertDictEqual(dispense_plan, expected_dispense_plan)
+        self.assertDictEqual(volumes_per_well_per_line, {2: 50.0, 3: 25.0})
 
     def test_create_multi_dispense_plan_with_empty_wells(self):
         reagent_volume_wells = {
             "B": (50.0, [well + 1 for well in range(384) if well % 2 == 0]),
-            "C": (50.0, []),
+            "C": (12.0, []),
         }
 
-        dispense_plan = create_dispense_plan(
+        dispense_plan, volumes_per_well_per_line = create_dispense_plan(
             reagent_volume_wells, self.reagentToFluidicLineIndexMapping
         )
 
@@ -108,15 +99,16 @@ class TestDispensePlan(unittest.TestCase):
         }
 
         self.assertDictEqual(dispense_plan, expected_dispense_plan)
+        self.assertDictEqual(volumes_per_well_per_line, {2: 50.0})
 
     def test_create_multi_dispense_plan_with_empty_reagent_volume_wells(self):
         reagent_volume_wells = {
             "B": (50.0, [well + 1 for well in range(384) if well % 2 == 0]),
-            "C": (50.0, [well + 1 for well in range(384) if well % 2 == 1]),
+            "C": (12.0, [well + 1 for well in range(384) if well % 2 == 1]),
             "D": (0.0, []),
         }
 
-        dispense_plan = create_dispense_plan(
+        dispense_plan, volumes_per_well_per_line = create_dispense_plan(
             reagent_volume_wells, self.reagentToFluidicLineIndexMapping
         )
 
@@ -126,13 +118,14 @@ class TestDispensePlan(unittest.TestCase):
         }
 
         self.assertDictEqual(dispense_plan, expected_dispense_plan)
+        self.assertDictEqual(volumes_per_well_per_line, {2: 50.0, 3: 12.0})
 
     def test_create_dispense_plan_with_directional_reagent(self):
         reagent_volume_wells = {
             "A": (25.0, [well + 1 for well in range(384)]),
         }
 
-        dispense_plan = create_dispense_plan(
+        dispense_plan, volumes_per_well_per_line = create_dispense_plan(
             reagent_volume_wells, self.reagentToFluidicLineIndexMapping
         )
 
@@ -162,6 +155,7 @@ class TestDispensePlan(unittest.TestCase):
         }
         self.assertEqual(dispense_plan.keys(), expected_dispense_plan.keys())
         self.assertDictEqual(dispense_plan, expected_dispense_plan)
+        self.assertDictEqual(volumes_per_well_per_line, {1: 25.0, 6: 25.0})
 
 
 class TestCreateRoutine(unittest.TestCase):

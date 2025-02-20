@@ -18,10 +18,11 @@ from hardware.mga.types import (
     DispensePlan,
     ReagentVolumeWells,
     LineConfiguration,
+    MovementRange,
+    Volume,
 )
 from hardware.mga.movement import (
     find_alignment_coordinates,
-    MovementRange,
     get_movement_range_coordinates,
     DispenseMovementMargin,
 )
@@ -40,14 +41,10 @@ DefaultDispenseTrips = [
 def create_dispense_plan(
     reagent_volume_wells: ReagentVolumeWells,
     reagentToFluidicLineIndexMapping: ReagentToLineMapping,
-) -> DispensePlan:
+) -> tuple[DispensePlan, dict[LineIndex, Volume]]:
     dispense_plan: DispensePlan = {}
 
-    volumes: set[float] = {
-        volume for volume, _ in reagent_volume_wells.values() if volume != 0
-    }
-    if len(volumes) > 1 or (len(volumes) > 0 and volumes.pop() < 0):
-        raise ValueError("All volumes must be the same and positive")
+    volumes_per_well_per_line: dict[LineIndex, Volume] = {}
 
     for reagent, (volume, wellIndexes) in reagent_volume_wells.items():
         line_index = reagentToFluidicLineIndexMapping.get(reagent)
@@ -67,12 +64,14 @@ def create_dispense_plan(
                     if (well.row - 1) % 2
                     == (0 if direction == Direction.forward else 1)
                 ]
+                volumes_per_well_per_line[index] = volume
         else:
             dispense_plan[line_index] = wells
+            volumes_per_well_per_line[line_index] = volume
         print(f"{volume}µl of {reagent} (line {line_index})")
         print_wells(wells)
 
-    return dispense_plan
+    return dispense_plan, volumes_per_well_per_line
 
 
 # Creates routine where thresholds are expressed in well-spacing units

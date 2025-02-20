@@ -7,14 +7,57 @@ from hardware.mga.types import (
     ValveState,
     Valve,
     ValveType,
+    MovementRange,
 )
 
+from hardware.mga.configuration import Axis
+from hardware.mga.movement import get_coordinate_axis
+
 PumpDispenseAxisRanges = dict[PumpIndex, tuple[float, float]]
+Volumes = dict[PumpIndex, Volume]
+PumpSpeeds = dict[PumpIndex, float]
 
 PumpStartMargin = 0.2
 
 
-def get_pump_dispense_axis_start_stop_positions(
+def get_pump_dispense_axis_range_from_movement_range(
+    routine: Routine,
+    movement_range: MovementRange,
+    movement_axis: Axis,
+    fluidic_line_to_pump_mapping: dict[LineIndex, PumpIndex],
+):
+    start = get_coordinate_axis(movement_range[0], movement_axis)
+    stop = get_coordinate_axis(movement_range[1], movement_axis)
+
+    pumpRanges: PumpDispenseAxisRanges = {}
+    all_line_indexes = [lineIndex for lineIndex in fluidic_line_to_pump_mapping.keys()]
+
+    line_indexes: set[LineIndex] = set()
+    for line_index in all_line_indexes:
+        for item in routine.positionThresholdToStateMapping:
+            lineValves = [
+                valve
+                for valve in item.state.valves
+                if valve.identifier.fluidicLine == line_index
+            ]
+            if len(lineValves) == 0:
+                continue
+            pumpIndex = fluidic_line_to_pump_mapping[line_index]
+            if pumpIndex is None:
+                raise KeyError(
+                    "{lineIndex} does not exist in fluidic_line_to_pump_mapping"
+                )
+            line_indexes.add(line_index)
+            if pumpIndex not in pumpRanges:
+                pumpRanges[pumpIndex] = (
+                    start,
+                    stop,
+                )
+
+    return pumpRanges, [lineIndex for lineIndex in line_indexes]
+
+
+def get_pump_dispense_axis_range_from_routine(
     routine: Routine,
     fluidic_line_to_pump_mapping: dict[LineIndex, PumpIndex],
     pump_start_stop_margin_mm: float,
@@ -22,7 +65,7 @@ def get_pump_dispense_axis_start_stop_positions(
     """
     Get the pump usage in routine
     """
-    lineIndexes = [lineIndex for lineIndex in fluidic_line_to_pump_mapping.keys()]
+    all_line_indexes = [lineIndex for lineIndex in fluidic_line_to_pump_mapping.keys()]
 
     pumpRanges: PumpDispenseAxisRanges = {}
 
@@ -32,7 +75,7 @@ def get_pump_dispense_axis_start_stop_positions(
     sign = 1 if direction == Routine.Direction.forward else -1
 
     line_indexes: set[LineIndex] = set()
-    for lineIndex in lineIndexes:
+    for lineIndex in all_line_indexes:
         for item in routine.positionThresholdToStateMapping:
             lineValves = [
                 valve
@@ -63,9 +106,6 @@ def get_pump_dispense_axis_start_stop_positions(
                     ),
                 )
     return pumpRanges, [lineIndex for lineIndex in line_indexes]
-
-
-Volumes = dict[PumpIndex, Volume]
 
 
 def estimate_volume_usage(

@@ -1,8 +1,7 @@
 from hardware.mga.configuration import Geometry, Axis
-from hardware.mga.types import Coordinate, Alignment, Routine
+from hardware.mga.types import Coordinate, Alignment, Routine, MovementRange
 
 DispenseMovementMargin = 20.0  # mm
-MovementRange = tuple[Coordinate, Coordinate]
 
 
 def get_movement_range_coordinates(
@@ -108,3 +107,9 @@ def get_gantry_dispense_movement_speed(
     Get the gantry dispense movement speed
     """
     return inter_nozzle_in_movement_distance / (dispense_volume / pump_speed)
+
+def get_coordinate_axis(coordinate: Coordinate, axis: Axis):
+    """
+    Get the coordinate axis
+    """
+    return coordinate.x if axis == Axis.x else coordinate.y
