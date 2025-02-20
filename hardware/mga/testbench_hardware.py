@@ -164,7 +164,6 @@ class MGATestbenchHardware(Frame):
             # dispense
             self.valves.startRoutine(valves._())
             self.start_pump_moves(end_volume_marks)
-            time.sleep(0.1) # wait for pumps to start moving
             self.move_to(movement_end, wait_to_finish=True, correct_slack=False)
             self.stop_pump_moves([pumpIndex for pumpIndex in end_volume_marks.keys()])
             self.valves.stopRoutine(valves._())

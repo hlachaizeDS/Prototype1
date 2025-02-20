@@ -1,7 +1,7 @@
 from hardware.mga.configuration import Geometry, Axis
 from hardware.mga.types import Coordinate, Alignment, Routine
 
-DispenseMovementMargin = 1.0  # mm
+DispenseMovementMargin = 20.0  # mm
 MovementRange = tuple[Coordinate, Coordinate]
 
 
