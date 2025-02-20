@@ -248,8 +248,8 @@ class MGATestbenchHardware(Frame):
 
         self.pumps.moveTo(get_pump_moves(PumpMaxVolume))
         self._wait_for_pump_moves_to_finish(pumps_)
-        self.pumps.moveTo(get_pump_moves(PumpMaxVolume - PumpSlack))
-        self._wait_for_pump_moves_to_finish(pumps_)
+        # self.pumps.moveTo(get_pump_moves(PumpMaxVolume - PumpSlack))
+        # self._wait_for_pump_moves_to_finish(pumps_)
         return pumps_
 
     def _set_pump_speeds(self, pump_speeds: dict[PumpIndex, float]):
