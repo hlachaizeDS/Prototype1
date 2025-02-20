@@ -1,2 +1,1 @@
-C:\Users\admOTF\workspace\Prototype1\hardware\common\Optris\generic.xml
-1
+Dispensing

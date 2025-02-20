@@ -409,12 +409,13 @@ class MGATestbenchHardware(Frame):
         pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
         print("Pump remaining volumes: ", pump_remaining_volumes)
 
-        volume_margin = 0.0
+        # volume_margin = 0.0
         end_volume_marks = {
-            pump_index: max(
-                pump_remaining_volumes[pump_index] - (volume * (1 + volume_margin)),
-                0.0,
-            )
+            pump_index: 0.0
+            # pump_index: max(
+            #     pump_remaining_volumes[pump_index] - (volume * (1 + volume_margin)),
+            #     0.0,
+            # )
             for pump_index, volume in current_trip_volume_usage.items()
         }
         print("move pumps to marks", end_volume_marks)
