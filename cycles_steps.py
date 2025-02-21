@@ -3,6 +3,7 @@ from excelRead import *
 import copy
 from hardware.dnascript.proto_hardware import ProtoHardware
 from hardware.mga.testbench_hardware import MGATestbenchHardware
+from logger import logger
 
 quadrant_nb = 4
 
@@ -204,7 +205,7 @@ def fillPlate(hardware, buffer, vol, is384, max_vol=None):
 
 
 def updateCycleLabel(hardware, cycle, step):
-    print("Cycle " + str(cycle) + " " + step)
+    logger.info("Cycle " + str(cycle) + " " + step)
     hardware.parent.leftFrame.cycleLabelString.set("Cycle " + str(cycle) + " " + step)
 
 
@@ -256,9 +257,9 @@ def getParameters(synthesis_sheet):
             + "="
             + str(synthesis_sheet.cell_value(row, 3))
         )
-        # print(code)
+        # logger.info(code)
         exec(code, globals())
 
 
 if __name__ == "__main__":
-    print(wellListFromColumns_384([1, 2]))
+    logger.info(wellListFromColumns_384([1, 2]))

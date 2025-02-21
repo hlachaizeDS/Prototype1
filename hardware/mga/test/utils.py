@@ -7,6 +7,8 @@ from hardware.mga.types import (
 )
 import numpy as np
 import math
+from logger import logger
+
 
 def create_geogram(routine: Routine) -> str:
     if len(routine.positionThresholdToStateMapping) == 0:
@@ -50,7 +52,7 @@ def create_geogram(routine: Routine) -> str:
             for threshold in np.arange(start, end, step):
                 for item in routine.positionThresholdToStateMapping:
                     if math.isclose(item.positionThreshold, threshold, abs_tol=0.001):
-                        # print("equals!")
+                        # logger.info("equals!")
                         for valve in item.state.valves:
                             if (
                                 valve.identifier.fluidicLine == line
@@ -63,19 +65,19 @@ def create_geogram(routine: Routine) -> str:
 
 
 def print_wells(wells: list[Well]):
-    print()
+    diagram = "\n"
     for row in range(1, 17):
-        print("|", end="")
+        diagram += "|"
         for column in range(1, 25):
-            print("x|" if Well(row=row, column=column) in wells else " |", end="")
-        print()
-    print()
+            diagram += "x|" if Well(row=row, column=column) in wells else " |"
+        diagram += "\n"
+    logger.info(diagram)
 
 
 def print_routine(routine: Routine):
     for item in routine.positionThresholdToStateMapping:
-        print(item.positionThreshold)
+        logger.debug(item.positionThreshold)
         for valve in item.state.valves:
-            print(
+            logger.debug(
                 f"\t{valve.identifier.fluidicLine}.{valve.identifier.id} -> {'open' if valve.state == 0 else 'closed'}"
             )

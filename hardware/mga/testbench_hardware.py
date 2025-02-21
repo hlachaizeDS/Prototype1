@@ -9,7 +9,6 @@ import mga_testbench_interface.generated.pumps_pb2_grpc as pumps_grpc
 import mga_testbench_interface.generated.pumps_pb2 as pumps
 import time
 from hardware.mga.test.utils import create_geogram
-import datetime
 import copy
 
 from hardware.mga.configuration import (
@@ -44,6 +43,7 @@ from hardware.mga.fluidics import (
     PumpSpeeds,
 )
 from enum import Enum
+from logger import logger
 
 
 class VolumeEstimationMode(Enum):
@@ -86,7 +86,7 @@ class MGATestbenchHardware(Frame):
         pump_indexes = set(
             [pump_index for _, pump_index in FluidicLineIndexToPumpIndexMapping.items()]
         )
-        print("Home pumps ", pump_indexes)
+        logger.info("Home pumps ", pump_indexes)
         self.pumps.home(
             pumps.PumpIndexes(pumps=[pumps.PumpIndex(value=i) for i in pump_indexes])
         )
@@ -99,23 +99,22 @@ class MGATestbenchHardware(Frame):
 
     def print_positions(self):
         position: gantry.Position = self.gantry.getPosition(gantry._())
-        print("Current position: ", position.x, position.y)
+        logger.debug("Current position: ", position.x, position.y)
         pass
 
     def vacValveOpen(self):
         if self.arduinoControl:
             self.arduinoControl.open_vac()
         else:
-            print("Arduino control not initialized")
+            logger.error("Arduino control not initialized")
 
     def vacValveClose(self):
         if self.arduinoControl:
             self.arduinoControl.close_vac()
         else:
-            print("Arduino control not initialized")
+            logger.error("Arduino control not initialized")
 
     def dispense(self, volume_per_line: ReagentVolumeWells):
-        print(datetime.datetime.now())
         dispense_plan, volumes_per_well_per_line = create_dispense_plan(
             volume_per_line, ReagentToFluidicLineIndexMapping
         )
@@ -179,7 +178,6 @@ class MGATestbenchHardware(Frame):
             self.stop_pump_moves([pumpIndex for pumpIndex in end_volume_marks.keys()])
             self.valves.stopRoutine(valves._())
             self.set_gantry_parameters()
-        print(datetime.datetime.now())
 
     def set_gantry_parameters(
         self, axis: Axis | None = None, gantry_dispense_speed: float | None = None
@@ -205,7 +203,6 @@ class MGATestbenchHardware(Frame):
                 ),
             ]
         )
-        # print(axis_parameters)
         self.gantry.setParameters(axis_parameters)
 
     def get_gantry_speed(self, axis: Axis):
@@ -222,7 +219,7 @@ class MGATestbenchHardware(Frame):
         wait_to_finish: bool = True,
         correct_slack: bool = True,
     ):
-        print("Moving to ", coordinate)
+        logger.debug("Moving to ", coordinate)
 
         def move():
             self.gantry.moveTo(gantry.Position(x=coordinate.x, y=coordinate.y))
@@ -238,12 +235,12 @@ class MGATestbenchHardware(Frame):
         while True:
             time.sleep(0.1)
             status = self.gantry.getStatus(gantry._())
-            # print("gantry", status)
+            # logger.debug("gantry", status)
             if not status.isBusy:
                 break
 
     def refill_pumps(self, pumps_):
-        print("Refilling pumps ", pumps_)
+        logger.info("Refilling pumps ", pumps_)
 
         def get_pump_moves(volume: float):
             return pumps.PumpMoves(
@@ -263,7 +260,7 @@ class MGATestbenchHardware(Frame):
         return pumps_
 
     def _set_pump_speeds(self, pump_speeds: PumpSpeeds):
-        print("Setting pump speeds: ", pump_speeds)
+        logger.debug("Setting pump speeds: ", pump_speeds)
         self.pumps.setParameters(
             pumps.PumpParameters(
                 pumps=[
@@ -289,8 +286,8 @@ class MGATestbenchHardware(Frame):
         )
         output_movement_axis_speed = self.get_gantry_speed(movement_axis)
         if output_movement_axis_speed is not None:
-            print("Precise dispense movement speed: ", output_movement_axis_speed)
-            print("Pump speeds: ", pump_speeds)
+            logger.info("Precise dispense movement speed: ", output_movement_axis_speed)
+            logger.info("Pump speeds: ", pump_speeds)
             self._set_pump_speeds(pump_speeds)
         time.sleep(0.05)
 
@@ -302,7 +299,6 @@ class MGATestbenchHardware(Frame):
                 )
             )
             initialized = [pump.initialized for pump in status.pumps]
-            # print(initialized)
             if all(initialized):
                 break
             time.sleep(0.1)
@@ -315,7 +311,6 @@ class MGATestbenchHardware(Frame):
                 )
             )
             busy = [pump.isBusy for pump in status.pumps]
-            # print("pumps busy", busy)
             if not any(busy):
                 break
             time.sleep(0.1)
@@ -348,7 +343,7 @@ class MGATestbenchHardware(Frame):
         return {PumpIndex(pump.index.value): pump.value for pump in volume_marks.pumps}
 
     def goToWell(self, element, well, quadrant):
-        print("Going to ", element, well, quadrant)
+        logger.info("Going to ", element, well, quadrant)
         if element == "thermalCamera":
             self.move_to(Coordinate(0, 0))
         pass
@@ -368,7 +363,7 @@ class MGATestbenchHardware(Frame):
                 for valve, state in states[fluidic_line].items()
             ]
         )
-        # print("Valve states: ", valveStates)
+        # logger.info("Valve states: ", valveStates)
         self.valves.setState(valveStates)
 
     def _refill_and_get_end_volume_marks(
@@ -379,15 +374,15 @@ class MGATestbenchHardware(Frame):
     ):
         pump_indexes = [pump_index for pump_index in total_upcoming_volume_usage.keys()]
         pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
-        # print("Volume usage: ", volume_usage)
-        print("Pump remaining volumes: ", pump_remaining_volumes)
+        # logger.info("Volume usage: ", volume_usage)
+        logger.debug("Pump remaining volumes: ", pump_remaining_volumes)
         pumps_requiring_refill = [
             pump_index
             for pump_index, volume in pump_remaining_volumes.items()
             if pump_index in total_upcoming_volume_usage
             and volume < total_upcoming_volume_usage[pump_index]
         ]
-        print("Pumps requiring refill: ", pumps_requiring_refill)
+        logger.debug("Pumps requiring refill: ", pumps_requiring_refill)
         if len(pumps_requiring_refill) > 0:
             # if any pump requires a refill, use the opportunity
             # to refill all pumps in the trip
@@ -412,12 +407,12 @@ class MGATestbenchHardware(Frame):
             )
 
         pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
-        print("Pump remaining volumes: ", pump_remaining_volumes)
+        logger.info("Pump remaining volumes: ", pump_remaining_volumes)
 
         end_volume_marks = {
             pump_index: 0.0 for pump_index, _ in current_trip_volume_usage.items()
         }
-        print("move pumps to marks", end_volume_marks)
+        logger.info("move pumps to marks", end_volume_marks)
         return end_volume_marks
 
     def _get_volume_usage_and_line_indexes_for_remaining_trips(
@@ -479,12 +474,12 @@ class MGATestbenchHardware(Frame):
     def _print_trip_debug_info(
         self, routine, movement_range, gantry_dispense_speed, volume_usage
     ):
-        print("Movement range: ", movement_range)
-        print(create_geogram(routine))
+        logger.info("Movement range: ", movement_range)
+        logger.debug("\n", create_geogram(routine))
         # print_routine(routine)
-        print(
+        logger.info(
             "Dispense axis speed",
             gantry_dispense_speed,
             "mm/s",
         )
-        print("Volume usage: ", volume_usage)
+        logger.info("Volume usage: ", volume_usage)

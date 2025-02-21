@@ -3,6 +3,7 @@ import serial
 import usbErrorHandling
 from serial import *
 from time import sleep
+from logger import logger
 
 
 COMPORT='COM12'
@@ -89,7 +90,7 @@ class ArduinoControl():
 #                 self.ser.write(b'1\r\n')
 #                 r=self.ser.read()
 #                 if r==b'':
-#                     print('Shaker didnt answer for >10s')
+#                     logger.info('Shaker didnt answer for >10s')
 #                 self.ser.close()
 #                 break
 #             except SerialException:
@@ -111,22 +112,22 @@ class MockArduinoControl():
         pass
 
     def startHeating(self):
-        print('MockArduinoControl startHeating')
+        logger.info('MockArduinoControl startHeating')
 
     def stopHeating(self):
-        print('MockArduinoControl stopHeating')
+        logger.info('MockArduinoControl stopHeating')
 
     def startShaking(self,velocity):
-        print('MockArduinoControl startShaking')
+        logger.info('MockArduinoControl startShaking')
 
     def stopShaking(self):
-        print('MockArduinoControl stopShaking')
+        logger.info('MockArduinoControl stopShaking')
 
     def open_vac(self):
-        print('MockArduinoControl open_vac')
+        logger.info('MockArduinoControl open_vac')
 
     def close_vac(self):
-        print('MockArduinoControl close_vac')
+        logger.info('MockArduinoControl close_vac')
 
 if __name__ == "__main__":
     # On crée la racine de notre interface

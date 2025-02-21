@@ -20,6 +20,7 @@ import pickle
 from MTM import matchTemplates
 #from socket_server import *
 import json
+from logger import logger
 
 
 class ThermalImageThread:
@@ -165,8 +166,8 @@ class ThermalImageThread:
             try:
                 self.in_video_loop()
             except Exception as e:
-                print('Couldnt update frame')
-                print(e)
+                logger.error('Couldnt update frame')
+                logger.error(e)
 
     def snapshot_in_cycle(self,thermalImages,folder_path,cycle,step):
         try:
@@ -203,7 +204,7 @@ class ThermalImageThread:
             elif self.automatic_detection==2:
                 self.generate_temperature_table_fixed_pixel(final_path)
         except:
-            print('Couldnt take snapshot')
+            logger.error('Couldnt take snapshot')
 
     def get_wells_temp_fixed_pixels(self):
         # Coordinates on image(with zoom), [x,y]
@@ -407,7 +408,7 @@ if __name__ == '__main__':
     bottom_right = [100, 100]
     wells=return_coordinates([top_left,bottom_left,top_right,bottom_right],0)
     for well in wells.items():
-        print(wells[well][0])
+        logger.info(wells[well][0])
 
 
 

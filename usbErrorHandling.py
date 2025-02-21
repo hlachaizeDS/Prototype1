@@ -3,12 +3,13 @@ import ctypes, sys
 
 import os
 import subprocess
+from logger import logger
 
 devcon_Path='C:\\Program Files (x86)\\Windows Kits\\10\\Tools\\x64\\devcon'
 
 
 def restartArduinoUSB():
-    print('Restart arduino')
+    logger.info('Restart arduino')
     subprocess.run([devcon_Path, 'disable', 'USB\VID_2341&PID_8037'])
     time.sleep(1)
     subprocess.run([devcon_Path, 'enable', 'USB\VID_2341&PID_8037'])

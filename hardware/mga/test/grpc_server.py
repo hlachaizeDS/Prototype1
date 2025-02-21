@@ -6,14 +6,7 @@ from mga_testbench_interface.generated import valves_pb2_grpc
 from mga_testbench_interface.generated import valves_pb2
 from mga_testbench_interface.generated import pumps_pb2_grpc
 from mga_testbench_interface.generated import pumps_pb2
-
-
-def print_to_file(*args):
-    with open("server.log", "a") as f:
-        f.write(" ".join(map(str, args)) + "\n")
-
-
-print = print_to_file
+from logger import logger
 
 
 class GantryServicer(gantry_pb2_grpc.GantryServicer):
@@ -23,25 +16,25 @@ class GantryServicer(gantry_pb2_grpc.GantryServicer):
         pass
 
     def home(self, request, context):
-        print("gantry home called", request)
+        logger.info("gantry home called", request)
         return gantry_pb2.GantryStatus(
             isBusy=False,
             initialized=True,
         )
 
     def getPosition(self, request, context):
-        print("gantry getPosition called")
+        logger.info("gantry getPosition called")
         return gantry_pb2.Position(x=10, y=20)
 
     def moveTo(self, request, context):
-        print("gantry moveTo called", request)
+        logger.info("gantry moveTo called", request)
         return gantry_pb2.GantryStatus(
             isBusy=True,
             initialized=True,
         )
 
     def setParameters(self, request: gantry_pb2.AxisParameters, context):
-        print("gantry setParameters called with", request)
+        logger.info("gantry setParameters called with", request)
         self.parameters = request
         return gantry_pb2.GantryStatus(
             isBusy=False,
@@ -49,7 +42,7 @@ class GantryServicer(gantry_pb2_grpc.GantryServicer):
         )
 
     def getParameters(self, request, context):
-        print("gantry getParameters called")
+        logger.info("gantry getParameters called")
         return self.parameters
 
     def getStatus(self, request, context):
@@ -64,30 +57,30 @@ class ValvesServicer(valves_pb2_grpc.ValvesServicer):
         pass
 
     def initialize(self, request, context):
-        print("valves initialize called")
+        logger.info("valves initialize called")
         return valves_pb2._()
 
     def setRoutine(self, request, context):
-        print("valves setRoutine called")
-        print(request)
+        logger.info("valves setRoutine called")
+        logger.debug(request)
         return valves_pb2.ValveStatus(
             routine=valves_pb2.ValveStatus.RoutineStatus.stopped
         )
 
     def startRoutine(self, request, context):
-        print("valves startRoutine called")
+        logger.info("valves startRoutine called")
         return valves_pb2.ValveStatus(
             routine=valves_pb2.ValveStatus.RoutineStatus.running
         )
 
     def stopRoutine(self, request, context):
-        print("valves stopRoutine called")
+        logger.info("valves stopRoutine called")
         return valves_pb2.ValveStatus(
             routine=valves_pb2.ValveStatus.RoutineStatus.stopped
         )
 
     def setState(self, request, context):
-        print("valves setState called", request)
+        logger.info("valves setState called", request)
         return valves_pb2.State(valves=[])
 
 
@@ -99,27 +92,27 @@ class PumpsServicer(pumps_pb2_grpc.PumpsServicer):
         pass
 
     def home(self, request: pumps_pb2.PumpIndexes, context):
-        print("pumps home called", request)
+        logger.info("pumps home called", request)
         self.pumpMarks = [0 for _ in range(11)]
         self.initialized = True
         return self._statuses(isBusy=False)
 
     def getStatuses(self, request, context):
-        print("pumps getStatuses called", request)
+        logger.info("pumps getStatuses called", request)
         return self._statuses(isBusy=False)
 
     def moveTo(self, request: pumps_pb2.PumpMoves, context):
-        print("pumps moveTo called", request)
+        logger.info("pumps moveTo called", request)
         for pump in request.pumps:
             self.pumpMarks[pump.index.value - 1] = pump.volumeMark
         return self._statuses(isBusy=True)
 
     def stop(self, request, context):
-        print("pumps stop called", request)
+        logger.info("pumps stop called", request)
         return self._statuses(isBusy=False)
 
     def setParameters(self, request, context):
-        print("pumps setParameters called", request)
+        logger.info("pumps setParameters called", request)
         return self._statuses(isBusy=False)
 
     def _statuses(self, isBusy: bool):
@@ -137,7 +130,7 @@ class PumpsServicer(pumps_pb2_grpc.PumpsServicer):
         )
 
     def getVolumeMarks(self, request, context):
-        print("pumps getVolumeMarks called", request)
+        logger.info("pumps getVolumeMarks called", request)
         return pumps_pb2.VolumeMarks(
             pumps=[
                 pumps_pb2.VolumeMarks.VolumeMark(
@@ -157,7 +150,7 @@ def serve():
 
     server.add_insecure_port("[::]:7050")
     server.start()
-    print("Server started at localhost:7050")
+    logger.info("Server started at localhost:7050")
     server.wait_for_termination()
 
 

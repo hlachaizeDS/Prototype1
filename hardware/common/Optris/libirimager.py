@@ -11,6 +11,7 @@ import numpy as np
 import atexit
 from enum import Enum
 import pathlib
+from logger import logger
 
 __all__ = ['libirimagerException', 'evo_irimager_terminate', 'evo_irimager_get_thermal_image',
            'evo_irimager_get_palette_image_size', 'evo_irimager_get_palette_image',
@@ -61,7 +62,7 @@ def evo_irimager_usb_init(xml_config=None, formats_def=None, logfile=None):
     if logfile:
         logfile = logfile.encode('utf-8')
 
-    print(xml_config, formats_def, logfile)
+    logger.debug(xml_config, formats_def, logfile)
 
     checkerror(irdll.evo_irimager_usb_init(c_char_p(xml_config), c_char_p(formats_def), c_char_p(logfile)))
     atexit.register(evo_irimager_terminate)

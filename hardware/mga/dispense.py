@@ -26,6 +26,7 @@ from hardware.mga.movement import (
     get_movement_range_coordinates,
     DispenseMovementMargin,
 )
+from logger import logger
 
 # in reference to the plate (forward = towards the last row)
 DefaultDispenseTrips = [
@@ -68,7 +69,7 @@ def create_dispense_plan(
         else:
             dispense_plan[line_index] = wells
             volumes_per_well_per_line[line_index] = volume
-        print(f"{volume}µl of {reagent} (line {line_index})")
+        logger.info(f"{volume}µl of {reagent} (line {line_index})")
         print_wells(wells)
 
     return dispense_plan, volumes_per_well_per_line
