@@ -103,7 +103,7 @@ def set_up_logging(
 
     # Create log file handler
     try:
-        logfile_handler = logging.FileHandler(logfile_file)
+        logfile_handler = logging.FileHandler(logfile_file, encoding='utf-8')
     except Exception as exception:
         print("Failed to set up log file: %s" % str(exception))
         return False

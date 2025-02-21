@@ -253,9 +253,9 @@ class MGATestbenchHardware(Frame):
                 ]
             )
 
-        self.pumps.moveTo(get_pump_moves(PumpMaxVolume + PumpSlack))
-        self._wait_for_pump_moves_to_finish(pumps_)
-        time.sleep(0.1)
+        # self.pumps.moveTo(get_pump_moves(PumpMaxVolume + PumpSlack))
+        # self._wait_for_pump_moves_to_finish(pumps_)
+        # time.sleep(0.3)
         self.pumps.moveTo(get_pump_moves(PumpMaxVolume))
         self._wait_for_pump_moves_to_finish(pumps_)
         time.sleep(0.1)
@@ -475,7 +475,7 @@ class MGATestbenchHardware(Frame):
         self, routine, movement_range, gantry_dispense_speed, volume_usage
     ):
         logger.info("Movement range: ", movement_range)
-        logger.debug("\n", create_geogram(routine))
+        logger.debug("\n" + create_geogram(routine))
         # print_routine(routine)
         logger.info(
             "Dispense axis speed",

@@ -7,8 +7,8 @@ test_hardware = MGATestbenchHardware(None, mock_components=True, on_machine=True
 def test_dispense():
     all_wells= [i for i in range(1, 385)]
 
-    left_wells = [i for i in range(1, 65)]
-    right_wells = [i for i in range(65, 129)]
+    left_wells = [i for i in range(1, 193)]
+    right_wells = [i for i in range(193, 385)]
 
     test_hardware.initialisation()
     test_hardware.dispense(
@@ -17,8 +17,8 @@ def test_dispense():
             # "DB": (12.5, all_wells),
             "A": (12,right_wells),
             # "C": (25, right_wells),
-            # "G": (12, all_wells),
-            "T": (25, left_wells),
+            #"G": (12, right_wells),
+            "T": (12, left_wells),
         }
     )
     test_hardware.move_to(Coordinate(x=0.0, y=0.0))
