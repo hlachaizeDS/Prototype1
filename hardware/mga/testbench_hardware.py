@@ -207,7 +207,7 @@ class MGATestbenchHardware(Frame):
         )
         self.gantry.setParameters(axis_parameters)
 
-    def get_gantry_speed(self, axis: Axis):
+    def get_gantry_speed(self, axis: Axis) -> float | None:
         parameters: gantry.AxisParameters = self.gantry.getParameters(gantry._())
         protoAxis = gantry.Axis.x if axis == Axis.x else gantry.Axis.y
         axisParameters = next((x for x in parameters.axes if x.axis == protoAxis), None)
@@ -289,14 +289,15 @@ class MGATestbenchHardware(Frame):
             axis=movement_axis, gantry_dispense_speed=gantry_dispense_movement_speed
         )
         output_movement_axis_speed = self.get_gantry_speed(movement_axis)
+        if output_movement_axis_speed is None:
+            logger.error("Failed to get gantry speed")
+            return
         pump_speeds = self._calculate_pump_speeds(
             volumes_per_well_per_line=volumes_per_well_per_line,
-            gantry_dispense_movement_speed=gantry_dispense_movement_speed,
+            gantry_dispense_movement_speed=output_movement_axis_speed,
         )
-        if output_movement_axis_speed is not None:
-            logger.info("Precise dispense movement speed: ", output_movement_axis_speed)
-            logger.info("Precise pump speeds: ", pump_speeds)
-            self._set_pump_speeds(pump_speeds)
+        logger.info("Precise dispense movement speed: ", output_movement_axis_speed)
+        self._set_pump_speeds(pump_speeds)
         time.sleep(0.05)
 
     def _wait_for_pump_home_to_finish(self, pump_indexes: list[PumpIndex]):
