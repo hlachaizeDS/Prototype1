@@ -1,7 +1,7 @@
 from hardware.mga.configuration import Geometry, Axis
 from hardware.mga.types import Coordinate, Alignment, Routine, MovementRange
 
-DispenseMovementMargin = 20.0  # mm
+DispenseMovementMargin = 10.0  # mm
 
 
 def get_movement_range_coordinates(

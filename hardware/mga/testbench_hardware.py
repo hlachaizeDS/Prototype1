@@ -255,8 +255,10 @@ class MGATestbenchHardware(Frame):
 
         self.pumps.moveTo(get_pump_moves(PumpMaxVolume + PumpSlack))
         self._wait_for_pump_moves_to_finish(pumps_)
+        time.sleep(0.1)
         self.pumps.moveTo(get_pump_moves(PumpMaxVolume))
         self._wait_for_pump_moves_to_finish(pumps_)
+        time.sleep(0.1)
         return pumps_
 
     def _set_pump_speeds(self, pump_speeds: PumpSpeeds):
@@ -386,20 +388,18 @@ class MGATestbenchHardware(Frame):
         if len(pumps_requiring_refill) > 0:
             # if any pump requires a refill, use the opportunity
             # to refill all pumps in the trip
+            pump_speeds = {
+                pump_index: DefaultPumpDynamicsMapping[pump_index].speed
+                for pump_index in pump_indexes
+            }
             self.set_valves(
                 get_valve_states_for_aspiration(
                     line_indexes=line_indexes, aspiration_valve_state=ValveState.open
                 )
             )
-            pump_speeds = {
-                pump_index: DefaultPumpDynamicsMapping[pump_index].speed
-                for pump_index in pump_indexes
-            }
             self._set_pump_speeds(pump_speeds)
-            time.sleep(0.05)
+            time.sleep(0.1)
             self.refill_pumps(pump_indexes)
-            self._wait_for_pump_moves_to_finish(pump_indexes)
-            time.sleep(0.05)
             self.set_valves(
                 get_valve_states_for_aspiration(
                     line_indexes=line_indexes, aspiration_valve_state=ValveState.closed
