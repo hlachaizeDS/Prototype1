@@ -162,12 +162,12 @@ class MGATestbenchHardware(Frame):
 
             # set routine and gantry parameters
             self.valves.setRoutine(routine)
-            time.sleep(0.1)
+            # time.sleep(0.1)
             movement_start, movement_end = movement_range
 
-            self.move_to(movement_start)
+            self.move_to(movement_start, correct_slack=False)
             self._set_gantry_and_pump_speeds_for_dispense(
-                pump_speeds=pump_speeds,
+                volumes_per_well_per_line=volumes_per_well_per_line,
                 movement_axis=movement_axis,
                 gantry_dispense_movement_speed=gantry_dispense_movement_speed,
             )
@@ -281,7 +281,7 @@ class MGATestbenchHardware(Frame):
 
     def _set_gantry_and_pump_speeds_for_dispense(
         self,
-        pump_speeds: PumpSpeeds,
+        volumes_per_well_per_line: dict[LineIndex, Volume],
         movement_axis: Axis,
         gantry_dispense_movement_speed: float,
     ):
@@ -289,9 +289,13 @@ class MGATestbenchHardware(Frame):
             axis=movement_axis, gantry_dispense_speed=gantry_dispense_movement_speed
         )
         output_movement_axis_speed = self.get_gantry_speed(movement_axis)
+        pump_speeds = self._calculate_pump_speeds(
+            volumes_per_well_per_line=volumes_per_well_per_line,
+            gantry_dispense_movement_speed=gantry_dispense_movement_speed,
+        )
         if output_movement_axis_speed is not None:
             logger.info("Precise dispense movement speed: ", output_movement_axis_speed)
-            logger.info("Pump speeds: ", pump_speeds)
+            logger.info("Precise pump speeds: ", pump_speeds)
             self._set_pump_speeds(pump_speeds)
         time.sleep(0.05)
 
@@ -417,6 +421,21 @@ class MGATestbenchHardware(Frame):
         logger.info("move pumps to marks", end_volume_marks)
         return end_volume_marks
 
+    def _calculate_pump_speeds(
+        self,
+        volumes_per_well_per_line: dict[LineIndex, Volume],
+        gantry_dispense_movement_speed: float,
+    ):
+        return {
+            FluidicLineIndexToPumpIndexMapping[line_index]: get_pump_speed(
+                dispense_volume=volume,
+                gantry_speed=gantry_dispense_movement_speed,
+                inter_nozzle_in_movement_distance=DefaultGeometry.x_inter_nozzle_spacing_wells_in_line
+                * DefaultGeometry.inter_well_spacing_mm,
+            )
+            for line_index, volume in volumes_per_well_per_line.items()
+        }
+
     def _get_volume_usage_and_line_indexes_for_remaining_trips(
         self,
         volumes_per_well: dict[LineIndex, Volume],
@@ -427,15 +446,10 @@ class MGATestbenchHardware(Frame):
     ) -> tuple[Volumes, Volumes, PumpSpeeds]:
         current_trip_volume_usage = {}
         total_volume_usage = {}
-        pump_speeds = {
-            FluidicLineIndexToPumpIndexMapping[line_index]: get_pump_speed(
-                dispense_volume=volume,
-                gantry_speed=gantry_dispense_movement_speed,
-                inter_nozzle_in_movement_distance=DefaultGeometry.x_inter_nozzle_spacing_wells_in_line
-                * DefaultGeometry.inter_well_spacing_mm,
-            )
-            for line_index, volume in volumes_per_well.items()
-        }
+        pump_speeds = self._calculate_pump_speeds(
+            volumes_per_well_per_line=volumes_per_well,
+            gantry_dispense_movement_speed=gantry_dispense_movement_speed,
+        )
 
         for index, (routine, movement_range) in enumerate(trips):
             pump_dispense_axis_ranges: PumpDispenseAxisRanges = {}
