@@ -162,6 +162,7 @@ class MGATestbenchHardware(Frame):
 
             # set routine and gantry parameters
             self.valves.setRoutine(routine)
+            time.sleep(0.1)
             movement_start, movement_end = movement_range
 
             self.move_to(movement_start)
@@ -175,6 +176,7 @@ class MGATestbenchHardware(Frame):
             self.valves.startRoutine(valves._())
             self.start_pump_moves(end_volume_marks)
             self.move_to(movement_end, wait_to_finish=True, correct_slack=False)
+            time.sleep(0.1)
             self.stop_pump_moves([pumpIndex for pumpIndex in end_volume_marks.keys()])
             self.valves.stopRoutine(valves._())
             self.set_gantry_parameters()
