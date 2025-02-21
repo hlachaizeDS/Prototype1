@@ -381,6 +381,7 @@ class MGATestbenchHardware(Frame):
         total_upcoming_volume_usage: Volumes,
         line_indexes: list[LineIndex],
     ):
+        pump_remaining_volume_margin = 250
         pump_indexes = [pump_index for pump_index in total_upcoming_volume_usage.keys()]
         pump_remaining_volumes = self.get_remaining_volumes_in_pumps(pump_indexes)
         # logger.info("Volume usage: ", volume_usage)
@@ -389,9 +390,15 @@ class MGATestbenchHardware(Frame):
             pump_index
             for pump_index, volume in pump_remaining_volumes.items()
             if pump_index in total_upcoming_volume_usage
-            and volume < total_upcoming_volume_usage[pump_index]
+            and volume
+            < (total_upcoming_volume_usage[pump_index] + pump_remaining_volume_margin)
         ]
-        logger.debug("Pumps requiring refill: ", pumps_requiring_refill)
+        logger.debug(
+            "Pumps requiring refill: ",
+            pumps_requiring_refill,
+            " - margin: ",
+            pump_remaining_volume_margin,
+        )
         if len(pumps_requiring_refill) > 0:
             # if any pump requires a refill, use the opportunity
             # to refill all pumps in the trip
