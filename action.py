@@ -5,13 +5,16 @@ from PSPs import *
 import sys
 
 
-thermal_is384 = 0
+thermal_is384 = 1
 
 def actionButton_Callback(directCommand):
     hardware = directCommand.parent.hardware
 
     #PDR
-    #PDR_Synthesis_TwoEnz_TwoDB_X(hardware,0)
+    #PDR_Synthesis_TwoEnz_TwoDB_Xop(hardware,0)
+    #PDR_Synthesis_OneEnz_EightNucs_Xbuff2(hardware, 0)
+    #PDR_Synthesis_TwoEnz_TwoWB2_Xbuff2(hardware, 0)
+
 
     #384------------------
     #ElongationCycle_TwoEnz_W1_384(hardware)
@@ -19,6 +22,10 @@ def actionButton_Callback(directCommand):
     #ElongationCycle_TwoEnz_W1_384_Buff2attheEnd(hardware)
     #ElongationCycle_TwoEnz_W1_384_WB2forSubs(hardware)
     #ElongationCycle_TwoEnz_W1_384_LowDensityLowScale(hardware)
+    #Synthesis384_TwoEnz_X(hardware, 1)
+    #Synthesis384_TwoEnz_Xall(hardware, 1)
+    #Synthesis384_TwoEnz_halfvol_X(hardware, 1)
+    PSPOnePot_384(hardware, 1)
 
     #96-------------------
     #EB
@@ -75,20 +82,28 @@ def actionButton_Callback(directCommand):
     #ElongationCycleOneEnz_EightNucs_W1_X(hardware, 0)
     #TwoElongTime_Col_TwoWB2(hardware, 0)
     #ElongationCycle_TwoEnz_TwoStepsWB2_2DB_W1(hardware, 0)
+    #Synthesis_FourEnz_TwoWB2_Xq(hardware, 0)
 
     #ElongationCycle_TwoEnz_W1_10minsomeCycles(hardware, 0)
 
 
     #Synthesis_TwoEnz(hardware, 0)
-    #Synthesis_TwoEnz_X(hardware, 0)
+    #Synthesis_TwoEnz_Xop(hardware, 0)
+    #Synthesis_TwoEnz_Xbuff2(hardware, 0)
     #Synthesis_TwoEnz_Xp(hardware, 0)
     #Synthesis_TwoEnz_Xp_AVPrimingO(hardware, 0)
     #Synthesis_TwoEnz_TwoDB_X(hardware, 0)
+    #Synthesis_TwoEnz_DiffConcDB_Xop(hardware, 0)
+    #Synthesis_FiveEnz_Xbuff2(hardware, 0)
     #Synthesis_TwoEnz_FourIncWB1_X(hardware, 0)
     #Synthesis_FourEnz_TwoDB_X(hardware, 0)
+    #Synthesis_FourEnz_Xbuff2(hardware, 0)
     #Synthesis_TwoEnz_TwoDB_TwoWB2x2_LastWB2_X(hardware, 0)
     #Synthesis_TwoEnz_TwoWB1_ExtraWB1_X(hardware, 0)
     #Synthesis_OneEnz_FourWB1_ExtraPkWash_X(hardware, 0)
+    #Synthesis_OneEnz_EightNucs_Xbuff2(hardware, 0)
+    #Synthesis_TwoEnz_WB1Time_Xop(hardware, 0)
+    #Synthesis_TwoEnz_FourdGTP_Xbuff2(hardware, 0)
     #multi_dispense_in_wells(hardware,{"Q": [50, [well for well in wellListFromColumns([1,2,3,4,5,6,7,8,9,10,11,12])]]})
 
 
@@ -96,7 +111,12 @@ def actionButton_Callback(directCommand):
     #PSPWashes_96OP_extraH20andEtOH(hardware,0)
     #PSPWashes_96OP_extraH20andEtOH_Soft(hardware,0)
     #PSPWashes_96OP_extraH20andEtOH_half(hardware,0)
+    #PSPWashes_96OP_extraH20andEtOH_IsoTime_EthConc(hardware, 0)
     #PSPOnePot_384_4LBs(hardware, 1)
+    #PSPOnePot_384(hardware, 1)
+
+    #SynthesisPlatform
+    #Synthesis_TwoEnz_Xp_SP(hardware, 0)
 
 
 

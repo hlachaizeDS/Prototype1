@@ -27,7 +27,7 @@ class ThermalImageThread:
     def __init__(self, mainFrame):
 
         """Parameters"""
-        self.is_384 = 0                   #format of the plate
+        self.is_384 = 1                   #format of the plate
         self.OS = "Proto"                 # Ubuntu(named_pipe), Windows (communication via bat) or Proto
         self.camera_type = "Xi400"          # so far only Xi400
         self.automatic_detection = 2        # 0 for no detection, 1 for image processing, 2 for fixed pixels
@@ -160,13 +160,13 @@ class ThermalImageThread:
         sleep(self.delay)
 
     def videoLoop(self):
-        #There used to be a while(1) here, but when the camera didn't function it would loop forever
         while(1):
             try:
                 self.in_video_loop()
             except Exception as e:
                 print('Couldnt update frame')
                 print(e)
+                sleep(self.delay) #otherwise the error loops too fast for the rest of the process to carry-on
 
     def snapshot_in_cycle(self,thermalImages,folder_path,cycle,step):
         try:
