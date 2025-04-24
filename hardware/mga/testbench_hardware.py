@@ -7,6 +7,8 @@ import mga_testbench_interface.generated.valves_pb2_grpc as valves_grpc
 import mga_testbench_interface.generated.valves_pb2 as valves
 import mga_testbench_interface.generated.pumps_pb2_grpc as pumps_grpc
 import mga_testbench_interface.generated.pumps_pb2 as pumps
+import mga_testbench_interface.generated.fluidics_pb2_grpc as fluidics_grpc
+import mga_testbench_interface.generated.fluidics_pb2 as fluidics
 import time
 from hardware.mga.test.utils import create_geogram
 import copy
@@ -71,6 +73,7 @@ class MGATestbenchHardware(Frame):
         self.gantry = gantry_grpc.GantryStub(self.channel)
         self.valves = valves_grpc.ValvesStub(self.channel)
         self.pumps = pumps_grpc.PumpsStub(self.channel)
+        self.fluidics = fluidics_grpc.FluidicsStub(self.channel)
 
     def initialisation(self):
         if self.parent:
@@ -119,67 +122,108 @@ class MGATestbenchHardware(Frame):
             volume_per_line, ReagentToFluidicLineIndexMapping
         )
 
-        movement_axis = Axis.y
-
-        trips = create_trips(
-            geometry=DefaultGeometry,
-            dispense_plan=dispense_plan,
-            movement_axis=movement_axis,
-            line_configurations=LineConfigurations,
-            fluidic_line_to_pump_mapping=FluidicLineIndexToPumpIndexMapping,
-        )
-        for trip_index, (routine, movement_range) in enumerate(trips):
-            gantry_dispense_movement_speed = GantryDispenseMovementSpeed
-
-            (
-                current_trip_volume_usage,
-                total_upcoming_volume_usage,
-                pump_speeds,
-            ) = self._get_volume_usage_and_line_indexes_for_remaining_trips(
-                volumes_per_well=volumes_per_well_per_line,
-                gantry_dispense_movement_speed=gantry_dispense_movement_speed,
-                trips=trips[trip_index:],
-                movement_axis=movement_axis,
-            )
-
-            self._print_trip_debug_info(
-                routine=routine,
-                movement_range=movement_range,
-                gantry_dispense_speed=gantry_dispense_movement_speed,
-                volume_usage=total_upcoming_volume_usage,
-            )
-
-            line_indexes = [
-                line_index for line_index in volumes_per_well_per_line.keys()
-            ]
-
-            # refill if needed
-            end_volume_marks = self._refill_and_get_end_volume_marks(
-                current_trip_volume_usage=current_trip_volume_usage,
-                total_upcoming_volume_usage=total_upcoming_volume_usage,
-                line_indexes=line_indexes,
-            )
-
-            # set routine and gantry parameters
-            self.valves.setRoutine(routine)
-            # time.sleep(0.1)
-            movement_start, movement_end = movement_range
-
-            self.move_to(movement_start, correct_slack=False)
-            self._set_gantry_and_pump_speeds_for_dispense(
-                volumes_per_well_per_line=volumes_per_well_per_line,
-                movement_axis=movement_axis,
-                gantry_dispense_movement_speed=gantry_dispense_movement_speed,
-            )
-
-            # dispense
-            self.valves.startRoutine(valves._())
-            self.start_pump_moves(end_volume_marks)
-            self.move_to(movement_end, wait_to_finish=True, correct_slack=False)
+        self.refill(volume_per_line)
+        
+        dispense_parameters = fluidics.DispenseParameters(mapping={line_index:fluidics.DispenseParameters.LineParameters(
+                    volume=volumes_per_well_per_line[line_index], wells=[fluidics.DispenseParameters.LineParameters.Well(
+                        row=well.row, column=well.column
+                    ) for well in wells]
+                ) for line_index, wells in dispense_plan.items()})
+        #print(dispense_parameters)
+        time.sleep(5)
+        status = self.fluidics.dispense(dispense_parameters)
+        while status.routineInProgress:
+            fluidic_lines = fluidics.FluidicLines(indexes = [
+                line_index for line_index in dispense_plan.keys()
+            ])
+            status = self.fluidics.getStatuses(fluidic_lines)
+            print(status)
             time.sleep(0.1)
-            self.stop_pump_moves([pumpIndex for pumpIndex in end_volume_marks.keys()])
-            self.valves.stopRoutine(valves._())
-            self.set_gantry_parameters()
+        print("DONE DISPENSING")
+
+    def refill(self, volume_per_line: ReagentVolumeWells):
+        dispense_plan, volumes_per_well_per_line = create_dispense_plan(
+            volume_per_line, ReagentToFluidicLineIndexMapping
+        )
+
+        status: fluidics.FluidicsStatuses = self.fluidics.refill(fluidics.RefillParameters(volumes={
+            line_index:5000 for line_index in dispense_plan.keys()
+        }))
+        while any(line_status.isBusy for line_status in status.statuses):
+            fluidic_lines = fluidics.FluidicLines(indexes = [
+                line_index for line_index in dispense_plan.keys()
+            ])
+            status = self.fluidics.getStatuses(fluidic_lines)
+            print(status)
+            time.sleep(0.1)
+        print("DONE REFILLING")
+
+    # def dispense(self, volume_per_line: ReagentVolumeWells):
+    #     dispense_plan, volumes_per_well_per_line = create_dispense_plan(
+    #         volume_per_line, ReagentToFluidicLineIndexMapping
+    #     )
+
+    #     movement_axis = Axis.y
+
+    #     trips = create_trips(
+    #         geometry=DefaultGeometry,
+    #         dispense_plan=dispense_plan,
+    #         movement_axis=movement_axis,
+    #         line_configurations=LineConfigurations,
+    #         fluidic_line_to_pump_mapping=FluidicLineIndexToPumpIndexMapping,
+    #     )
+    #     for trip_index, (routine, movement_range) in enumerate(trips):
+    #         gantry_dispense_movement_speed = GantryDispenseMovementSpeed
+
+    #         (
+    #             current_trip_volume_usage,
+    #             total_upcoming_volume_usage,
+    #             pump_speeds,
+    #         ) = self._get_volume_usage_and_line_indexes_for_remaining_trips(
+    #             volumes_per_well=volumes_per_well_per_line,
+    #             gantry_dispense_movement_speed=gantry_dispense_movement_speed,
+    #             trips=trips[trip_index:],
+    #             movement_axis=movement_axis,
+    #         )
+
+    #         self._print_trip_debug_info(
+    #             routine=routine,
+    #             movement_range=movement_range,
+    #             gantry_dispense_speed=gantry_dispense_movement_speed,
+    #             volume_usage=total_upcoming_volume_usage,
+    #         )
+
+    #         line_indexes = [
+    #             line_index for line_index in volumes_per_well_per_line.keys()
+    #         ]
+
+    #         # refill if needed
+    #         end_volume_marks = self._refill_and_get_end_volume_marks(
+    #             current_trip_volume_usage=current_trip_volume_usage,
+    #             total_upcoming_volume_usage=total_upcoming_volume_usage,
+    #             line_indexes=line_indexes,
+    #         )
+
+    #         # set routine and gantry parameters
+    #         self.valves.setRoutine(routine)
+    #         # time.sleep(0.1)
+    #         movement_start, movement_end = movement_range
+
+    #         self.move_to(movement_start, correct_slack=False)
+    #         self._set_gantry_and_pump_speeds_for_dispense(
+    #             volumes_per_well_per_line=volumes_per_well_per_line,
+    #             movement_axis=movement_axis,
+    #             gantry_dispense_movement_speed=gantry_dispense_movement_speed,
+    #         )
+
+    #         # dispense
+    #         self.valves.startRoutine(valves._())
+    #         self.start_pump_moves(end_volume_marks)
+    #         self.move_to(movement_end, wait_to_finish=True, correct_slack=False)
+    #         time.sleep(0.1)
+    #         self.stop_pump_moves([pumpIndex for pumpIndex in end_volume_marks.keys()])
+    #         self.valves.stopRoutine(valves._())
+    #         self.set_gantry_parameters()
 
     def set_gantry_parameters(
         self, axis: Axis | None = None, gantry_dispense_speed: float | None = None
