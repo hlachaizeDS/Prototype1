@@ -5,8 +5,8 @@ import math
 #X_A1=155891
 #Y_A1=27818
 
-X_A1=155256
-Y_A1=27869
+X_A1=143790
+Y_A1=34432
 
 X_step=9200
 Y_step=9200
@@ -34,7 +34,9 @@ def initialiseMotorList(hardware,motor_list):
     for motor in motor_list:
         motor.axis.set(1, 0) #We set the actual position to 0 for each motor
 
+
 def primeDB_Idex(hardware,volume_ul):
+
     du = hardware.dispenseBlock.dus[8]
     max_disp_temp = du.max_disp
     du.max_disp = du.cylinder_volume
@@ -49,6 +51,7 @@ def primeDB_Idex(hardware,volume_ul):
 
     du.max_disp = max_disp_temp
     du.init()
+
 
 def goToWell(hardware,element,well,quadrant):
 
@@ -107,19 +110,19 @@ def goToWell(hardware,element,well,quadrant):
 
     if element=='safe':
         X_1 = 0
-        Y_1 = 128344
+        Y_1 = 124284
 
     if element=='thermo':
         X_1=0
-        Y_1=128344
+        Y_1=124284
 
     if element == "thermalCamera":
         X_1 = 0
-        Y_1 = 128344
+        Y_1 = 124284
 
     if element == "washPrime":
         #X_1 = 167686
-        X_1=224963
+        X_1= 224963
         Y_1 = 0
 
     if element == "premixPrime":
@@ -255,51 +258,15 @@ def waitAndStir(hardware,timeToWait, velocity=900):
 
     goToWell(hardware, 'thermalCamera', 1,0)
 
+    P4_flag = 0
+
+    if P4_flag :
+        velocity = velocity * 280 // 900
+
     hardware.arduinoControl.startShaking(velocity)
     #hardware.arduinoControl.startShaking(330) #RNA
     wait(hardware,timeToWait)
     hardware.arduinoControl.stopShaking()
-
-def stirrerOnFast(hardware):
-    hardware.set_output2(5,1)
-    hardware.set_output2(4,1)
-
-
-def stirrerOnSlow(hardware):
-    hardware.set_output2(5, 1)
-    hardware.set_output2(4, 0)
-
-def stirrerStop(hardware):
-
-    stirrerOnSlow(hardware)
-    sleep(1)
-    while hardware.stirrerMotorParametersInterface.get(10) == 0:
-        sleep(0.05)
-        hardware.parent.update()
-    while hardware.stirrerMotorParametersInterface.get(10) != 0:
-        sleep(0.05)
-        hardware.parent.update()
-    hardware.set_output2(5, 0)
-
-def magnetGoUp(hardware):
-
-    hardware.magnetMotor.move_absolute_wait(hardware, -1706249)
-
-def magnetGoDown(hardware):
-    hardware.magnetMotor.move_absolute_wait(hardware, -642511)
-
-def pressureGoDown(hardware):
-    hardware.posPressure.goDown('dessalt')
-
-def pressureGoUp(hardware):
-    hardware.posPressure.goUp()
-
-def aspirate(hardware,time):
-
-    output=7 #output for vacuum
-    hardware.set_output(output, 1)
-    sleep(time)
-    hardware.set_output(output, 0)
 
 
 def multi_dispense(hardware, volume_per_line, max_vol=None):
@@ -311,7 +278,8 @@ def multi_dispense(hardware, volume_per_line, max_vol=None):
     :return:
     '''
 
-    pumps_index = {"M": 0, "N": 1, "A": 2, "C": 3, "G": 4, "T": 5, "O": 6, "P": 7,
+
+    pumps_index = {"M": 0, "N": 1, "A": 4, "C": 5, "G": 6, "T": 7, "O": 2, "P": 3,
                    "DB": 8, "BB": 9, "Buff1": 10, "Buff2": 11, "Q" : 12}
 
     full_disp_list = [0] * len(pumps_index)
@@ -355,106 +323,6 @@ def multiDispensePumps(hardware,volumes,max_vol=None):
         hardware.dispenseBlock.multi_dispense(volumes)
 
 
-def multiDispense(hardware,nucleoArray,time):
-
-
-    for i in range(4):
-        if nucleoArray[i] == 1:
-            hardware.set_output(i+2, 1)
-    sleep(time)
-    for i in range(4):
-        hardware.set_output(i+2,0)
-
-def multiDispenseWithEnzyme(hardware,nucleoArray,time_nuc,time_enz):
-
-    for i in range(4):
-        if nucleoArray[i+2] == 1:
-            hardware.set_output(i+2, 1)
-    if 1 in nucleoArray[2:6]:
-        sleep(time_nuc)
-    for i in range(4):
-        hardware.set_output(i+2,0)
-
-    for i in range(2):
-        if nucleoArray[i] == 1:
-            hardware.set_output(i, 1)
-    if 1 in nucleoArray[0:2]:
-        sleep(time_enz)
-    for i in range(2):
-        hardware.set_output(i,0)
-
-def multiDispenseWithEnzymeSep(hardware,nucleoArray,time_nuc,time_enz_M,time_enz_N):
-
-    for i in range(4):
-        if nucleoArray[i+2] == 1:
-            hardware.set_output(i+2, 1)
-    if 1 in nucleoArray[2:6]:
-        sleep(time_nuc)
-    for i in range(4):
-        hardware.set_output(i+2,0)
-
-    if nucleoArray[1]==1:
-        hardware.set_output(1, 1)
-        sleep(time_enz_N)
-        hardware.set_output(1, 0)
-
-    if nucleoArray[0]==1:
-        hardware.set_output(0, 1)
-        sleep(time_enz_M)
-        hardware.set_output(0, 0)
-
-def multiDispenseAether(hardware,nucleoArray,time_enz,time_A,time_C,time_G,time_T):
-
-    times=[time_enz,time_enz,time_A,time_C,time_G,time_T]
-    for i in range(4):
-        j=5-i
-        if nucleoArray[j] !=0:
-            hardware.set_output(j, 1)
-            sleep(times[j])
-            hardware.set_output(j, 0)
-
-    for i in range(2):
-        if nucleoArray[i] != 0:
-            hardware.set_output(i, 1)
-    if 1 in nucleoArray[0:2]:
-        sleep(time_enz)
-    for i in range(2):
-        hardware.set_output(i,0)
-
-def multiDispenseNACGTWithEnzyme(hardware,nucleoArray,time_nuc,time_enz):
-
-    for i in range(5):
-        if nucleoArray[i+1] == 1:
-            hardware.set_output(i+1, 1)
-    if 1 in nucleoArray[1:6]:
-        sleep(time_nuc)
-    for i in range(5):
-        hardware.set_output(i+1,0)
-
-    for i in range(1):
-        if nucleoArray[i] == 1:
-            hardware.set_output(i, 1)
-    if 1 in nucleoArray[0:1]:
-        sleep(time_enz)
-    for i in range(1):
-        hardware.set_output(i,0)
-
-def multiDispenseMNACGT(hardware,nucleoArray,time):
-
-    for i in range(6):
-        if nucleoArray[i] == 1:
-            hardware.set_output(i, 1)
-    sleep(time)
-    for i in range(6):
-        hardware.set_output(i,0)
-
-def dispenseInPlate(hardware):
-
-    final=96
-
-    for well in range(1,final+1,1):
-        goToWell(hardware,'A',well)
-        dispense(hardware,'A',0.02*((well%8) +1))
 
 if __name__ == "__main__":
     for well in range(1,50):

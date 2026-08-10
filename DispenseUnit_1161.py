@@ -34,6 +34,33 @@ class DispenseUnit_1161:
             self.max_disp = 200  # ul
             self.cylinder_volume = 5000  # ul
 
+        elif pump_type=="idex 250 lead 635":
+            #Corresponds to an idex 250 with a thread of 6.35mm lead
+            self.dist_per_full_step = 0.03175 # mm
+            self.radius = 5.006/2  # mm
+            self.max_disp = 200  # ul
+            self.cylinder_volume = 250  # ul
+            #self.std_asp_speed = 950
+            #self.std_disp_speed = 950
+
+        elif pump_type=="idex 250 lead 488":
+            #Corresponds to an idex 250 with a thread of 4.88mm lead
+            self.dist_per_full_step = 0.0244 # mm
+            self.radius = 5.006/2  # mm
+            self.max_disp = 200  # ul
+            self.cylinder_volume = 250  # ul
+            #self.std_asp_speed = 950
+            #self.std_disp_speed = 950
+
+        elif pump_type=="idex 250 lead 400":
+            #Corresponds to an idex 250 with a thread of 4.00mm lead
+            self.dist_per_full_step = 0.02 # mm
+            self.radius = 5.006/2  # mm
+            self.max_disp = 200  # ul
+            self.cylinder_volume = 250  # ul
+            #self.std_asp_speed = 950
+            #self.std_disp_speed = 950
+
     def ul_to_usteps(self,volume_ul):
         steps_nb = int(volume_ul * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
         #print(steps_nb)
@@ -114,14 +141,27 @@ class DispenseUnit_1161:
 
         self.run_firmware_from_line(1)
 
+    def multi_print(self,total_volume,stroke):
+
+        start=time.time()
+        for i in range(int(total_volume//stroke)):
+            print((i+1)*stroke)
+            self.dispense(stroke)
+            self.wait_for_idle()
+
+        print(time.time() - start)
+
 
 if __name__ == "__main__":
 
-    serial_port = Serial('COM7', 115200)
+
+    serial_port = Serial('COM10', 115200)
     bus = pyTMCL.connect(serial_port)
 
-    pump_1=DispenseUnit_1161("fakeparent",bus,1,0)
+    pump_1=DispenseUnit_1161("fakeparent",bus,1,0,'idex 250 lead 400')
 
-    pump_1.init()
-    #pump_1.dispense(100)
+    #pump_1.init()
+    #pump_1.dispense(200)
+
+    pump_1.multi_print(30000,200)
     serial_port.close()

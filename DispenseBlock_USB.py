@@ -14,15 +14,26 @@ class DispenseBlock_USB:
         #self.bus = pyTMCL.connect(self.serial_port)
 
         self.dus=[]
+
+        self.lines_to_adress = {"M": 1, "N": 2, "O": 3, "P": 4,
+                                "A": 5, "C": 6, "G": 7, "T": 8,
+                                "DB": 9, "BB": 10, "Buff1": 11, "Buff2": 12,
+                                "Q": 13}
+
         comport_dictionnaries = COM_port.list_1161_coms_by_adress()
 
-        for adress in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]:
-            bus = pyTMCL.connect(Serial(comport_dictionnaries[adress], 115200, timeout=5))
+        for line in self.lines_to_adress.keys():
+            adress_of_line = self.lines_to_adress[line]
+            print("Line " + line + ": id " + str(adress_of_line) + ", port " + comport_dictionnaries[adress_of_line])
 
-            if adress in [9, 10]:
-                self.dus.append(DispenseUnit_1161(self, bus, 1, 0, pump_type="idex 5000"))
-            else:
-                self.dus.append(DispenseUnit_1161(self, bus, 1, 0))
+        for line in ["M", "N", "O", "P", "A", "C", "G", "T", "DB", "BB", "Buff1", "Buff2", "Q"]:
+            bus = pyTMCL.connect(Serial(comport_dictionnaries[self.lines_to_adress[line]], 115200, timeout=5))
+            if line in ["M", "N", "O", "A", "C", "G", "T"]:
+                self.dus.append(DispenseUnit_1161(self, bus, 1, 0, pump_type="idex 250 lead 488"))
+            elif line in ["P","Q"]:
+                self.dus.append(DispenseUnit_1161(self, bus, 1, 0, pump_type="idex 250 lead 400"))
+            elif line in ["DB", "BB", "Buff1", "Buff2"]:
+                self.dus.append(DispenseUnit_1161(self, bus, 1, 0, pump_type="idex 250 lead 400"))
 
     def multi_dispense(self,volumes):
         #if list of volumes not at the same length as dus, we add 0s

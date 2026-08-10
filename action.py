@@ -5,27 +5,24 @@ from PSPs import *
 import sys
 
 
-thermal_is384 = 1
+thermal_is384 = 0
 
 def actionButton_Callback(directCommand):
     hardware = directCommand.parent.hardware
 
-    #PDR
-    #PDR_Synthesis_TwoEnz_TwoDB_Xop(hardware,0)
-    #PDR_Synthesis_OneEnz_EightNucs_Xbuff2(hardware, 0)
-    #PDR_Synthesis_TwoEnz_TwoWB2_Xbuff2(hardware, 0)
 
+    #template
+    #Synthesis384_TwoEnz_Xbuff2(hardware, 1)
+    #Synthesis384_TwoEnz_4X12buff2(hardware, 1)
+    #Synthesis_TwoEnz_Xbuff2(hardware, 0) #à vérifier
+    #Synthesis_TwoEnz_Xop(hardware, 0)
 
     #384------------------
-    #ElongationCycle_TwoEnz_W1_384(hardware)
-    #ElongationCycle_TwoEnz_W1_384_2and3minElong(hardware)
-    #ElongationCycle_TwoEnz_W1_384_Buff2attheEnd(hardware)
-    #ElongationCycle_TwoEnz_W1_384_WB2forSubs(hardware)
-    #ElongationCycle_TwoEnz_W1_384_LowDensityLowScale(hardware)
-    #Synthesis384_TwoEnz_X(hardware, 1)
-    #Synthesis384_TwoEnz_Xall(hardware, 1)
-    #Synthesis384_TwoEnz_halfvol_X(hardware, 1)
-    PSPOnePot_384(hardware, 1)
+    #Synthesis384_TwoEnz_Xbuff2(hardware, 1)
+
+
+
+    #PSPOnePot_384(hardware, 1)
 
     #96-------------------
     #EB
@@ -33,79 +30,28 @@ def actionButton_Callback(directCommand):
     #WB1
 
     #DB
-
+    #Synthesis_TwoEnz_TwoDB_Xop(hardware, 0)
     #WB2
 
-    #Misc
-    #take_snapshot(hardware,"Newheater")
-
-    #ElongationTwoEnz_HighScale_10minSomeCycles(hardware, 0)
-    #ElongationCycleSeparatedFourEnz_B4(hardware, 0)
-    #ElongationCycle_TwoEnz_W1(hardware, 0)
-    #ElongationCycle_OneEnz_W1(hardware, 0)
-    #ElongationCycle_TwoEnz_W1X(hardware, 0)
-    #ElongationCycle_OneEnz_W1X(hardware, 0)
-    #ElongationCycle_TwoEnz_W1X_preprimenucs(hardware, 0)
-    #ElongationCycle_TwoEnz_W1_TwoWB2(hardware,0)
-    #ElongationCycle_TwoEnz_W1_384_WB2Screen(hardware, 1)
-    #ElongationCycle_TwoEnz_W1_Buff2atTheEnd_DiffVol(hardware, 0)
-    #ElongationCycle_TwoEnz_W1_TR102030(hardware, 0)
-    #ElongationCycle_TwoEnz_TwoW1(hardware, 0)
-    #ElongationCycle_TwoEnz_W1_synthesisIssue(hardware, 0)
-    #ElongationCycle_TwoEnz_W1_CloggingFJ8504(hardware, 0)
-    #ElongationCycle_TwoEnz_W1_PSPTblsht(hardware, 0)
-    #ElongationCycle_TwoEnz_W1_10minsomeCycles(hardware, 0)
-    #ElongationCycle_OneEnz_W1_X(hardware, 0)
-    #ElongationCycle_OneEnz_W1_10minsomeCycles(hardware, 0)
-    #ElongationCycleSeparatedFourEnz_W1(hardware, 0)
-    #ElongationCycle_TwoEnz_TwoStepsWB2_W1(hardware, 0)
-    #ElongationCycle_TwoEnz_TwoWB2_W1(hardware, 0)
-    # start=time.time()
-
-    # print(time.time()-start)
-    #ElongationCycle_TwoEnz_TwoDB(hardware, 0)
-    #ElongationCycle_TwoEnz_4IncEBTime_W1(hardware, 0)
-    #ElongationCycle_TwoEnz_EDTAspike_FourIncW1(hardware, 0)
-    #ElongationCycle_TwoEnz_W1_DispCheck(hardware, 0)
-    #ElongationCycle_TwoEnz_TwoW1(hardware, 0)
-    #ElongationCycle_TwoEnz_W1_Reprime_DiffVol(hardware, 1)
-    #ElongationCycle_TwoEnz_W1_96in384(hardware, 1)
-    #ElongationCycle_TwoEnz_2DiffWB2_2StepsWB2_W1(hardware, 0)
-    #ElongationCycle_TwoEnz_W1_AceticAcidCapping(hardware, 0)
-    #ElongationCycle_TwoEnz_EndedWellsCR0_hardocded_W1(hardware, 0)
-    #Testing_384(hardware,0)
-    #ElongationCycle_TwoEnz_W1_ReprimeNucs_Oended(hardware,0)
-    #ElongationCycle_TwoEnz_W1_long_mutants_dI(hardware,0)
-    #ElongationCycle_TwoEnz_W1_long_diffVolumes(hardware, 0)
-    #ElongationCycle_TwoEnz_2DiffWB2_2volEB_1DB_W1_EndedWellsCR0(hardware, 0)
-    #ElongationCycleTwoEnz_W1_DiffVols_X(hardware, 0)
-    #ElongationCycleOneEnz_EightNucs_W1_X(hardware, 0)
-    #TwoElongTime_Col_TwoWB2(hardware, 0)
-    #ElongationCycle_TwoEnz_TwoStepsWB2_2DB_W1(hardware, 0)
-    #Synthesis_FourEnz_TwoWB2_Xq(hardware, 0)
-
-    #ElongationCycle_TwoEnz_W1_10minsomeCycles(hardware, 0)
 
 
-    #Synthesis_TwoEnz(hardware, 0)
-    #Synthesis_TwoEnz_Xop(hardware, 0)
-    #Synthesis_TwoEnz_Xbuff2(hardware, 0)
-    #Synthesis_TwoEnz_Xp(hardware, 0)
-    #Synthesis_TwoEnz_Xp_AVPrimingO(hardware, 0)
-    #Synthesis_TwoEnz_TwoDB_X(hardware, 0)
-    #Synthesis_TwoEnz_DiffConcDB_Xop(hardware, 0)
-    #Synthesis_FiveEnz_Xbuff2(hardware, 0)
-    #Synthesis_TwoEnz_FourIncWB1_X(hardware, 0)
-    #Synthesis_FourEnz_TwoDB_X(hardware, 0)
+    #Synthesis_TwoEnz_Xp(hardware, 0) #a relire
     #Synthesis_FourEnz_Xbuff2(hardware, 0)
-    #Synthesis_TwoEnz_TwoDB_TwoWB2x2_LastWB2_X(hardware, 0)
-    #Synthesis_TwoEnz_TwoWB1_ExtraWB1_X(hardware, 0)
-    #Synthesis_OneEnz_FourWB1_ExtraPkWash_X(hardware, 0)
-    #Synthesis_OneEnz_EightNucs_Xbuff2(hardware, 0)
-    #Synthesis_TwoEnz_WB1Time_Xop(hardware, 0)
-    #Synthesis_TwoEnz_FourdGTP_Xbuff2(hardware, 0)
-    #multi_dispense_in_wells(hardware,{"Q": [50, [well for well in wellListFromColumns([1,2,3,4,5,6,7,8,9,10,11,12])]]})
-
+    #Humidification_Test(hardware,1)
+    #Synthesis_TwoEnz_FourElongTime_Xbuff2(hardware, 0)
+    #multi_dispense(hardware,{"N":40000,"O":40000,"P":40000,"Q":40000}, max_vol=12.5)
+    #Synthesis384_TwoEnz_Xbuff2_1sur4(hardware, 1)
+    #Synthesis384_OneEnz_SixDB_4X12S3(hardware, 1)
+    #Synthesis384_OneEnz_Xbuff2(hardware, 1)
+    #Synthesis384_TwoEnz_ThreeWB2_4X12q(hardware, 1)
+    #Synthesis384_OneEnz_FourDB_4X12buff2(hardware, 1)
+    #Synthesis384_OneEnz_FourWB2_4X12buff2(hardware, 1)
+    Synthesis_OneEnz_FourDB_Xbuff2(hardware, 0)
+    #for i in range(1000):
+    #    print(i)
+    #    multi_dispense(hardware,{"N":12.5})
+    #    multi_dispense(hardware,{"N":12.5})
+    #    multi_dispense(hardware,{"N":15})
 
     #PSPs
     #PSPWashes_96OP_extraH20andEtOH(hardware,0)
@@ -114,9 +60,11 @@ def actionButton_Callback(directCommand):
     #PSPWashes_96OP_extraH20andEtOH_IsoTime_EthConc(hardware, 0)
     #PSPOnePot_384_4LBs(hardware, 1)
     #PSPOnePot_384(hardware, 1)
-
-    #SynthesisPlatform
-    #Synthesis_TwoEnz_Xp_SP(hardware, 0)
-
+    #usedWells=wellListFromColumns_384(list(range(1,25)))
+    #multi_dispense_in_wells(hardware, {"N": [25, [well for well in usedWells if well % 8 in [1, 2]]],
+     #                                  "O": [25, [well for well in usedWells if well % 8 in [3, 4]]],
+     #                                  "P": [25, [well for well in usedWells if well % 8 in [5, 6]]],
+     #                                  "Q": [25, [well for well in usedWells if well % 8 in [7, 0]]]
+      #                                 }, 1, max_vol=12.5)
 
 

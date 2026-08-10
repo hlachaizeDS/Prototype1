@@ -17,7 +17,7 @@ from time import *
 import cv2 as cv
 import pandas as pd
 import pickle
-from MTM import matchTemplates
+#from MTM import matchTemplates
 #from socket_server import *
 import json
 
@@ -27,9 +27,9 @@ class ThermalImageThread:
     def __init__(self, mainFrame):
 
         """Parameters"""
-        self.is_384 = 1                   #format of the plate
+        self.is_384 = 0                   #format of the plate
         self.OS = "Proto"                 # Ubuntu(named_pipe), Windows (communication via bat) or Proto
-        self.camera_type = "Xi400"          # so far only Xi400
+        self.camera_type = 'Xi400'          # Xi400 or PI160
         self.automatic_detection = 2        # 0 for no detection, 1 for image processing, 2 for fixed pixels
         self.flip_vertically = 0            # mirror through vertical axis
         self.flip_horizontally = 0          # mirror through horizontal axis
@@ -46,7 +46,7 @@ class ThermalImageThread:
         elif self.OS=="Windows":
             self.root_path = "Thermal_Camera"
         elif self.OS=="Proto":
-            self.root_path = "D:\\Proto7\\Thermal_Camera"
+            self.root_path = "D:\\Prototype4\\Thermal_Camera"
 
 
         self.cm = plt.get_cmap('seismic')               #Color map
@@ -54,6 +54,9 @@ class ThermalImageThread:
         if self.camera_type=='Xi400':
             self.width = 382
             self.height = 288
+        elif self.camera_type=='PI160':
+            self.width = 160
+            self.height = 120
         else:
             raise Exception("Camera type unknown.")
 

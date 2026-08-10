@@ -2,6 +2,7 @@ from elementaryFunctions import *
 from excelRead import *
 import copy
 
+
 quadrant_nb=4
 
 def multi_dispense_in_wells(hardware,lines_volumes_wells_dict,is384=0,max_vol=None):
@@ -598,6 +599,18 @@ def removeSupernatant(hardware,vacuumTime):
 
     wait(hardware, 3)
 
+def removeSupernatantSnapVac(hardware,vacuumTime):
+
+    goToWell(hardware, 'thermalCamera', 1,0)
+
+    hardware.vacValveOpen()
+
+    wait(hardware, vacuumTime)
+    TT.snapshot_in_cycle(thermalImages, folder_path, cycle, 'DuringVac')
+    hardware.vacValveClose()
+
+    wait(hardware, 3)
+
 def removeSupernatantPosPressure(hardware, wells, time, plate, vacuum):
 
     hardware.posPressure.goUp()
@@ -634,19 +647,43 @@ def removeSupernatantPosPressure(hardware, wells, time, plate, vacuum):
 def fillPlate(hardware, buffer, vol, is384, max_vol=None):
 
     # We read the excel and get the parameters back
-    synthesis_sheet = getExcelSheet(path)
-    getParameters(synthesis_sheet)
-    sequences = getSequences(synthesis_sheet)
-    nucleo_arrays = splitSequences(sequences, 1)
+    if is384:
+        synthesis_sheet = getExcelSheet_384(path)
+        getParameters(synthesis_sheet)
+        sequences = getSequences_384(synthesis_sheet)
+    else:
+        synthesis_sheet = getExcelSheet(path)
+        getParameters(synthesis_sheet)
+        sequences = getSequences(synthesis_sheet)
+
+    [ended_wells, A_wells, C_wells, G_wells, T_wells, M_wells, N_wells, O_wells, P_wells, X_wells, Q_wells] \
+        = splitSequences(sequences, 1)
+
     usedWells = getUsedWells(sequences)
     activeWells = getActiveWells(sequences, 1)
 
+    if max_vol==0:
+        max_vol=None
+
     if buffer=="nucs":
-        dispensePumps(hardware, [vol]*8,
-                      nucleo_arrays[5], nucleo_arrays[6],
-                      nucleo_arrays[1], nucleo_arrays[2], nucleo_arrays[3], nucleo_arrays[4],[],[], is384, max_vol)
+        multi_dispense_in_wells(hardware,{
+            "A":[vol,A_wells],
+            "C":[vol,C_wells],
+            "G":[vol,G_wells],
+            "T":[vol,T_wells],
+            "M":[vol,M_wells],
+            "N":[vol,N_wells],
+            "O":[vol,O_wells],
+            "P":[vol,P_wells],
+            "Q":[vol,Q_wells],
+        }, is384, max_vol)
     else:
-        dispenseWashes(hardware,vol,buffer,activeWells,is384)
+        if max_vol!=None:
+            max_vol=max_vol*4
+
+        multi_dispense_in_wells(hardware, {
+            buffer: [vol, usedWells],
+        }, is384, max_vol)
 
 def DBRinseRoutine(hardware):
 
@@ -693,6 +730,55 @@ def wellListFromColumns(ColsList):
         wellList.append((Col-1)*8+6)
         wellList.append((Col-1)*8+7)
         wellList.append((Col-1)*8+8)
+    return wellList
+
+def wellListFromRows(RowsList):
+#%8
+    wellList=[]
+    for Row in RowsList:
+        wellList.append((Row-1)+1)
+        wellList.append((Row-1)+2)
+        wellList.append((Row-1)+3)
+        wellList.append((Row-1)+4)
+        wellList.append((Row-1)+5)
+        wellList.append((Row-1)+6)
+        wellList.append((Row-1)+7)
+        wellList.append((Row-1)+8)
+    return wellList
+
+def ColToWell(ColsList):
+
+    wellList=[]
+    for Col in ColsList:
+        wellList.append((Col-1)*8+1)
+        wellList.append((Col-1)*8+2)
+        wellList.append((Col-1)*8+3)
+        wellList.append((Col-1)*8+4)
+        wellList.append((Col-1)*8+5)
+        wellList.append((Col-1)*8+6)
+        wellList.append((Col-1)*8+7)
+        wellList.append((Col-1)*8+8)
+    return wellList
+
+def RowToWell(RowsList):
+
+    wellList=[]
+    for row in RowsList:
+        wellList=wellList+list(range(row,96+1,8))
+    return wellList
+
+def ColToWell_384(ColsList):
+
+    wellList=[]
+    for col in ColsList:
+        wellList=wellList+(list(range((col-1)*16+1,(col)*16+1)))
+    return wellList
+
+def RowToWell_384(RowsList):
+
+    wellList=[]
+    for row in RowsList:
+        wellList=wellList+list(range(row,384+1,16))
     return wellList
 
 def wellListFromColumns_384(ColsList):

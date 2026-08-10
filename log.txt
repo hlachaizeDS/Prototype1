@@ -1,2 +1,2 @@
-C:\Users\SynthesisDNASCRIPT\PycharmProjects\Prototype7\venv\Lib\Optris\generic.xml
+C:\Users\Prototype 4\PycharmProjects\Prototype4\venv\Lib\Optris\generic.xml
 1

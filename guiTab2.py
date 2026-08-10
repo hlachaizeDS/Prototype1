@@ -1,6 +1,6 @@
 # On importe Tkinter
 import threading
-from tkinter import *
+from tkinter.tix import *
 from hardware import *
 from action import actionButton_Callback
 from cycles_steps import *
@@ -28,6 +28,7 @@ class MiddleFrame(Frame):
     def __init__(self, parent, *args, **kwargs):
         Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
+        self.tool_tip = Balloon(self)
         #print(self.parent.parent.tab(1))
         hardware = self.parent.parent.children['!mainframetab1'].hardware
 
@@ -35,23 +36,26 @@ class MiddleFrame(Frame):
         self.initAllFirstButton = Button(self, text="Init All Pumps", command=lambda: hardware.init_all_du())
         self.initAllFirstButton.grid(row=1, column=1, padx=5, pady=5)
 
-        # Priming MNACGT
-        self.PrimingPremixButton = Button(self, text="Prime MNACGT 3mL",
-                                             command=lambda: multiDispensePumps(hardware,[3000]*6))
-        self.PrimingPremixButton.grid(row=2, column=1, padx=5, pady=5)
+        ## Priming MNACGT
+        #self.PrimingPremixButton = Button(self, text="Prime MNACGT 3mL",
+        #                                     command=lambda: multiDispensePumps(hardware,[3000]*6))
+        #self.PrimingPremixButton.grid(row=2, column=1, padx=5, pady=5)
 
         # Priming All single lines
-        self.PrimingPremixButton = Button(self, text="Prime MNACGTOPQ 3mL",
-                                          command=lambda: multiDispensePumps(hardware, [3000] * 8 + [0,0,0,0,3000]))
-        self.PrimingPremixButton.grid(row=3, column=1, padx=5, pady=5)
-
-
+        self.PrimingPremixButton = Button(self, text="Prime Mono 4mL",
+                                          command=lambda: multi_dispense(hardware, {line : 4000 for line in ["M","N","A","C","G","T","O","P","Q"]}), bg='#E1E1E1')
+        self.PrimingPremixButton.grid(row=2, column=1, padx=5, pady=5)
 
         # Priming all multi lines
-        self.primingWashesButton = Button(self, text="Prime DB BB Buff1 Buff2 7mL",
-                                          command=lambda: multiDispensePumps(hardware,
-                                                                             [0,0,0,0,0,0,0,0,7000,7000,7000,7000]))
-        self.primingWashesButton.grid(row=4, column=1, padx=5, pady=5)
+        self.primingWashesButton = Button(self, text="Prime Quad 4mL",
+                                          command=lambda: multi_dispense(hardware, {line : 4000 for line in ["DB","BB","Buff1","Buff2"]}), bg='#E1E1E1')
+        self.primingWashesButton.grid(row=3, column=1, padx=5, pady=5)
+
+        # Priming all lines
+        self.primingButton = Button(self, text="Prime All 4mL",
+                                          command=lambda: multi_dispense(hardware, {line : 4000 for line in ["M","N","A","C","G","T","O","P","Q","DB","BB","Buff1","Buff2"]}), bg='#E1E1E1')
+        self.primingButton.grid(row=4, column=1, padx=5, pady=5)
+        self.tool_tip.bind_widget(self.primingButton, balloonmsg="All lines 3mL")
 
         # Priming Idex Pump
         #self.primingWashesButton = Button(self, text="Prime DB Idex 15mL",
@@ -60,10 +64,8 @@ class MiddleFrame(Frame):
 
 
         # Rinsing all multi lines
-        self.rinsingWashesButton = Button(self, text="Rinse DB BB Buff1 Buff2 20mL",
-                                          command=lambda: multiDispensePumps(hardware,
-                                                                             [0, 0, 0, 0, 0, 0, 0, 0, 20000, 20000, 20000,
-                                                                              20000]))
+        self.rinsingWashesButton = Button(self, text="Rinse Quad 20mL",
+                                          command=lambda: multi_dispense(hardware, {line : 20000 for line in ["DB","BB","Buff1","Buff2"]}), bg='#E1E1E1')
         self.rinsingWashesButton.grid(row=7, column=1, padx=5, pady=5)
 
 
@@ -121,20 +123,18 @@ class MiddleFrame(Frame):
         self.volumeToDisp_value.set('25')
 
         self.multidispMNACGTButton = Button(self, text="MNACGT",
-                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(6)]+[0,0,0,0,0,0]))
+                                            command=lambda: multi_dispense(hardware,{line : float(self.volumeToDisp_value.get()) for line in ["M","N","A","C","G","T"]}))
         self.multidispMNACGTButton.grid(row=2, column=5, padx=5, pady=5)
 
         self.multidispMNACGTButton = Button(self, text="MNACGTOPQ",
-                                            command=lambda: multiDispensePumps(hardware,
-                                                                               [float(self.volumeToDisp_value.get()) for
-                                                                                i in range(8)] + [ 0, 0, 0, 0, float(self.volumeToDisp_value.get())]))
+                                            command=lambda: multi_dispense(hardware,{line : float(self.volumeToDisp_value.get()) for line in ["M","N","A","C","G","T","O","P","Q"]}))
         self.multidispMNACGTButton.grid(row=3, column=5, padx=5, pady=5)
 
-        self.multidispButton = Button(self, text="ACGT", command=lambda : multiDispensePumps(hardware, [0,0]+[float(self.volumeToDisp_value.get()) for i in range(4)]+[0,0,0,0,0,0]))
+        self.multidispButton = Button(self, text="ACGT", command=lambda : multi_dispense(hardware,{line : float(self.volumeToDisp_value.get()) for line in ["A","C","G","T"]}))
         self.multidispButton.grid(row=4, column=5, padx=5, pady=5)
 
         self.multidispMNButton = Button(self, text="MN",
-                                            command=lambda: multiDispensePumps(hardware, [float(self.volumeToDisp_value.get()) for i in range(2)]+[0,0,0,0,0,0,0,0,0,0]))
+                                            command=lambda: multi_dispense(hardware,{line : float(self.volumeToDisp_value.get()) for line in ["M","N"]}))
         self.multidispMNButton.grid(row=5, column=5, padx=5, pady=5)
 
         simpleChannelList=['M', 'N', 'A', 'C','G','T', 'O', 'P', 'Q']
@@ -156,21 +156,7 @@ class MiddleFrame(Frame):
         self.initAllButton = Button(self, text='Init All',
                                  command=lambda: hardware.init_all_du())
         self.initAllButton.grid(row=5 + quadChannelList.index(buffer) + 4, column=6, padx=5, pady=5)
-        ##Entry
-        # self.timeToDisp_value = StringVar()
-        # self.timeToDisp = Entry(self, textvariable=self.timeToDisp_value)
-        # self.timeToDisp.grid(row=1, column=6)
-        # self.timeToDisp_value.set('0.1')
 
-        # buffersList = ['DB', 'BB', 'Buff1', 'Buff2']
-        # self.bufferButton = [None] * len(buffersList)
-        # for buffer in buffersList:
-        #     self.bufferButton[buffersList.index(buffer)] = Button(self, text=buffer,
-        #                                                           command=lambda buffer=buffer: dispense(hardware,
-        #                                                                                                  buffer, float(
-        #                                                                   self.timeToDisp_value.get())))
-        #     self.bufferButton[buffersList.index(buffer)].grid(row=2 + buffersList.index(buffer), column=6, padx=5,
-        #                                                       pady=5)
 
         '''GoToWell Block'''
         self.colToGo_value = StringVar()
@@ -186,59 +172,62 @@ class MiddleFrame(Frame):
             self.bufferButton2[buffersList.index(buffer)].grid(row=3 + buffersList.index(buffer), column=7, padx=5,
                                                               pady=5)
 
-        '''Normalization'''
-
-        self.posPressDessButton = Button(self, text="Normalize 96 with A",
-                                         command=lambda: removeSupernatantPosPressure(hardware, "excel", float(
-                                             self.posPressTime_value.get()), "dessalt", 0))
-        self.posPressDessButton.grid(row=2, column=8, padx=5, pady=5)
-
-        '''PositivePressure'''
-        '''
-        self.posPressTime_value = StringVar()
-        self.posPressTime = Entry(self, textvariable=self.posPressTime_value)
-        self.posPressTime.grid(row=1, column=8)
-        self.posPressTime_value.set('0.3')
-
-        self.posPressDessButton = Button(self, text="P+ Dessalt + Quant",command=lambda: removeSupernatantPosPressure(hardware,"excel",float(self.posPressTime_value.get()),"dessalt",0))
-        self.posPressDessButton .grid(row=2, column=8, padx=5,pady=5)
-
-        self.posPressSynDessButton = Button(self, text="P+ Syn+Dessalt",
-                                         command=lambda: removeSupernatantPosPressure(hardware, "excel", float(
-                                             self.posPressTime_value.get()), "synDessaltStack", 0))
-        self.posPressSynDessButton.grid(row=3, column=8, padx=5, pady=5)
-
-        self.posPressSynButton = Button(self, text="P+ Synthesis",
-                                        command=lambda: removeSupernatantPosPressure(hardware, "excel", float(
-                                            self.posPressTime_value.get()), "synthesis", 0))
-        self.posPressSynButton.grid(row=4, column=8, padx=5, pady=5)
-        '''
 
         '''Fill'''
+        self.plate_dispense_tool = Plate_dispense_tool(self, bd=2, relief=GROOVE, padx=5, pady=5)
+        self.plate_dispense_tool.grid(row=2, column=8, rowspan=10)
+
+
+class Plate_dispense_tool(Frame):
+
+    def __init__(self, parent, *args, **kwargs):
+        Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+
+        hardware = self.parent.parent.parent.children['!mainframetab1'].hardware
+
+        '''Title'''
+        self.title_label = Label(self, text="Plate Dispense Tool", justify="center", font=('Arial',10,'bold'))
+        self.title_label.grid(row=1, column=1, columnspan=3)
+
+        '''Volume to fill'''
+        self.fillVolLabel = Label(self, text="ul to fill", justify="center")
+        self.fillVolLabel.grid(row=2, column=1)
+
         self.fillVol_value = StringVar()
-        self.fillVol = Entry(self, textvariable=self.fillVol_value)
-        self.fillVol.grid(row=6, column=8)
+        self.fillVol = Entry(self, textvariable=self.fillVol_value, width=6)
+        self.fillVol.grid(row=3, column=1, padx=10)
         self.fillVol_value.set('25')
 
-        self.fillVolLabel = Label(self, text="ul to fill", justify="center")
-        self.fillVolLabel.grid(row=6, column=9)
+        '''Max volume to dispense'''
+        self.maxVolLabel = Label(self, text="max vol", justify="center")
+        self.maxVolLabel.grid(row=2, column=2)
 
-        self.is384_value = StringVar()
-        self.is384 = Entry(self, textvariable=self.is384_value)
-        self.is384.grid(row=7, column=8)
+        self.maxVol_value = StringVar()
+        self.maxVol = Entry(self, textvariable=self.maxVol_value,width=6)
+        self.maxVol.grid(row=3, column=2, padx=10)
+        self.maxVol_value.set('0')
+
+        '''Plate Format'''
+        self.is384flag = Label(self, text="384 ?", justify="center")
+        self.is384flag.grid(row=2, column=3)
+
+        self.is384_value = IntVar()
+        self.is384 = Checkbutton(self, variable=self.is384_value)
+        self.is384.grid(row=3, column=3, padx=10)
         self.is384_value.set('0')
-        self.is384flag = Label(self, text="1=384 0=96", justify="center")
-        self.is384flag.grid(row=7, column=9)
 
+        '''Buttons'''
         fillList = ['nucs', 'DB', 'BB', 'Buff1', 'Buff2']
         self.fillButtons = [None] * len(fillList)
+
+
         for fill in fillList:
             self.fillButtons[fillList.index(fill)] = Button(self, text=fill,
-                                                                   command=lambda buffer=fill: fillPlate(hardware,buffer,float(self.fillVol_value.get()),float(self.is384_value.get())))
-            self.fillButtons[fillList.index(fill)].grid(row=8 + fillList.index(fill), column=8, padx=5,
-                                                               pady=5)
-        self.PSPWashesButton = Button(self, text="PSP 384 Washes",command=lambda : PSPOnePot_384(hardware, 1))
-        self.PSPWashesButton.grid(row=13,column=8,padx=5,pady=5)
+                        command=lambda buffer=fill:
+                        fillPlate(hardware, buffer,float(self.fillVol_value.get()),self.is384_value.get(),float(self.maxVol_value.get())))
+            self.fillButtons[fillList.index(fill)].grid(row=4 + fillList.index(fill), column=2, padx=5,
+                                                        pady=5)
 
 '''CALLBACK FUNCTIONS'''
 
@@ -284,8 +273,7 @@ def bufferButton_Callback(directCommand,i):
 
 def goToColumn_Callback(MiddleFrame,hardware,buffer):
     colToGo=int(MiddleFrame.colToGo_value.get())
-    quadrant=float(MiddleFrame.is384_value.get())
-    goToWell(hardware,buffer,(colToGo-1)*4+1,quadrant)
+    goToWell(hardware,buffer,(colToGo-1)*4+1,0)
     MiddleFrame.colToGo_value.set(colToGo+1)
 
 

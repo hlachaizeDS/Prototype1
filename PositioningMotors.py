@@ -2,6 +2,7 @@ from serial import *
 import pyTMCL
 import COM_port
 
+POSITIONING_PORT = "COM21"
 
 class PositioningMotors:
     '''
@@ -12,17 +13,10 @@ class PositioningMotors:
 
         self.parent = parent
 
-        comport_dictionnaries = COM_port.list_1161_coms_by_adress()
-        x_port = comport_dictionnaries[21]
-        y_port = comport_dictionnaries[22]
+        self.bus = pyTMCL.connect(Serial(POSITIONING_PORT, timeout=5))
 
-        self.xserial_port = Serial(x_port, 115200, timeout=5)
-        self.xbus = pyTMCL.connect(self.xserial_port)
-        self.xMotor = self.xbus.get_motor(1, 0)
-
-        self.yserial_port = Serial(y_port, 115200, timeout=5)
-        self.ybus = pyTMCL.connect(self.yserial_port)
-        self.yMotor = self.ybus.get_motor(1, 0)
+        self.xMotor = self.bus.get_motor(1, 0)
+        self.yMotor = self.bus.get_motor(1, 1)
 
         self.apply_std_parameters([self.xMotor,self.yMotor])
 
@@ -41,7 +35,7 @@ class PositioningMotors:
         precise_reference_search_velocity = [5000, 5000]
         velocity_max = [400000, 400000]  # 0...7999774
         velocity_V1 = 0  # the target velocity to attain before going to a second phase of velocity
-        microsteps = [8, 8, 6]
+        microsteps = [8, 8]
 
         for motor in motor_list:
             motor.set_axis_parameter(4, velocity_max[motor_list.index(motor)])
@@ -58,7 +52,7 @@ class PositioningMotors:
             motor.set_axis_parameter(194, reference_search_velocity[motor_list.index(motor)])
             motor.set_axis_parameter(195, precise_reference_search_velocity[motor_list.index(motor)])
             motor.set_axis_parameter(140, microsteps[motor_list.index(motor)])
-            motor.set_axis_parameter(251, reverse_shaft[motor_list.index(motor)])
+            #motor.set_axis_parameter(251, reverse_shaft[motor_list.index(motor)]) #not available on 3-axes Trinamic
 
 if __name__ == "__main__":
 

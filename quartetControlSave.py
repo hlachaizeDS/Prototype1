@@ -21,16 +21,17 @@ def saveQuartetControlFile(title,code=""):
     now=datetime.datetime.now()
 
     #original Quartet file
-    original_path=r'D:\Proto7\Quartet_Control.xlsm'
+    original_path=r'D:\Prototype4\Quartet_Control.xlsm'
     expID=readExpID()
 
     #new folder path
-    general_path = "C:\\Users\\SynthesisDNASCRIPT\\DNA Script\\SO - Synthesis Operations - Bibliothèque\\S.3 - Proto\\P7\\Quartets"
+    general_path = "C:\\Users\\Prototype 4\\DNA Script\\SO - Synthesis Operations - Bibliothèque\\S.3 - Proto\\P4\\Quartets"
     folder_path=str(now.year)[2:]+ force2digits(now.month)
+    instr = os.path.basename(os.path.dirname(general_path))
 
     # new file path
-    personal_folder_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_P7_' + title + '_' + expID
-    file_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + "_P7_" + title + "_" + expID
+    personal_folder_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_' + instr + '_' + title + '_' + expID
+    file_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_' + instr + '_' + title + "_" + expID
 
     #the quartet control will be copied both in its own folder AND in all folder
     os.makedirs(general_path + '\\' + folder_path, exist_ok=True)
