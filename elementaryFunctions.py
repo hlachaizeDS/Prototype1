@@ -32,6 +32,25 @@ def initialiseMotorList(hardware,motor_list):
     for motor in motor_list:
         motor.axis.set(1, 0) #We set the actual position to 0 for each motor
 
+def prime_IdexPumps(hardware,volume):
+    idex_dus=[hardware.dispense_units_3[2],hardware.dispense_units_4[0]]
+    idex_index=[8,9]
+
+    for du in idex_dus:
+        max_disp_temp = du.max_disp
+        du.max_disp = du.cylinder_volume
+
+    dispense_mask=[0]*12
+    for index in idex_index:
+        dispense_mask[index]=volume
+
+    multiDispensePumps(hardware, dispense_mask)
+
+    for du in idex_dus:
+        du.max_disp = max_disp_temp
+
+    hardware.init_all_du(idex_dus)
+
 
 def goToWell(hardware,element,well,quadrant):
     if hardware.parent.directCommand.stopButton_value.get()==1:
@@ -112,15 +131,10 @@ def goToWell(hardware,element,well,quadrant):
         hardware.parent.update()
         sleep(0.2)
 
-def goToFakeWell(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant):
+def goToFakeWell(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant,X_step=X_step,Y_step=Y_step):
 
     #Works only for the upper left nozzle
 
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
-
-    'We make sure the needles are up'
-    #'needlesGoUp(hardware)
 
     'Positions of A1 with the up left Lee vann'
     X_1 = X_A1 - ((dispHead_dims[0] - 1)*X_step)
@@ -138,16 +152,24 @@ def goToFakeWell(hardware,fake_well,fake_plate_dims,dispHead_dims,quadrant):
     if quadrant == 4:
         X_1 = X_1 + int(X_step / 4)
         Y_1 = Y_1 + int(Y_step / 4)
+    if quadrant == 5: #5th quadrant for the true 384
+        X_1 = X_1 - int(X_step / 2)
+        Y_1 = Y_1 - int(Y_step / 2)
 
-    X = X_1 + ((fake_well - 1) % fake_plate_dims[0]) * X_step
-    Y = Y_1 + ((fake_well - 1) // fake_plate_dims[0]) * Y_step
-    hardware.xMotor.move_absolute(X)
-    hardware.yMotor.move_absolute(Y)
-    sleep(0.2)
+
+    X = int(X_1 + ((fake_well - 1) % fake_plate_dims[0]) * X_step)
+    Y = int(Y_1 + ((fake_well - 1) // fake_plate_dims[0]) * Y_step)
+
+    xMotor = hardware.xMotor
+    yMotor = hardware.yMotor
+    xMotor.move_absolute(X)
+    yMotor.move_absolute(Y)
+    sleep(0.1)
 
     while hardware.xMotorParametersInterface.get(8) == 0 or hardware.yMotorParametersInterface.get(8) == 0:
         hardware.parent.update()
         sleep(0.2)
+
 
 
 def realWellToPlateWell(realWell):
@@ -188,22 +210,20 @@ def plateWellToRealWell6Nozzles(plateWell):
 
     return realWell
 
-def fake_plate_well_to_real_well(fake_plate_well, fake_plate_dims, dispHead_dims):
+
+def fake_plate_well_to_real_well(fake_plate_well, real_plate_dims, fake_plate_dims, dispHead_dims):
 
     column=(fake_plate_well-1)//fake_plate_dims[0] + 1
     row=(fake_plate_well-1)%fake_plate_dims[0] + 1
 
-    middle_row=fake_plate_dims[0]/2
-    real_rows=[middle_row-3,middle_row-2,middle_row-1,middle_row,middle_row+1,middle_row+2,middle_row+3,middle_row+4]
+    real_rows=list(range(dispHead_dims[0],dispHead_dims[0]+real_plate_dims[0]))
 
-    middle_col=fake_plate_dims[1]/2
-    real_cols= [middle_col-5,middle_col-4,middle_col-3,middle_col-2,middle_col-1,middle_col,
-                middle_col+1,middle_col+2,middle_col+3,middle_col+4,middle_col+5,middle_col+6]
+    real_cols =list(range(dispHead_dims[1], dispHead_dims[1] + real_plate_dims[1]))
 
     if row not in real_rows or column not in real_cols: #When the plate well is outside the range of realwells
         return 0
 
-    realWell=(column - (dispHead_dims[1]-1) - 1 )*8 + row - (dispHead_dims[0]-1)
+    realWell=(column - (dispHead_dims[1]-1) - 1 )*real_plate_dims[0] + row - (dispHead_dims[0]-1)
 
     return realWell
 
@@ -221,14 +241,13 @@ def wait(hardware,timeToWait):
     hardware.parent.leftFrame.statusLabelString.set('StatusBar')
     hardware.parent.leftFrame.skipButton_value.set(0)
 
-def waitAndStir(hardware,timeToWait):
+def waitAndStir(hardware,timeToWait,velocity=900):
     if hardware.parent.directCommand.stopButton_value.get()==1:
         return
 
     goToWell(hardware, 'thermalCamera', 1,0)
 
-    hardware.arduinoControl.startShaking(900)
-    #hardware.arduinoControl.startShaking(330) #RNA
+    hardware.arduinoControl.startShaking(velocity)
     wait(hardware,timeToWait)
     hardware.arduinoControl.stopShaking()
 
@@ -289,24 +308,20 @@ def multiDispensePumps(hardware,volumes):
 
 
     volumes=volumes.copy()
-    if len(volumes)!=12:
-        volumes.extend([0]*(12-len(volumes)))
+    if len(volumes)!=13:
+        volumes.extend([0]*(13-len(volumes)))
 
     dus = []
-    for pump_id in range(3):
-        du = hardware.dispense_units_1[pump_id]
-        dus.append(du)
-    for pump_id in range(3):
-        du = hardware.dispense_units_2[pump_id]
-        dus.append(du)
-    for pump_id in range(3):
-        du = hardware.dispense_units_3[pump_id]
-        dus.append(du)
-    for pump_id in range(3):
-        du = hardware.dispense_units_4[pump_id]
-        dus.append(du)
+    dus_lists=[hardware.dispense_units_1,
+               hardware.dispense_units_2,
+               hardware.dispense_units_3,
+               hardware.dispense_units_4,
+               hardware.dispense_units_5]
+    for du_list in dus_lists:
+        for du in du_list:
+            dus.append(du)
 
-    while volumes!=[0,0,0,0,0,0,0,0,0,0,0,0]:
+    while volumes!=[0,0,0,0,0,0,0,0,0,0,0,0,0]:
 
         used_dus=[]
         for pump in range(len(dus)):
@@ -323,7 +338,49 @@ def multiDispensePumps(hardware,volumes):
                 else:
                     vol_to_disp=dus[pump].max_disp
 
-                dus[pump].push(vol_to_disp)
+                dus[pump].push(vol_to_disp+dus[pump].pullback)
+                volumes[pump]-=vol_to_disp
+
+        for du in used_dus:
+            du.pull(du.pullback)
+        for du in used_dus:
+            du.zero()
+
+def multiDispensePumpsQ(hardware,volumes):
+
+
+    volumes=volumes.copy()
+    if len(volumes)!=13:
+        volumes.extend([0]*(13-len(volumes)))
+
+    dus = []
+    dus_lists=[hardware.dispense_units_1,
+               hardware.dispense_units_2,
+               hardware.dispense_units_3,
+               hardware.dispense_units_4,
+               hardware.dispense_units_5]
+    for du_list in dus_lists:
+        for du in du_list:
+            dus.append(du)
+
+    while volumes!=[0,0,0,0,0,0,0,0,0,0,0,0,0]:
+
+        used_dus=[]
+        for pump in range(len(dus)):
+            if volumes[pump]!=0:
+                used_dus.append(dus[pump])
+
+        for du in used_dus:
+            du.push_in_reservoir(du.conditioning)
+
+        for pump in range(len(dus)):
+            if volumes[pump]!=0:
+                if volumes[pump]<=dus[pump].max_disp:
+                    vol_to_disp=volumes[pump]
+                else:
+                    vol_to_disp=dus[pump].max_disp
+
+                dus[pump].push(vol_to_disp+du.pullback)
                 volumes[pump]-=vol_to_disp
 
         for du in used_dus:
@@ -332,60 +389,38 @@ def multiDispensePumps(hardware,volumes):
             du.zero()
 
 
+def multi_dispense(hardware, volume_per_line, max_vol=None):
+    '''
 
-def multiDispense(hardware,nucleoArray,time):
+    :param hardware: link to the prototype hardware
+    :param volume_per_line: dictionnaries of volumes to dispense, eg {"DB":50,"BB":15}
+    :param max_vol: maximum volume to dispense in a single dispense, in particular to avoid overflows
+    :return:
+    '''
 
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
+    pumps_index = {"M": 0, "N": 1, "A": 2, "C": 3, "G": 4, "T": 5, "O": 6, "P": 7,
+                   "DB": 8, "BB": 9, "Buff1": 10, "Buff2": 11, "Q":12}
 
-    for i in range(4):
-        if nucleoArray[i] == 1:
-            hardware.set_output(i+2, 1)
-    sleep(time)
-    for i in range(4):
-        hardware.set_output(i+2,0)
+    full_disp_list = [0] * len(pumps_index)
 
-def multiDispenseWithEnzyme(hardware,nucleoArray,time_nuc,time_enz):
+    for line in volume_per_line.keys():
+        full_disp_list[pumps_index[line]] = volume_per_line[line]
 
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
-    for i in range(4):
-        if nucleoArray[i+2] == 1:
-            hardware.set_output(i+2, 1)
-    if 1 in nucleoArray[2:6]:
-        sleep(time_nuc)
-    for i in range(4):
-        hardware.set_output(i+2,0)
+    if max_vol != None:
+        while any(full_disp_list) > 0:
+            disp_list = []
+            for i in range(len(full_disp_list)):
+                if full_disp_list[i] > max_vol:
+                    disp_list.append(max_vol)
+                    full_disp_list[i] -= max_vol
+                else:
+                    disp_list.append(full_disp_list[i])
+                    full_disp_list[i] = 0
 
-    for i in range(2):
-        if nucleoArray[i] == 1:
-            hardware.set_output(i, 1)
-    if 1 in nucleoArray[0:2]:
-        sleep(time_enz)
-    for i in range(2):
-        hardware.set_output(i,0)
+            multiDispensePumpsQ(hardware,disp_list)
 
-def multiDispenseWithEnzymeSep(hardware,nucleoArray,time_nuc,time_enz_M,time_enz_N):
-
-    if hardware.parent.directCommand.stopButton_value.get()==1:
-        return
-    for i in range(4):
-        if nucleoArray[i+2] == 1:
-            hardware.set_output(i+2, 1)
-    if 1 in nucleoArray[2:6]:
-        sleep(time_nuc)
-    for i in range(4):
-        hardware.set_output(i+2,0)
-
-    if nucleoArray[1]==1:
-        hardware.set_output(1, 1)
-        sleep(time_enz_N)
-        hardware.set_output(1, 0)
-
-    if nucleoArray[0]==1:
-        hardware.set_output(0, 1)
-        sleep(time_enz_M)
-        hardware.set_output(0, 0)
+    else:
+        multiDispensePumpsQ(hardware,full_disp_list)
 
 def multiDispenseAether(hardware,nucleoArray,time_enz,time_A,time_C,time_G,time_T):
 

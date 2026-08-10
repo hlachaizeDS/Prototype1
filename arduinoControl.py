@@ -1,4 +1,4 @@
-import time
+import datetime
 import serial
 import usbErrorHandling
 from serial import *
@@ -29,7 +29,8 @@ class ArduinoControl():
                 self.ser.close()
                 break
             except SerialException:
-                usbErrorHandling.restartArduinoUSB()
+                print(str(datetime.datetime.now()) + " Arduino serial exception - trying to reconnect")
+                sleep(2)
 
 
 
@@ -38,13 +39,16 @@ class ArduinoControl():
     def stopShaking(self):
         while True:
             try:
-                self.ser = serial.Serial(COMPORT, 115200)
+                self.ser = serial.Serial(COMPORT, 115200, timeout=10)
                 self.ser.write(b'1\r\n')
-                self.ser.read()
+                r = self.ser.read()
+                if r == b'':
+                    print('Shaker didnt answer for >10s')
                 self.ser.close()
                 break
             except SerialException:
-                usbErrorHandling.restartArduinoUSB()
+                print(str(datetime.datetime.now()) + " Arduino serial exception - trying to reconnect")
+                sleep(2)
 
 if __name__ == "__main__":
     # On crée la racine de notre interface

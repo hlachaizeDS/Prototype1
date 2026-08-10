@@ -1,31 +1,32 @@
 import xlrd
 
-path = r'C:\Users\SynthesisDNASCRIPT\Desktop\Proto5\Quartet_Control.xlsm'
+path = r'D:\Proto5\Quartet_Control.xlsm'
 
 #Parameters
 
-stirVel=0
-firstRemoval=0
-atTheEnd=0
-PremixVolume=0
 NucsVolume=0
 EBVolume=0
+BBVolume1=0
 DBVolume1=0
 DBVolume2=0
-WashVolume=0
-BBVolume1=0
 BBVolume2=0
-VolumesSheet=0
 Elong_time=0
+WB1Time=0
+WB2Time=0
+DB1Time=0
+DB2Time=0
 VacuumTime=0
-BBTime=0
-DBTime=0
-WashTime=0
-params=[stirVel,firstRemoval,atTheEnd,PremixVolume,DBVolume1,DBVolume2,WashVolume,BBVolume1,BBVolume2,VolumesSheet,Elong_time,VacuumTime,BBTime,DBTime,WashTime]
+
+
 
 def getExcelSheet(path):
     wb = xlrd.open_workbook(path)
     synthesis_sheet = wb.sheet_by_name("Syntheses")
+    return synthesis_sheet
+
+def getExcelSheet_384(path):
+    wb = xlrd.open_workbook(path)
+    synthesis_sheet = wb.sheet_by_name("Syntheses 384")
     return synthesis_sheet
 
 def getSequences(synthesis_sheet):
@@ -34,6 +35,19 @@ def getSequences(synthesis_sheet):
     well=1
     for col in range(12):
         for row in range(8):
+            value=synthesis_sheet.cell_value(7+row,1+col)
+            if value!='':
+                sequences.append((well,value))
+            well+=1
+
+    return sequences
+
+def getSequences_384(synthesis_sheet):
+
+    sequences=[]
+    well=1
+    for col in range(24):
+        for row in range(16):
             value=synthesis_sheet.cell_value(7+row,1+col)
             if value!='':
                 sequences.append((well,value))
@@ -53,11 +67,12 @@ def splitSequences(sequences,cycle):
     O_wells=[]
     P_wells=[]
     X_wells=[]
+    Q_wells=[]
 
-    nucleos=['A','C','G','T','M','N','O','P','X']
-    nucleo_arrays=[ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells,O_wells,P_wells,X_wells]
+    nucleos=['A','C','G','T','M','N','O','P','X','Q']
+    nucleo_arrays=[ended_wells,A_wells,C_wells,G_wells,T_wells,M_wells,N_wells,O_wells,P_wells,X_wells,Q_wells]
 
-    for nucleo in range(1,9+1):
+    for nucleo in range(1,10+1):
         for sample in range(len(sequences)):
             if (cycle<=len(sequences[sample][1]) and sequences[sample][1][cycle-1]==nucleos[nucleo-1]):
                 nucleo_arrays[nucleo].append(sequences[sample][0])
@@ -168,6 +183,8 @@ def getEndedWellsPlusX(sequences,cycle):
 
     return ended_wells
 
+
+
 def findIndexes(eltToFind,synthesis_sheet):
 
     for row in range(synthesis_sheet.nrows):
@@ -215,4 +232,4 @@ if __name__ == "__main__":
     print(getEndedWellsPlusX(sequences,1))
     #params=getParameters(synthesis_sheet)
     #print(getUsedWells(sequences))
-    #print(getActiveWells(sequences,4))
+    #print(getActiveWells(sequences

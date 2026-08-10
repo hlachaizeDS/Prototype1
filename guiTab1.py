@@ -5,7 +5,7 @@ from hardware import *
 from action import actionButton_Callback
 import TMCL
 from  Optris import *
-from Thermal import ThermalImageThread,ThermalImage,ThermalImageParams
+from Thermal import ThermalImageThread
 from PIL import Image, ImageTk
 from matplotlib import pyplot as plt
 
@@ -177,7 +177,7 @@ class DirectCommand(Frame):
         #STOP
         self.stopButton_value = IntVar()
         self.stopButton = Checkbutton(self, text="STOP",fg='red', command=lambda: stopButton_Callback(self),indicatoron=0,variable=self.stopButton_value)
-        self.stopButton.grid(row=0, column=5, padx=30, pady=5)
+        #self.stopButton.grid(row=0, column=5, padx=30, pady=5)
 
         # ACTION
         self.actionButton = Button(self, text="ACTION", command=lambda: actionButton_Callback(self))

@@ -16,21 +16,22 @@ def readExpID():
     return number
 
 
-def saveQuartetControlFile(title):
+def saveQuartetControlFile(title,code=""):
 
     now=datetime.datetime.now()
 
     #original Quartet file
-    original_path=r'C:\Users\SynthesisDNASCRIPT\Desktop\Proto5\Quartet_Control.xlsm'
+    original_path=r'D:\Proto5\Quartet_Control.xlsm'
     expID=readExpID()
 
     #new folder path
-    general_path = "C:\\Users\\SynthesisDNASCRIPT\\DNA Script\\Thomas YBERT - SYNTHESIS OPERATIONS\\S.6 - P5\\Quartets"
+    general_path = "C:\\Users\\SynthesisDNASCRIPT\\DNA Script\\SO - Synthesis Operations - Bibliothèque\\S.3 - Proto\\P5\\Quartets"
     folder_path=str(now.year)[2:]+ force2digits(now.month)
+    instr = os.path.basename(os.path.dirname(general_path))
 
     # new file path
-    personal_folder_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_P5_' + title + '_' + expID
-    file_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + "_P5_" + title + "_" + expID
+    personal_folder_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_' + instr + '_' + title + '_' + expID
+    file_path = str(now.year)[2:] + force2digits(now.month) + force2digits(now.day) + '_' + instr + '_' + title + "_" + expID
 
     #the quartet control will be copied both in its own folder AND in all folder
     os.makedirs(general_path + '\\' + folder_path, exist_ok=True)
@@ -43,6 +44,13 @@ def saveQuartetControlFile(title):
     final_all_path=general_path + '\\' + folder_path + '\\All\\' + file_path + '.xlsm'
     shutil.copy(original_path, final_personal_path)
     shutil.copy(original_path, final_all_path)
+
+    #Eventually copy source code
+    final_personal_code_path=general_path + '\\' + folder_path + '\\' + personal_folder_path + "\\" + file_path + "_code.txt"
+    if code!="":
+        code_file=open(final_personal_code_path, "w")
+        code_file.write(code)
+        code_file.close()
 
     #We don't insert timings anymore,nor date
     # for path in [final_personal_path,final_all_path]:

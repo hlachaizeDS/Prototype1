@@ -16,6 +16,7 @@ class DispenseUnit():
         self.bus_tmcl=bus_pump
         self.digOut=digOut
 
+        self.valve_timing=0.02
 
         if (size=="small"):
             self.microsteps = 2 ** 6
@@ -46,9 +47,28 @@ class DispenseUnit():
             self.dist_per_full_step = 0.0254  # mm
             self.radius = 4.6 / 2
             self.max_disp = 200  # ul
-            self.pullback = 0 # ul
+            self.pullback = 10 # ul
             self.init_forward = 210  # ul
-            self.conditioning= 5 #ul
+            self.conditioning= 0 #ul (was5uL)
+
+        elif (size=="nanotech"):
+            self.microsteps = 2 ** 6
+            self.dist_per_full_step = 0.0254  # mm
+            self.radius = 4.6 / 2
+            self.max_disp = 200  # ul
+            self.pullback = 10 # ul
+            self.init_forward = 210  # ul
+            self.conditioning= 0 #ul (was5uL)
+
+        elif (size=="idex_2500"):
+            self.microsteps = 2 ** 6
+            self.dist_per_full_step = 0.00635  # mm
+            self.radius = 15.829 / 2
+            self.max_disp = 200  # ul
+            self.pullback = 25 # ul
+            self.init_forward = 2600  # ul
+            self.conditioning= 0 #ul
+            self.cylinder_volume = 2500  # ul
 
         #init
         self.init_backward=self.max_disp+self.pullback+self.conditioning+1 #ul
@@ -77,13 +97,13 @@ class DispenseUnit():
     def push(self,volume):
         self.wait_for_pos()
         self.open_valve()
-        steps_nb = int((volume + self.pullback) * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
+        steps_nb = int(volume * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
         self.motor.move_relative( steps_nb)
 
     def push_in_reservoir(self,volume):
         self.wait_for_pos()
         self.close_valve()
-        steps_nb = int((volume + self.pullback) * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
+        steps_nb = int(volume * self.microsteps / (math.pi * (self.radius ** 2) * self.dist_per_full_step))
         self.motor.move_relative(steps_nb)
 
 
@@ -101,11 +121,11 @@ class DispenseUnit():
 
     def open_valve(self):
         self.bus_tmcl.send(1, TMCL.commands.Command.SIO, self.digOut, 2, 1)
-        time.sleep(0.02)
+        time.sleep(self.valve_timing)
 
     def close_valve(self):
         self.bus_tmcl.send(1, TMCL.commands.Command.SIO, self.digOut, 2, 0)
-        time.sleep(0.02)
+        time.sleep(self.valve_timing)
 
     def zero(self):
         self.wait_for_pos()
@@ -132,7 +152,7 @@ class DispenseUnit():
             self.motor_parameters.set(17, int(7629278 / 10))
             self.motor_parameters.set(4, int(200000 / 10))
 
-        if self.size=="chineseMotor":
+        if self.size=="chineseMotor" or self.size=="nanotech" or self.size=="idex_2500":
             self.motor_parameters.set(6, 90)
             self.motor_parameters.set(5, int(7629278 / 10))
             self.motor_parameters.set(17, int(7629278 / 10))
@@ -158,6 +178,18 @@ class DispenseUnit():
             self.motor_parameters.set(5, 7629278)
             self.motor_parameters.set(17, 7629278)
             self.motor_parameters.set(4, 150000)
+
+        if  self.size=="nanotech":
+            self.motor_parameters.set(6, 255)
+            self.motor_parameters.set(5, 7629278)
+            self.motor_parameters.set(17, 7629278)
+            self.motor_parameters.set(4, 200000)
+
+        if  self.size=="idex_2500":
+            self.motor_parameters.set(6, 255)
+            self.motor_parameters.set(5, int(7629278/2))
+            self.motor_parameters.set(17, int(7629278/2))
+            self.motor_parameters.set(4, int(150000/3))
 
     def initialise_position(self):
 
